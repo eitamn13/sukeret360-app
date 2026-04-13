@@ -1,13 +1,23 @@
 import { useState } from 'react';
 import { ChevronLeft, Sparkles } from 'lucide-react';
-import { Gender, UserProfile, useAppContext, genderedText } from '../context/AppContext';
+import {
+  Gender,
+  UserProfile,
+  useAppContext,
+  genderedText,
+} from '../context/AppContext';
 
 const ROSE = '#E11D48';
 const ROSE_LIGHT = '#FFF1F2';
 const ROSE_BORDER = '#FECDD3';
 
 export function OnboardingScreen() {
-  const { saveUserProfile, completeOnboarding } = useAppContext();
+  const {
+    saveUserProfile,
+    completeOnboarding,
+    saveEmergencyContact,
+  } = useAppContext();
+
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [gender, setGender] = useState<Gender>('');
@@ -23,8 +33,11 @@ export function OnboardingScreen() {
   const totalSteps = 5;
 
   const goNext = () => {
-    if (step < totalSteps - 1) setStep((s) => s + 1);
-    else finish();
+    if (step < totalSteps - 1) {
+      setStep((s) => s + 1);
+      return;
+    }
+    finish();
   };
 
   const finish = () => {
@@ -37,14 +50,11 @@ export function OnboardingScreen() {
 
     saveUserProfile(profile);
 
-    localStorage.setItem(
-      'emergency_contact',
-      JSON.stringify({
-        name: emergencyName,
-        phone: emergencyPhone,
-        message: emergencyMessage,
-      })
-    );
+    saveEmergencyContact({
+      name: emergencyName.trim(),
+      phone: emergencyPhone.trim(),
+      message: emergencyMessage.trim() || 'אני צריך עזרה דחופה. זה המיקום שלי:',
+    });
 
     completeOnboarding();
   };
@@ -59,7 +69,9 @@ export function OnboardingScreen() {
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col items-center justify-center px-6 overflow-y-auto py-8"
-      style={{ background: 'linear-gradient(160deg, #FFF1F2 0%, #FFE4E6 50%, #FECDD3 100%)' }}
+      style={{
+        background: 'linear-gradient(160deg, #FFF1F2 0%, #FFE4E6 50%, #FECDD3 100%)',
+      }}
     >
       <div className="w-full max-w-sm">
         <div className="flex justify-center mb-6">
@@ -89,21 +101,25 @@ export function OnboardingScreen() {
               <div className="flex items-center justify-center mb-2">
                 <span className="text-3xl">👋</span>
               </div>
+
               <h2
                 className="text-2xl text-center mb-1"
                 style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
               >
                 נעים להכיר!
               </h2>
+
               <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
                 מה שמך? נתאים את החוויה עבורך
               </p>
+
               <label
                 className="block text-sm text-right mb-2"
                 style={{ color: '#6B7280', fontWeight: 600 }}
               >
                 שמך
               </label>
+
               <input
                 type="text"
                 value={name}
@@ -128,20 +144,23 @@ export function OnboardingScreen() {
               <div className="flex items-center justify-center mb-2">
                 <span className="text-3xl">🙋</span>
               </div>
+
               <h2
                 className="text-2xl text-center mb-1"
                 style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
               >
                 מגדר
               </h2>
+
               <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
                 נתאים את הממשק והטקסט עבורך, {name}
               </p>
+
               <div className="grid grid-cols-2 gap-3">
-                {([
+                {[
                   { value: 'female' as Gender, label: 'נקבה', emoji: '👩' },
                   { value: 'male' as Gender, label: 'זכר', emoji: '👨' },
-                ]).map(({ value, label, emoji }) => (
+                ].map(({ value, label, emoji }) => (
                   <button
                     key={value}
                     onClick={() => setGender(value)}
@@ -155,7 +174,10 @@ export function OnboardingScreen() {
                     <p className="text-3xl mb-2">{emoji}</p>
                     <p
                       className="text-lg"
-                      style={{ color: gender === value ? ROSE : '#374151', fontWeight: 800 }}
+                      style={{
+                        color: gender === value ? ROSE : '#374151',
+                        fontWeight: 800,
+                      }}
                     >
                       {label}
                     </p>
@@ -170,21 +192,25 @@ export function OnboardingScreen() {
               <div className="flex items-center justify-center mb-2">
                 <span className="text-3xl">🎂</span>
               </div>
+
               <h2
                 className="text-2xl text-center mb-1"
                 style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
               >
                 {genderedText(gender, `כמה את בת, ${name}?`, `כמה אתה בן, ${name}?`)}
               </h2>
+
               <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
                 נתאים את ההמלצות לגיל שלך
               </p>
+
               <label
                 className="block text-sm text-right mb-2"
                 style={{ color: '#6B7280', fontWeight: 600 }}
               >
                 גיל
               </label>
+
               <input
                 type="number"
                 value={age}
@@ -211,15 +237,18 @@ export function OnboardingScreen() {
               <div className="flex items-center justify-center mb-2">
                 <span className="text-3xl">💊</span>
               </div>
+
               <h2
                 className="text-2xl text-center mb-1"
                 style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
               >
                 סוג הסוכרת
               </h2>
+
               <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
                 נתאים את ההמלצות האישיות שלך
               </p>
+
               <div className="grid grid-cols-2 gap-3">
                 {(['1', '2'] as const).map((type) => (
                   <button
@@ -234,7 +263,10 @@ export function OnboardingScreen() {
                   >
                     <p
                       className="text-2xl mb-1"
-                      style={{ color: diabetesType === type ? ROSE : '#374151', fontWeight: 900 }}
+                      style={{
+                        color: diabetesType === type ? ROSE : '#374151',
+                        fontWeight: 900,
+                      }}
                     >
                       סוג {type}
                     </p>
@@ -255,12 +287,14 @@ export function OnboardingScreen() {
               <div className="flex items-center justify-center mb-2">
                 <span className="text-3xl">🚨</span>
               </div>
+
               <h2
                 className="text-2xl text-center mb-1"
                 style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
               >
                 איש קשר לחירום
               </h2>
+
               <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
                 במקרה חירום, נוכל לשלוח אליו הודעה אוטומטית
               </p>
@@ -271,6 +305,7 @@ export function OnboardingScreen() {
               >
                 שם איש קשר
               </label>
+
               <input
                 type="text"
                 value={emergencyName}
@@ -292,6 +327,7 @@ export function OnboardingScreen() {
               >
                 טלפון איש קשר
               </label>
+
               <input
                 type="tel"
                 value={emergencyPhone}
@@ -313,6 +349,7 @@ export function OnboardingScreen() {
               >
                 הודעת חירום
               </label>
+
               <textarea
                 value={emergencyMessage}
                 onChange={(e) => setEmergencyMessage(e.target.value)}
@@ -353,7 +390,7 @@ export function OnboardingScreen() {
               </>
             ) : (
               <>
-                <span>המשך</span>
+                <span>{genderedText(gender, 'המשיכי', 'המשך')}</span>
                 <ChevronLeft size={18} strokeWidth={2.5} />
               </>
             )}
@@ -365,7 +402,7 @@ export function OnboardingScreen() {
               className="w-full mt-3 h-10 text-sm transition-colors"
               style={{ color: '#9CA3AF', fontWeight: 500 }}
             >
-              חזרה
+              {genderedText(gender, 'חזרי', 'חזור')}
             </button>
           )}
         </div>
@@ -380,10 +417,19 @@ function OnboardingLogo() {
       <img
         src="https://i.postimg.cc/FrmVmf7S/16p-Kq.jpg"
         alt="לוגו"
-        style={{ width: 72, height: 72, borderRadius: '50%', objectFit: 'cover', boxShadow: '0 8px 32px rgba(225,29,72,0.2)' }}
+        style={{
+          width: 72,
+          height: 72,
+          borderRadius: '50%',
+          objectFit: 'cover',
+          boxShadow: '0 8px 32px rgba(225,29,72,0.2)',
+        }}
       />
       <div className="text-center">
-        <h1 className="text-2xl" style={{ color: '#E11D48', fontWeight: 900, letterSpacing: '-0.03em' }}>
+        <h1
+          className="text-2xl"
+          style={{ color: '#E11D48', fontWeight: 900, letterSpacing: '-0.03em' }}
+        >
           הסוכרת שלי
         </h1>
         <p className="text-sm mt-0.5" style={{ color: '#FDA4AF', fontWeight: 500 }}>
