@@ -1,6 +1,14 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 
 export type Gender = 'female' | 'male' | '';
+
+export function genderedText(
+  gender: Gender,
+  femaleText: string,
+  maleText: string
+) {
+  return gender === 'male' ? maleText : femaleText;
+}
 
 export interface UserProfile {
   name: string;
@@ -9,169 +17,227 @@ export interface UserProfile {
   gender: Gender;
 }
 
-export interface LoggedMeal {
-  id: string;
+export interface EmergencyContact {
   name: string;
-  icon: string;
-  carbs: number;
-  loggedAt: Date;
+  phone: string;
+  message: string;
 }
 
-export interface Theme {
-  primary: string;
-  primaryDark: string;
-  primaryLight: string;
-  primaryBorder: string;
-  primaryBg: string;
-  primaryShadow: string;
-  primaryMuted: string;
-  gradientCard: string;
-  gradientFull: string;
-  headerBg: string;
-  headerBorder: string;
-  headerShadow: string;
+export interface SavedLocation {
+  lat: number;
+  lng: number;
+  updatedAt: string;
 }
 
-export const FEMALE_THEME: Theme = {
-  primary: '#E11D48',
-  primaryDark: '#BE123C',
-  primaryLight: '#9F1239',
-  primaryBorder: '#FECDD3',
-  primaryBg: '#FFF1F2',
-  primaryShadow: 'rgba(225,29,72,0.35)',
-  primaryMuted: '#FDA4AF',
-  gradientCard: 'linear-gradient(135deg, #E11D48 0%, #BE123C 55%, #9F1239 100%)',
-  gradientFull: 'linear-gradient(160deg, #FFF1F2 0%, #FFE4E6 60%, #FECDD3 100%)',
-  headerBg: 'rgba(255,241,242,0.94)',
-  headerBorder: '#FECDD3',
-  headerShadow: '0 2px 16px rgba(225,29,72,0.08)',
+export interface MedicationScheduleItem {
+  id: string;
+  time: string;
+  period: string;
+  name: string;
+  dosage: string;
+  type: 'pill' | 'injection';
+}
+
+export interface MedicationLogEntry {
+  medicationId: string;
+  dateKey: string;
+  takenAt: string;
+}
+
+const DEFAULT_PROFILE: UserProfile = {
+  name: '',
+  age: '',
+  diabetesType: '',
+  gender: '',
 };
 
-export const MALE_THEME: Theme = {
-  primary: '#1D4ED8',
-  primaryDark: '#1E40AF',
-  primaryLight: '#1E3A8A',
-  primaryBorder: '#BFDBFE',
-  primaryBg: '#EFF6FF',
-  primaryShadow: 'rgba(29,78,216,0.35)',
-  primaryMuted: '#93C5FD',
-  gradientCard: 'linear-gradient(135deg, #1D4ED8 0%, #1E40AF 55%, #1E3A8A 100%)',
-  gradientFull: 'linear-gradient(160deg, #EFF6FF 0%, #DBEAFE 60%, #BFDBFE 100%)',
-  headerBg: 'rgba(239,246,255,0.94)',
-  headerBorder: '#BFDBFE',
-  headerShadow: '0 2px 16px rgba(29,78,216,0.08)',
+const DEFAULT_CONTACT: EmergencyContact = {
+  name: '',
+  phone: '',
+  message: 'מצב חירום!',
 };
 
-interface AppState {
-  completedExercises: Set<string>;
-  completedMedications: Set<string>;
+const DEFAULT_MEDS: MedicationScheduleItem[] = [
+  { id: 'morning', time: '08:00', period: 'בוקר', name: 'מטפורמין', dosage: '500 מ"ג', type: 'pill' },
+  { id: 'evening', time: '21:00', period: 'ערב', name: 'אינסולין', dosage: '10 יחידות', type: 'injection' },
+];
+
+function todayKey() {
+  return new Date().toISOString().split('T')[0];
+}
+
+interface AppContextType {
   userProfile: UserProfile;
   onboardingDone: boolean;
-  theme: Theme;
-  todayMeals: LoggedMeal[];
-}
+  emergencyContact: EmergencyContact;
+  savedLocation: SavedLocation | null;
+  medicationSchedule: MedicationScheduleItem[];
+  medicationLogs: MedicationLogEntry[];
 
-interface AppContextValue extends AppState {
-  toggleExercise: (id: string) => void;
-  toggleMedication: (id: string) => void;
-  saveUserProfile: (profile: UserProfile) => void;
+  saveUserProfile: (p: UserProfile) => void;
   completeOnboarding: () => void;
-  logMeal: (meal: Omit<LoggedMeal, 'id' | 'loggedAt'>) => void;
+  saveEmergencyContact: (c: EmergencyContact) => void;
+  saveLocation: (l: SavedLocation | null) => void;
+  markMedicationTaken: (id: string) => void;
+  unmarkMedicationTaken: (id: string) => void;
 }
 
-const AppContext = createContext<AppContextValue | null>(null);
-
-function setFromStorage(key: string): Set<string> {
-  try {
-    const raw = localStorage.getItem(key);
-    if (raw) return new Set(JSON.parse(raw));
-  } catch { /* ignore */ }
-  return new Set();
-}
-
-function saveToStorage(key: string, set: Set<string>) {
-  localStorage.setItem(key, JSON.stringify(Array.from(set)));
-}
-
-function getProfile(): UserProfile {
-  try {
-    const raw = localStorage.getItem('userProfile');
-    if (raw) return JSON.parse(raw);
-  } catch { /* ignore */ }
-  return { name: '', age: '', diabetesType: '', gender: '' };
-}
-
-function getThemeForProfile(profile: UserProfile): Theme {
-  return profile.gender === 'male' ? MALE_THEME : FEMALE_THEME;
-}
+const AppContext = createContext<AppContextType | null>(null);
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [completedExercises, setCompletedExercises] = useState<Set<string>>(
-    () => setFromStorage('completedExercises')
+  const [userProfile, setUserProfile] = useState<UserProfile>(
+    JSON.parse(localStorage.getItem('userProfile') || 'null') || DEFAULT_PROFILE
   );
-  const [completedMedications, setCompletedMedications] = useState<Set<string>>(
-    () => setFromStorage('completedMedications')
-  );
-  const [userProfile, setUserProfile] = useState<UserProfile>(getProfile);
-  const [theme, setTheme] = useState<Theme>(() => getThemeForProfile(getProfile()));
-  const [onboardingDone, setOnboardingDone] = useState<boolean>(
-    () => localStorage.getItem('onboardingDone') === 'true'
-  );
-  const [todayMeals, setTodayMeals] = useState<LoggedMeal[]>([]);
 
-  useEffect(() => { saveToStorage('completedExercises', completedExercises); }, [completedExercises]);
-  useEffect(() => { saveToStorage('completedMedications', completedMedications); }, [completedMedications]);
+  const [onboardingDone, setOnboardingDone] = useState(
+    localStorage.getItem('onboardingDone') === 'true'
+  );
 
-  const toggleExercise = (id: string) => {
-    setCompletedExercises((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+  const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>(
+    JSON.parse(localStorage.getItem('emergency_contact') || 'null') || DEFAULT_CONTACT
+  );
+
+  const [savedLocation, setSavedLocation] = useState<SavedLocation | null>(
+    JSON.parse(localStorage.getItem('saved_location') || 'null')
+  );
+
+  const [medicationSchedule] = useState(DEFAULT_MEDS);
+
+  const [medicationLogs, setMedicationLogs] = useState<MedicationLogEntry[]>(
+    JSON.parse(localStorage.getItem('medication_logs') || '[]')
+  );
+
+  // 💾 SAVE
+  useEffect(() => {
+    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+  }, [userProfile]);
+
+  useEffect(() => {
+    localStorage.setItem('medication_logs', JSON.stringify(medicationLogs));
+  }, [medicationLogs]);
+
+  useEffect(() => {
+    localStorage.setItem('emergency_contact', JSON.stringify(emergencyContact));
+  }, [emergencyContact]);
+
+  useEffect(() => {
+    localStorage.setItem('saved_location', JSON.stringify(savedLocation));
+  }, [savedLocation]);
+
+  // 🔔 בקשת הרשאות
+  useEffect(() => {
+    if ('Notification' in window) {
+      Notification.requestPermission();
+    }
+  }, []);
+
+  const isTakenToday = (id: string) => {
+    return medicationLogs.some(
+      m => m.medicationId === id && m.dateKey === todayKey()
+    );
   };
 
-  const toggleMedication = (id: string) => {
-    setCompletedMedications((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
+  // 🔥 מנוע תזכורות
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const now = new Date();
+
+      medicationSchedule.forEach(med => {
+        const [h, m] = med.time.split(':').map(Number);
+
+        if (
+          now.getHours() === h &&
+          now.getMinutes() === m &&
+          !isTakenToday(med.id)
+        ) {
+          const text = genderedText(
+            userProfile.gender,
+            `💊 שכחת לקחת את ${med.name}`,
+            `💊 שכחת לקחת את ${med.name}`
+          );
+
+          if (Notification.permission === 'granted') {
+            new Notification(text);
+          }
+
+          // ⏱️ 30 דקות
+          setTimeout(() => {
+            if (!isTakenToday(med.id)) {
+              triggerEmergency(med);
+            }
+          }, 30 * 60 * 1000);
+        }
+      });
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [medicationLogs, userProfile]);
+
+  // 🚨 חירום
+  const triggerEmergency = (med: MedicationScheduleItem) => {
+    if (!emergencyContact.phone) return;
+
+    const location = savedLocation
+      ? `https://maps.google.com/?q=${savedLocation.lat},${savedLocation.lng}`
+      : '';
+
+    const msg = genderedText(
+      userProfile.gender,
+      `🚨 המטופלת לא לקחה ${med.name}\n${location}`,
+      `🚨 המטופל לא לקח ${med.name}\n${location}`
+    );
+
+    window.open(`https://wa.me/${emergencyContact.phone}?text=${encodeURIComponent(msg)}`);
   };
 
-  const saveUserProfile = (profile: UserProfile) => {
-    setUserProfile(profile);
-    setTheme(getThemeForProfile(profile));
-    localStorage.setItem('userProfile', JSON.stringify(profile));
-  };
+  // ACTIONS
+  const saveUserProfile = (p: UserProfile) => setUserProfile(p);
 
   const completeOnboarding = () => {
     setOnboardingDone(true);
     localStorage.setItem('onboardingDone', 'true');
   };
 
-  const logMeal = (meal: Omit<LoggedMeal, 'id' | 'loggedAt'>) => {
-    setTodayMeals((prev) => [
+  const saveEmergencyContact = (c: EmergencyContact) => setEmergencyContact(c);
+
+  const saveLocation = (l: SavedLocation | null) => setSavedLocation(l);
+
+  const markMedicationTaken = (id: string) => {
+    setMedicationLogs(prev => [
       ...prev,
-      { ...meal, id: Date.now().toString(), loggedAt: new Date() },
+      { medicationId: id, dateKey: todayKey(), takenAt: new Date().toISOString() }
     ]);
+  };
+
+  const unmarkMedicationTaken = (id: string) => {
+    setMedicationLogs(prev =>
+      prev.filter(m => !(m.medicationId === id && m.dateKey === todayKey()))
+    );
   };
 
   return (
     <AppContext.Provider value={{
-      completedExercises, completedMedications, userProfile, onboardingDone, theme, todayMeals,
-      toggleExercise, toggleMedication, saveUserProfile, completeOnboarding, logMeal,
+      userProfile,
+      onboardingDone,
+      emergencyContact,
+      savedLocation,
+      medicationSchedule,
+      medicationLogs,
+
+      saveUserProfile,
+      completeOnboarding,
+      saveEmergencyContact,
+      saveLocation,
+      markMedicationTaken,
+      unmarkMedicationTaken
     }}>
       {children}
     </AppContext.Provider>
   );
 }
 
-export function useAppContext() {
+export const useAppContext = () => {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useAppContext must be used within AppProvider');
+  if (!ctx) throw new Error("AppContext");
   return ctx;
-}
-
-export function genderedText(gender: Gender, female: string, male: string): string {
-  return gender === 'male' ? male : female;
-}
+};
