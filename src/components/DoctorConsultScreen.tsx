@@ -22,9 +22,7 @@ function nowTime() {
   return new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 }
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL as string;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-const CHAT_ENDPOINT = `${SUPABASE_URL}/functions/v1/chat`;
+const CHAT_ENDPOINT = '/api/chat';
 
 const INITIAL_MESSAGE: Message = {
   id: 'm0',
@@ -59,12 +57,14 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
     if (!messageText || isTyping) return;
 
     setError(null);
+
     const userMsg: Message = {
       id: Date.now().toString(),
       from: 'user',
       text: messageText,
       time: nowTime(),
     };
+
     setMessages((prev) => [...prev, userMsg]);
     setInput('');
     setIsTyping(true);
@@ -74,16 +74,22 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-          'Apikey': SUPABASE_ANON_KEY,
         },
-        body: JSON.stringify({ message: messageText, history }),
+        body: JSON.stringify({
+          message: messageText,
+          history,
+        }),
       });
 
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json().catch(() => null);
 
-      const data = await res.json();
-      const replyText: string = data.reply ?? 'מצטערת, לא הצלחתי להשיב כרגע. נסי שוב.';
+      if (!res.ok) {
+        console.error('Chat API error:', res.status, data);
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const replyText: string =
+        data?.reply ?? 'מצטערת, לא הצלחתי להשיב כרגע. נסי שוב.';
 
       const replyMsg: Message = {
         id: (Date.now() + 1).toString(),
@@ -91,13 +97,15 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
         text: replyText,
         time: nowTime(),
       };
+
       setMessages((prev) => [...prev, replyMsg]);
       setHistory((prev) => [
         ...prev,
         { role: 'user', content: messageText },
         { role: 'assistant', content: replyText },
       ]);
-    } catch {
+    } catch (err) {
+      console.error('DoctorConsultScreen sendMessage failed:', err);
       setError('לא ניתן להתחבר לשירות כרגע. בדקי את החיבור לאינטרנט ונסי שוב.');
       setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
       setInput(messageText);
@@ -166,10 +174,11 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
               className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
               style={{ background: msg.from === 'ai' ? theme.gradientCard : '#F3F4F6' }}
             >
-              {msg.from === 'ai'
-                ? <Sparkles size={16} strokeWidth={1.5} color="white" />
-                : <User size={17} strokeWidth={1.5} style={{ color: '#374151' }} />
-              }
+              {msg.from === 'ai' ? (
+                <Sparkles size={16} strokeWidth={1.5} color="white" />
+              ) : (
+                <User size={17} strokeWidth={1.5} style={{ color: '#374151' }} />
+              )}
             </div>
 
             <div className="max-w-[78%]">
@@ -181,9 +190,10 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
                   fontWeight: 400,
                   borderRadius: msg.from === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
                   border: msg.from === 'ai' ? `1.5px solid ${theme.primaryBorder}` : 'none',
-                  boxShadow: msg.from === 'ai'
-                    ? `0 2px 8px ${theme.primary}14`
-                    : `0 4px 12px ${theme.primaryShadow}`,
+                  boxShadow:
+                    msg.from === 'ai'
+                      ? `0 2px 8px ${theme.primary}14`
+                      : `0 4px 12px ${theme.primaryShadow}`,
                   textAlign: 'right',
                   direction: 'rtl',
                 }}
