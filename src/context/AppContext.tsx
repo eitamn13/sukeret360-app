@@ -6,7 +6,15 @@ export function genderedText(
   gender: Gender,
   femaleText: string,
   maleText: string
-) {
+): string {
+  return gender === 'male' ? maleText : femaleText;
+}
+
+export function genderedAction(
+  gender: Gender,
+  femaleText: string,
+  maleText: string
+): string {
   return gender === 'male' ? maleText : femaleText;
 }
 
@@ -43,8 +51,7 @@ export interface MedicationScheduleItem {
 export interface MedicationLogEntry {
   medicationId: string;
   dateKey: string;
-  status: 'taken' | 'missed';
-  recordedAt: string;
+  takenAt: string;
 }
 
 export interface LoggedMeal {
@@ -100,20 +107,20 @@ export const MALE_THEME: Theme = {
   headerShadow: '0 2px 16px rgba(29,78,216,0.08)',
 };
 
-export const DEFAULT_PROFILE: UserProfile = {
+const DEFAULT_PROFILE: UserProfile = {
   name: '',
   age: '',
   diabetesType: '',
   gender: '',
 };
 
-export const DEFAULT_CONTACT: EmergencyContact = {
+const DEFAULT_CONTACT: EmergencyContact = {
   name: '',
   phone: '',
   message: 'אני צריך עזרה דחופה. זה המיקום שלי:',
 };
 
-export const DEFAULT_MEDS: MedicationScheduleItem[] = [
+const DEFAULT_MEDS: MedicationScheduleItem[] = [
   {
     id: 'morning-metformin',
     time: '08:00',
@@ -128,8 +135,8 @@ export const DEFAULT_MEDS: MedicationScheduleItem[] = [
     id: 'noon-pill',
     time: '13:00',
     period: 'צהריים',
-    name: 'גלוקובאנס',
-    dosage: '2.5/500',
+    name: 'כדור לפני ארוחה',
+    dosage: 'גלוקובאנס 2.5/500',
     type: 'pill',
     notes: '30 דקות לפני הארוחה',
     image: '💊',
@@ -138,46 +145,47 @@ export const DEFAULT_MEDS: MedicationScheduleItem[] = [
     id: 'night-insulin',
     time: '21:00',
     period: 'ערב',
-    name: 'לנטוס',
-    dosage: '10 יחידות',
+    name: 'הזרקת אינסולין',
+    dosage: '10 יחידות לנטוס',
     type: 'injection',
     notes: 'הזרקה בבטן או בירך',
     image: '💉',
   },
 ];
 
-interface AppContextType {
+interface AppState {
   userProfile: UserProfile;
   onboardingDone: boolean;
+  theme: Theme;
+  todayMeals: LoggedMeal[];
   emergencyContact: EmergencyContact;
   savedLocation: SavedLocation | null;
   locationPermissionGranted: boolean;
+  notificationPermission: NotificationPermission | 'default';
   medicationSchedule: MedicationScheduleItem[];
   medicationLogs: MedicationLogEntry[];
-  todayMeals: LoggedMeal[];
-  theme: Theme;
-  notificationPermission: NotificationPermission | 'default';
-
-  saveUserProfile: (p: UserProfile) => void;
-  completeOnboarding: () => void;
-  resetOnboarding: () => void;
-  saveEmergencyContact: (c: EmergencyContact) => void;
-  saveLocation: (l: SavedLocation | null) => void;
-  setLocationPermissionGranted: (value: boolean) => void;
-  requestBrowserNotificationPermission: () => Promise<NotificationPermission | 'default'>;
-
-  markMedicationTaken: (id: string) => void;
-  markMedicationMissed: (id: string) => void;
-  clearMedicationStatus: (id: string) => void;
-  isMedicationTakenToday: (id: string) => boolean;
-  isMedicationMissedToday: (id: string) => boolean;
-
-  logMeal: (meal: Omit<LoggedMeal, 'id' | 'loggedAt'>) => void;
 }
 
-const AppContext = createContext<AppContextType | null>(null);
+interface AppContextValue extends AppState {
+  saveUserProfile: (profile: UserProfile) => void;
+  completeOnboarding: () => void;
+  resetOnboarding: () => void;
+  saveEmergencyContact: (contact: EmergencyContact) => void;
+  saveLocation: (location: SavedLocation | null) => void;
+  setLocationPermissionGranted: (granted: boolean) => void;
+  requestBrowserNotificationPermission: () => Promise<NotificationPermission | 'default'>;
+  markMedicationTaken: (medicationId: string) => void;
+  unmarkMedicationTaken: (medicationId: string) => void;
+  isMedicationTakenToday: (medicationId: string) => boolean;
+  getMedicationTakenAt: (medicationId: string) => string | null;
+  logMeal: (meal: Omit<LoggedMeal, 'id' | 'loggedAt'>) => void;
+  clearTodayMeals: () => void;
+  clearMedicationLogs: () => void;
+}
 
-function safeParse<T>(key: string, fallback: T): T {
+const AppContext = createContext<AppContextValue | null>(null);
+
+function readJson<T>(key: string, fallback: T): T {
   try {
     const raw = localStorage.getItem(key);
     if (!raw) return fallback;
@@ -187,11 +195,15 @@ function safeParse<T>(key: string, fallback: T): T {
   }
 }
 
-function saveJson(key: string, value: unknown) {
-  localStorage.setItem(key, JSON.stringify(value));
+function writeJson(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore
+  }
 }
 
-function todayKey() {
+function getTodayKey() {
   return new Date().toISOString().split('T')[0];
 }
 
@@ -200,49 +212,47 @@ function getThemeForProfile(profile: UserProfile): Theme {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [userProfile, setUserProfile] = useState<UserProfile>(
-    safeParse<UserProfile>('userProfile', DEFAULT_PROFILE)
+  const [userProfile, setUserProfile] = useState<UserProfile>(() =>
+    readJson<UserProfile>('userProfile', DEFAULT_PROFILE)
   );
 
-  const [onboardingDone, setOnboardingDone] = useState(
-    localStorage.getItem('onboardingDone') === 'true'
+  const [onboardingDone, setOnboardingDone] = useState<boolean>(
+    () => localStorage.getItem('onboardingDone') === 'true'
   );
 
-  const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>(
-    safeParse<EmergencyContact>('emergency_contact', DEFAULT_CONTACT)
+  const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>(() =>
+    readJson<EmergencyContact>('emergency_contact', DEFAULT_CONTACT)
   );
 
-  const [savedLocation, setSavedLocationState] = useState<SavedLocation | null>(
-    safeParse<SavedLocation | null>('saved_location', null)
+  const [savedLocation, setSavedLocationState] = useState<SavedLocation | null>(() =>
+    readJson<SavedLocation | null>('saved_location', null)
   );
 
-  const [locationPermissionGranted, setLocationPermissionGrantedState] = useState(
-    localStorage.getItem('locationPermissionGranted') === 'true'
-  );
-
-  const [medicationSchedule] = useState<MedicationScheduleItem[]>(DEFAULT_MEDS);
-
-  const [medicationLogs, setMedicationLogs] = useState<MedicationLogEntry[]>(
-    safeParse<MedicationLogEntry[]>('medication_logs', [])
-  );
-
-  const [todayMeals, setTodayMeals] = useState<LoggedMeal[]>(
-    safeParse<LoggedMeal[]>('todayMeals', [])
+  const [locationPermissionGranted, setLocationPermissionGrantedState] = useState<boolean>(
+    () => localStorage.getItem('locationPermissionGranted') === 'true'
   );
 
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'default'>(
     () => {
-      if (typeof window === 'undefined' || typeof Notification === 'undefined') {
-        return 'default';
-      }
+      if (typeof Notification === 'undefined') return 'default';
       return Notification.permission;
     }
+  );
+
+  const [medicationSchedule] = useState<MedicationScheduleItem[]>(DEFAULT_MEDS);
+
+  const [medicationLogs, setMedicationLogs] = useState<MedicationLogEntry[]>(() =>
+    readJson<MedicationLogEntry[]>('medication_logs', [])
+  );
+
+  const [todayMeals, setTodayMeals] = useState<LoggedMeal[]>(() =>
+    readJson<LoggedMeal[]>('todayMeals', [])
   );
 
   const theme = useMemo(() => getThemeForProfile(userProfile), [userProfile]);
 
   useEffect(() => {
-    saveJson('userProfile', userProfile);
+    writeJson('userProfile', userProfile);
   }, [userProfile]);
 
   useEffect(() => {
@@ -250,55 +260,57 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [onboardingDone]);
 
   useEffect(() => {
-    saveJson('emergency_contact', emergencyContact);
+    writeJson('emergency_contact', emergencyContact);
   }, [emergencyContact]);
 
   useEffect(() => {
-    saveJson('saved_location', savedLocation);
+    writeJson('saved_location', savedLocation);
   }, [savedLocation]);
 
   useEffect(() => {
-    localStorage.setItem('locationPermissionGranted', locationPermissionGranted ? 'true' : 'false');
+    localStorage.setItem(
+      'locationPermissionGranted',
+      locationPermissionGranted ? 'true' : 'false'
+    );
   }, [locationPermissionGranted]);
 
   useEffect(() => {
-    saveJson('medication_logs', medicationLogs);
+    writeJson('medication_logs', medicationLogs);
   }, [medicationLogs]);
 
   useEffect(() => {
-    saveJson('todayMeals', todayMeals);
+    writeJson('todayMeals', todayMeals);
   }, [todayMeals]);
 
-  const isMedicationTakenToday = (id: string) => {
+  const isMedicationTakenToday = (medicationId: string) => {
+    const todayKey = getTodayKey();
     return medicationLogs.some(
-      (item) =>
-        item.medicationId === id &&
-        item.dateKey === todayKey() &&
-        item.status === 'taken'
+      (log) => log.medicationId === medicationId && log.dateKey === todayKey
     );
   };
 
-  const isMedicationMissedToday = (id: string) => {
-    return medicationLogs.some(
-      (item) =>
-        item.medicationId === id &&
-        item.dateKey === todayKey() &&
-        item.status === 'missed'
+  const getMedicationTakenAt = (medicationId: string) => {
+    const todayKey = getTodayKey();
+    const entry = medicationLogs.find(
+      (log) => log.medicationId === medicationId && log.dateKey === todayKey
     );
+    return entry?.takenAt ?? null;
   };
 
   const requestBrowserNotificationPermission = async (): Promise<NotificationPermission | 'default'> => {
-    if (typeof window === 'undefined' || typeof Notification === 'undefined') {
+    if (typeof Notification === 'undefined') return 'default';
+
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      return permission;
+    } catch {
       return 'default';
     }
-
-    const permission = await Notification.requestPermission();
-    setNotificationPermission(permission);
-    return permission;
   };
 
-  const saveUserProfile = (p: UserProfile) => {
-    setUserProfile(p);
+  const saveUserProfile = (profile: UserProfile) => {
+    setUserProfile(profile);
   };
 
   const completeOnboarding = () => {
@@ -310,53 +322,43 @@ export function AppProvider({ children }: { children: ReactNode }) {
     window.location.reload();
   };
 
-  const saveEmergencyContact = (c: EmergencyContact) => {
-    setEmergencyContact(c);
+  const saveEmergencyContact = (contact: EmergencyContact) => {
+    setEmergencyContact(contact);
   };
 
-  const saveLocation = (l: SavedLocation | null) => {
-    setSavedLocationState(l);
+  const saveLocation = (location: SavedLocation | null) => {
+    setSavedLocationState(location);
   };
 
-  const setLocationPermissionGranted = (value: boolean) => {
-    setLocationPermissionGrantedState(value);
+  const setLocationPermissionGranted = (granted: boolean) => {
+    setLocationPermissionGrantedState(granted);
   };
 
-  const upsertMedicationStatus = (id: string, status: 'taken' | 'missed') => {
-    const key = todayKey();
+  const markMedicationTaken = (medicationId: string) => {
+    const todayKey = getTodayKey();
 
     setMedicationLogs((prev) => {
-      const withoutCurrent = prev.filter(
-        (entry) => !(entry.medicationId === id && entry.dateKey === key)
+      const withoutOld = prev.filter(
+        (log) => !(log.medicationId === medicationId && log.dateKey === todayKey)
       );
 
       return [
-        ...withoutCurrent,
+        ...withoutOld,
         {
-          medicationId: id,
-          dateKey: key,
-          status,
-          recordedAt: new Date().toISOString(),
+          medicationId,
+          dateKey: todayKey,
+          takenAt: new Date().toISOString(),
         },
       ];
     });
   };
 
-  const markMedicationTaken = (id: string) => {
-    upsertMedicationStatus(id, 'taken');
-  };
-
-  const markMedicationMissed = (id: string) => {
-    if (isMedicationTakenToday(id)) return;
-    upsertMedicationStatus(id, 'missed');
-  };
-
-  const clearMedicationStatus = (id: string) => {
-    const key = todayKey();
+  const unmarkMedicationTaken = (medicationId: string) => {
+    const todayKey = getTodayKey();
 
     setMedicationLogs((prev) =>
       prev.filter(
-        (entry) => !(entry.medicationId === id && entry.dateKey === key)
+        (log) => !(log.medicationId === medicationId && log.dateKey === todayKey)
       )
     );
   };
@@ -372,47 +374,67 @@ export function AppProvider({ children }: { children: ReactNode }) {
     ]);
   };
 
+  const clearTodayMeals = () => {
+    setTodayMeals([]);
+  };
+
+  const clearMedicationLogs = () => {
+    setMedicationLogs([]);
+  };
+
   useEffect(() => {
-    if (typeof window === 'undefined' || typeof Notification === 'undefined') return;
-    if (Notification.permission === 'default') return;
-    setNotificationPermission(Notification.permission);
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission === 'default') {
+      void requestBrowserNotificationPermission();
+    }
   }, []);
 
-  return (
-    <AppContext.Provider
-      value={{
-        userProfile,
-        onboardingDone,
-        emergencyContact,
-        savedLocation,
-        locationPermissionGranted,
-        medicationSchedule,
-        medicationLogs,
-        todayMeals,
-        theme,
-        notificationPermission,
-        saveUserProfile,
-        completeOnboarding,
-        resetOnboarding,
-        saveEmergencyContact,
-        saveLocation,
-        setLocationPermissionGranted,
-        requestBrowserNotificationPermission,
-        markMedicationTaken,
-        markMedicationMissed,
-        clearMedicationStatus,
-        isMedicationTakenToday,
-        isMedicationMissedToday,
-        logMeal,
-      }}
-    >
-      {children}
-    </AppContext.Provider>
+  const value = useMemo<AppContextValue>(
+    () => ({
+      userProfile,
+      onboardingDone,
+      theme,
+      todayMeals,
+      emergencyContact,
+      savedLocation,
+      locationPermissionGranted,
+      notificationPermission,
+      medicationSchedule,
+      medicationLogs,
+      saveUserProfile,
+      completeOnboarding,
+      resetOnboarding,
+      saveEmergencyContact,
+      saveLocation,
+      setLocationPermissionGranted,
+      requestBrowserNotificationPermission,
+      markMedicationTaken,
+      unmarkMedicationTaken,
+      isMedicationTakenToday,
+      getMedicationTakenAt,
+      logMeal,
+      clearTodayMeals,
+      clearMedicationLogs,
+    }),
+    [
+      userProfile,
+      onboardingDone,
+      theme,
+      todayMeals,
+      emergencyContact,
+      savedLocation,
+      locationPermissionGranted,
+      notificationPermission,
+      medicationSchedule,
+      medicationLogs,
+    ]
   );
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
-export const useAppContext = () => {
+export function useAppContext() {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useAppContext must be used inside AppProvider');
+  if (!ctx) throw new Error('useAppContext must be used within AppProvider');
   return ctx;
-};
+}
