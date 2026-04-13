@@ -5,7 +5,7 @@ const handleSend = async () => {
   let aiReply = "";
 
   try {
-    const response = await fetch("https://sukeret-ai-api.vercel.app/api/chat", {
+    const response = await fetch("/api/chat", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -13,7 +13,6 @@ const handleSend = async () => {
       body: JSON.stringify({ message: userMessage }),
     });
 
-    // 🔥 אם השרת מחזיר שגיאה
     if (!response.ok) {
       console.error("Server error:", response.status);
       aiReply = "השרת לא זמין כרגע 😔";
@@ -21,7 +20,6 @@ const handleSend = async () => {
       const data = await response.json();
       aiReply = data.reply || "לא הצלחתי לענות 😔";
     }
-
   } catch (error) {
     console.error("Fetch error:", error);
     aiReply = "שגיאת חיבור 😢";
@@ -49,6 +47,6 @@ const handleSend = async () => {
     replies: 0,
   };
 
-  setPosts(prev => [newPost, aiPost, ...prev]);
+  setPosts((prev) => [newPost, aiPost, ...prev]);
   setMessage("");
 };
