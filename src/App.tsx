@@ -8,7 +8,7 @@ import { ActionGrid } from './components/ActionGrid';
 import { CommunitySection } from './components/CommunitySection';
 import { SmartMealLogger } from './components/SmartMealLogger';
 import { SugarModal } from './components/SugarModal';
-import { CommunityScreen } from './components/CommunityScreen';
+import CommunityScreen from './components/CommunityScreen';
 import { ComingSoonModal } from './components/ComingSoonModal';
 import { MedicationsScreen } from './components/MedicationsScreen';
 import { DailyTipModal } from './components/DailyTipModal';
@@ -40,11 +40,26 @@ function AppInner() {
   };
 
   const handleActionClick = (id: string, label: string) => {
-    if (id === 'medications') { setShowMedications(true); return; }
-    if (id === 'tip') { setShowDailyTip(true); return; }
-    if (id === 'meals') { setShowMeals(true); return; }
-    if (id === 'history') { setShowHistory(true); return; }
-    if (id === 'doctor') { setShowDoctorConsult(true); return; }
+    if (id === 'medications') {
+      setShowMedications(true);
+      return;
+    }
+    if (id === 'tip') {
+      setShowDailyTip(true);
+      return;
+    }
+    if (id === 'meals') {
+      setShowMeals(true);
+      return;
+    }
+    if (id === 'history') {
+      setShowHistory(true);
+      return;
+    }
+    if (id === 'doctor') {
+      setShowDoctorConsult(true);
+      return;
+    }
     setComingSoon(label);
   };
 
