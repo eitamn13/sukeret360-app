@@ -1,14 +1,14 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState } from "react";
+
+type SOSModalProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
 
 type EmergencyContact = {
   name: string;
   phone: string;
   message: string;
-};
-
-type SOSModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
 };
 
 const DEFAULT_CONTACT: EmergencyContact = {
@@ -20,9 +20,12 @@ const DEFAULT_CONTACT: EmergencyContact = {
 export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
   const [countdown, setCountdown] = useState(3);
   const [isCounting, setIsCounting] = useState(false);
-  const [contact, setContact] = useState<EmergencyContact>(DEFAULT_CONTACT);
   const [locationText, setLocationText] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
+  const [contact, setContact] = useState<EmergencyContact>(DEFAULT_CONTACT);
+  const [alarmAudio] = useState(
+    () => new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg")
+  );
 
   useEffect(() => {
     const saved = localStorage.getItem("emergency_contact");
@@ -39,14 +42,17 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
     if (!isOpen) {
       setCountdown(3);
       setIsCounting(false);
-      return;
+      alarmAudio.pause();
+      alarmAudio.currentTime = 0;
     }
-  }, [isOpen]);
+  }, [isOpen, alarmAudio]);
 
   useEffect(() => {
     if (!isCounting) return;
 
     if (countdown <= 0) {
+      alarmAudio.pause();
+      alarmAudio.currentTime = 0;
       window.location.href = "tel:101";
       setIsCounting(false);
       onClose();
@@ -55,15 +61,25 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
 
     const timer = setTimeout(() => setCountdown((c) => c - 1), 1000);
     return () => clearTimeout(timer);
-  }, [isCounting, countdown, onClose]);
+  }, [isCounting, countdown, onClose, alarmAudio]);
 
-  const hasContact = useMemo(() => {
-    return contact.name.trim() !== "" && contact.phone.trim() !== "";
-  }, [contact]);
+  const startEmergencyCall = () => {
+    setCountdown(3);
+    setIsCounting(true);
 
-  const saveContact = () => {
-    localStorage.setItem("emergency_contact", JSON.stringify(contact));
-    alert("איש הקשר נשמר");
+    if (navigator.vibrate) {
+      navigator.vibrate([300, 100, 300, 100, 500]);
+    }
+
+    alarmAudio.loop = true;
+    alarmAudio.play().catch(() => {});
+  };
+
+  const cancelEmergency = () => {
+    setIsCounting(false);
+    setCountdown(3);
+    alarmAudio.pause();
+    alarmAudio.currentTime = 0;
   };
 
   const getLocation = () => {
@@ -91,8 +107,8 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
   };
 
   const sendSmsToContact = () => {
-    if (!hasContact) {
-      alert("קודם שמרי איש קשר חירום");
+    if (!contact.phone.trim()) {
+      alert("אין איש קשר לחירום שמור");
       return;
     }
 
@@ -101,8 +117,8 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
   };
 
   const sendWhatsAppToContact = () => {
-    if (!hasContact) {
-      alert("קודם שמרי איש קשר חירום");
+    if (!contact.phone.trim()) {
+      alert("אין איש קשר לחירום שמור");
       return;
     }
 
@@ -131,6 +147,8 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
         style={{
           width: "100%",
           maxWidth: "420px",
+          maxHeight: "90vh",
+          overflowY: "auto",
           background: "linear-gradient(180deg, #fff5f5 0%, #ffe3e3 100%)",
           borderRadius: "24px",
           padding: "20px",
@@ -151,28 +169,22 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
             מצב חירום
           </div>
           <div style={{ fontSize: "14px", opacity: 0.95 }}>
-            אפשר להתקשר למד"א, לשתף מיקום, או לשלוח הודעה לאיש קשר.
+            בחרי פעולה מהירה. לא צריך למלא שום דבר עכשיו.
           </div>
         </div>
 
-        <div
-          style={{
-            display: "grid",
-            gap: "10px",
-            marginBottom: "16px",
-          }}
-        >
+        <div style={{ display: "grid", gap: "10px", marginBottom: "16px" }}>
           <button
-            onClick={() => {
-              setCountdown(3);
-              setIsCounting(true);
-            }}
+            onClick={startEmergencyCall}
             style={buttonStyle("#dc2626", "white")}
           >
-            {isCounting ? `מחייג למד"א בעוד ${countdown}...` : "התקשרי למד״א"}
+            {isCounting ? `מחייג למד״א בעוד ${countdown}...` : "התקשרי למד״א"}
           </button>
 
-          <button onClick={getLocation} style={buttonStyle("#2563eb", "white")}>
+          <button
+            onClick={getLocation}
+            style={buttonStyle("#2563eb", "white")}
+          >
             {loadingLocation ? "מאתר מיקום..." : "שלחי מיקום"}
           </button>
 
@@ -192,10 +204,7 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
 
           {isCounting && (
             <button
-              onClick={() => {
-                setIsCounting(false);
-                setCountdown(3);
-              }}
+              onClick={cancelEmergency}
               style={buttonStyle("#f3f4f6", "#111827")}
             >
               בטלי
@@ -208,7 +217,6 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
             background: "white",
             borderRadius: "18px",
             padding: "14px",
-            marginBottom: "14px",
             border: "1px solid #fecaca",
           }}
         >
@@ -216,43 +224,6 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
           <div style={{ fontSize: "13px", wordBreak: "break-word", color: "#374151" }}>
             {locationText || "עדיין לא נאסף מיקום"}
           </div>
-        </div>
-
-        <div
-          style={{
-            background: "white",
-            borderRadius: "18px",
-            padding: "14px",
-            border: "1px solid #fecaca",
-          }}
-        >
-          <div style={sectionTitle}>איש קשר לחירום</div>
-
-          <input
-            value={contact.name}
-            onChange={(e) => setContact({ ...contact, name: e.target.value })}
-            placeholder="שם איש קשר"
-            style={inputStyle}
-          />
-
-          <input
-            value={contact.phone}
-            onChange={(e) => setContact({ ...contact, phone: e.target.value })}
-            placeholder="טלפון איש קשר"
-            style={inputStyle}
-          />
-
-          <textarea
-            value={contact.message}
-            onChange={(e) => setContact({ ...contact, message: e.target.value })}
-            placeholder="הודעת חירום"
-            rows={3}
-            style={{ ...inputStyle, resize: "vertical", minHeight: "80px" }}
-          />
-
-          <button onClick={saveContact} style={buttonStyle("#111827", "white")}>
-            שמרי איש קשר
-          </button>
         </div>
 
         <button
@@ -279,24 +250,14 @@ const buttonStyle = (background: string, color: string): React.CSSProperties => 
   width: "100%",
   border: "none",
   borderRadius: "14px",
-  padding: "14px 16px",
+  padding: "16px",
   background,
   color,
   fontWeight: 800,
-  fontSize: "15px",
+  fontSize: "18px",
   cursor: "pointer",
   boxShadow: "0 8px 20px rgba(0,0,0,0.12)",
 });
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  marginBottom: "10px",
-  padding: "12px 14px",
-  borderRadius: "12px",
-  border: "1px solid #d1d5db",
-  fontSize: "14px",
-  boxSizing: "border-box",
-};
 
 const sectionTitle: React.CSSProperties = {
   fontSize: "16px",
