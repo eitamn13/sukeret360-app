@@ -1,329 +1,433 @@
-import { X, Pill, Syringe, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
-import { useState, useEffect } from 'react';
-import {
-  useAppContext,
-  genderedText,
-  MedicationScheduleItem,
-} from '../context/AppContext';
+import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 
-interface MedicationsScreenProps {
-  onClose: () => void;
+export type Gender = 'female' | 'male' | '';
+
+export function genderedText(
+  gender: Gender,
+  femaleText: string,
+  maleText: string
+): string {
+  return gender === 'male' ? maleText : femaleText;
 }
 
-function isPast(timeStr: string): boolean {
-  const [h, m] = timeStr.split(':').map(Number);
-  const now = new Date();
-  return now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m);
+export interface UserProfile {
+  name: string;
+  age: string;
+  diabetesType: '1' | '2' | '';
+  gender: Gender;
 }
 
-export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
-  const {
-    medicationSchedule,
-    isMedicationTakenToday,
-    markMedicationTaken,
-    unmarkMedicationTaken,
-    theme,
-    userProfile,
-  } = useAppContext();
+export interface EmergencyContact {
+  name: string;
+  phone: string;
+  message: string;
+}
 
-  const [justMarked, setJustMarked] = useState<string | null>(null);
+export interface SavedLocation {
+  lat: number;
+  lng: number;
+  updatedAt: string;
+}
+
+export interface MedicationScheduleItem {
+  id: string;
+  time: string;
+  period: string;
+  name: string;
+  dosage: string;
+  type: 'pill' | 'injection';
+  notes?: string;
+  image?: string;
+}
+
+export interface MedicationLogEntry {
+  medicationId: string;
+  dateKey: string;
+  takenAt: string;
+}
+
+export interface LoggedMeal {
+  id: string;
+  name: string;
+  icon: string;
+  carbs: number;
+  loggedAt: string;
+}
+
+export interface Theme {
+  primary: string;
+  primaryDark: string;
+  primaryLight: string;
+  primaryBorder: string;
+  primaryBg: string;
+  primaryShadow: string;
+  primaryMuted: string;
+  gradientCard: string;
+  gradientFull: string;
+  headerBg: string;
+  headerBorder: string;
+  headerShadow: string;
+}
+
+export const FEMALE_THEME: Theme = {
+  primary: '#E11D48',
+  primaryDark: '#BE123C',
+  primaryLight: '#9F1239',
+  primaryBorder: '#FECDD3',
+  primaryBg: '#FFF1F2',
+  primaryShadow: 'rgba(225,29,72,0.35)',
+  primaryMuted: '#FDA4AF',
+  gradientCard: 'linear-gradient(135deg, #E11D48 0%, #BE123C 55%, #9F1239 100%)',
+  gradientFull: 'linear-gradient(160deg, #FFF1F2 0%, #FFE4E6 60%, #FECDD3 100%)',
+  headerBg: 'rgba(255,241,242,0.94)',
+  headerBorder: '#FECDD3',
+  headerShadow: '0 2px 16px rgba(225,29,72,0.08)',
+};
+
+export const MALE_THEME: Theme = {
+  primary: '#1D4ED8',
+  primaryDark: '#1E40AF',
+  primaryLight: '#1E3A8A',
+  primaryBorder: '#BFDBFE',
+  primaryBg: '#EFF6FF',
+  primaryShadow: 'rgba(29,78,216,0.35)',
+  primaryMuted: '#93C5FD',
+  gradientCard: 'linear-gradient(135deg, #1D4ED8 0%, #1E40AF 55%, #1E3A8A 100%)',
+  gradientFull: 'linear-gradient(160deg, #EFF6FF 0%, #DBEAFE 60%, #BFDBFE 100%)',
+  headerBg: 'rgba(239,246,255,0.94)',
+  headerBorder: '#BFDBFE',
+  headerShadow: '0 2px 16px rgba(29,78,216,0.08)',
+};
+
+const DEFAULT_PROFILE: UserProfile = {
+  name: '',
+  age: '',
+  diabetesType: '',
+  gender: '',
+};
+
+const DEFAULT_CONTACT: EmergencyContact = {
+  name: '',
+  phone: '',
+  message: 'אני צריך עזרה דחופה. זה המיקום שלי:',
+};
+
+const DEFAULT_MEDS: MedicationScheduleItem[] = [
+  {
+    id: 'morning-metformin',
+    time: '08:00',
+    period: 'בוקר',
+    name: 'מטפורמין',
+    dosage: '500 מ"ג',
+    type: 'pill',
+    notes: 'ליטול עם ארוחת הבוקר',
+    image: '💊',
+  },
+  {
+    id: 'noon-pill',
+    time: '13:00',
+    period: 'צהריים',
+    name: 'כדור לפני ארוחה',
+    dosage: 'גלוקובאנס 2.5/500',
+    type: 'pill',
+    notes: '30 דקות לפני הארוחה',
+    image: '💊',
+  },
+  {
+    id: 'night-insulin',
+    time: '21:00',
+    period: 'ערב',
+    name: 'הזרקת אינסולין',
+    dosage: '10 יחידות לנטוס',
+    type: 'injection',
+    notes: 'הזרקה בבטן או בירך',
+    image: '💉',
+  },
+];
+
+interface AppState {
+  userProfile: UserProfile;
+  onboardingDone: boolean;
+  theme: Theme;
+  todayMeals: LoggedMeal[];
+  emergencyContact: EmergencyContact;
+  savedLocation: SavedLocation | null;
+  locationPermissionGranted: boolean;
+  notificationPermission: NotificationPermission | 'default';
+  medicationSchedule: MedicationScheduleItem[];
+  medicationLogs: MedicationLogEntry[];
+}
+
+interface AppContextValue extends AppState {
+  saveUserProfile: (profile: UserProfile) => void;
+  completeOnboarding: () => void;
+  resetOnboarding: () => void;
+  saveEmergencyContact: (contact: EmergencyContact) => void;
+  saveLocation: (location: SavedLocation | null) => void;
+  setLocationPermissionGranted: (granted: boolean) => void;
+  requestBrowserNotificationPermission: () => Promise<NotificationPermission | 'default'>;
+  markMedicationTaken: (medicationId: string) => void;
+  unmarkMedicationTaken: (medicationId: string) => void;
+  isMedicationTakenToday: (medicationId: string) => boolean;
+  getMedicationTakenAt: (medicationId: string) => string | null;
+  logMeal: (meal: Omit<LoggedMeal, 'id' | 'loggedAt'>) => void;
+  clearTodayMeals: () => void;
+  clearMedicationLogs: () => void;
+}
+
+const AppContext = createContext<AppContextValue | null>(null);
+
+function readJson<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw) as T;
+  } catch {
+    return fallback;
+  }
+}
+
+function writeJson(key: string, value: unknown) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore
+  }
+}
+
+function getTodayKey() {
+  return new Date().toISOString().split('T')[0];
+}
+
+function getThemeForProfile(profile: UserProfile): Theme {
+  return profile.gender === 'male' ? MALE_THEME : FEMALE_THEME;
+}
+
+export function AppProvider({ children }: { children: ReactNode }) {
+  const [userProfile, setUserProfile] = useState<UserProfile>(() =>
+    readJson<UserProfile>('userProfile', DEFAULT_PROFILE)
+  );
+
+  const [onboardingDone, setOnboardingDone] = useState<boolean>(
+    () => localStorage.getItem('onboardingDone') === 'true'
+  );
+
+  const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>(() =>
+    readJson<EmergencyContact>('emergency_contact', DEFAULT_CONTACT)
+  );
+
+  const [savedLocation, setSavedLocationState] = useState<SavedLocation | null>(() =>
+    readJson<SavedLocation | null>('saved_location', null)
+  );
+
+  const [locationPermissionGranted, setLocationPermissionGrantedState] = useState<boolean>(
+    () => localStorage.getItem('locationPermissionGranted') === 'true'
+  );
+
+  const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'default'>(
+    () => {
+      if (typeof Notification === 'undefined') return 'default';
+      return Notification.permission;
+    }
+  );
+
+  const [medicationSchedule] = useState<MedicationScheduleItem[]>(DEFAULT_MEDS);
+
+  const [medicationLogs, setMedicationLogs] = useState<MedicationLogEntry[]>(() =>
+    readJson<MedicationLogEntry[]>('medication_logs', [])
+  );
+
+  const [todayMeals, setTodayMeals] = useState<LoggedMeal[]>(() =>
+    readJson<LoggedMeal[]>('todayMeals', [])
+  );
+
+  const theme = useMemo(() => getThemeForProfile(userProfile), [userProfile]);
 
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
+    writeJson('userProfile', userProfile);
+  }, [userProfile]);
 
-  const toggle = (id: string) => {
-    const isDone = isMedicationTakenToday(id);
+  useEffect(() => {
+    localStorage.setItem('onboardingDone', onboardingDone ? 'true' : 'false');
+  }, [onboardingDone]);
 
-    if (isDone) {
-      unmarkMedicationTaken(id);
-      return;
-    }
+  useEffect(() => {
+    writeJson('emergency_contact', emergencyContact);
+  }, [emergencyContact]);
 
-    markMedicationTaken(id);
-    setJustMarked(id);
-    setTimeout(() => setJustMarked(null), 1000);
+  useEffect(() => {
+    writeJson('saved_location', savedLocation);
+  }, [savedLocation]);
+
+  useEffect(() => {
+    localStorage.setItem(
+      'locationPermissionGranted',
+      locationPermissionGranted ? 'true' : 'false'
+    );
+  }, [locationPermissionGranted]);
+
+  useEffect(() => {
+    writeJson('medication_logs', medicationLogs);
+  }, [medicationLogs]);
+
+  useEffect(() => {
+    writeJson('todayMeals', todayMeals);
+  }, [todayMeals]);
+
+  const isMedicationTakenToday = (medicationId: string) => {
+    const todayKey = getTodayKey();
+    return medicationLogs.some(
+      (log) => log.medicationId === medicationId && log.dateKey === todayKey
+    );
   };
 
-  const doneCount = medicationSchedule.filter((med) =>
-    isMedicationTakenToday(med.id)
-  ).length;
+  const getMedicationTakenAt = (medicationId: string) => {
+    const todayKey = getTodayKey();
+    const entry = medicationLogs.find(
+      (log) => log.medicationId === medicationId && log.dateKey === todayKey
+    );
+    return entry?.takenAt ?? null;
+  };
 
-  const progress = Math.round((doneCount / medicationSchedule.length) * 100);
+  const requestBrowserNotificationPermission = async (): Promise<NotificationPermission | 'default'> => {
+    if (typeof Notification === 'undefined') return 'default';
 
-  return (
-    <div
-      className="fixed inset-0 z-50 flex flex-col animate-slide-in-right"
-      style={{ background: theme.gradientFull }}
-    >
-      <div
-        className="flex-shrink-0 px-5 pt-12 pb-4"
-        style={{
-          backgroundColor: theme.headerBg,
-          backdropFilter: 'blur(14px)',
-          WebkitBackdropFilter: 'blur(14px)',
-          borderBottom: `1px solid ${theme.primaryBorder}`,
-        }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95"
-            style={{
-              border: `1.5px solid ${theme.primaryBorder}`,
-              backgroundColor: 'white',
-            }}
-            aria-label={genderedText(userProfile.gender, 'סגרי', 'סגור')}
-          >
-            <X size={20} strokeWidth={2} style={{ color: theme.primary }} />
-          </button>
+    try {
+      const permission = await Notification.requestPermission();
+      setNotificationPermission(permission);
+      return permission;
+    } catch {
+      return 'default';
+    }
+  };
 
-          <div className="text-center">
-            <h1
-              className="text-lg leading-tight"
-              style={{
-                color: '#1F2937',
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
-              }}
-            >
-              ניהול תרופות יומי
-            </h1>
-            <p
-              className="text-xs mt-0.5"
-              style={{ color: theme.primaryMuted, fontWeight: 500 }}
-            >
-              {new Date().toLocaleDateString('he-IL', {
-                weekday: 'long',
-                day: 'numeric',
-                month: 'long',
-              })}
-            </p>
-          </div>
+  const saveUserProfile = (profile: UserProfile) => {
+    setUserProfile(profile);
+  };
 
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{
-              backgroundColor: theme.primaryBg,
-              border: `1.5px solid ${theme.primaryBorder}`,
-            }}
-          >
-            <Pill size={18} strokeWidth={1.5} style={{ color: theme.primary }} />
-          </div>
-        </div>
+  const completeOnboarding = () => {
+    setOnboardingDone(true);
+  };
 
-        <div
-          className="rounded-xl p-3.5"
-          style={{
-            backgroundColor: '#F9FAFB',
-            border: '1px solid #F3F4F6',
-          }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <span
-              className="text-xs"
-              style={{ color: '#6B7280', fontWeight: 600 }}
-            >
-              {doneCount}/{medicationSchedule.length} בוצעו
-            </span>
-            <span
-              className="text-xs"
-              style={{
-                color: progress === 100 ? '#16A34A' : theme.primary,
-                fontWeight: 700,
-              }}
-            >
-              {progress}%
-            </span>
-          </div>
+  const resetOnboarding = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
 
-          <div
-            className="w-full h-2 rounded-full overflow-hidden"
-            style={{ backgroundColor: '#E5E7EB' }}
-          >
-            <div
-              className="h-full rounded-full transition-all duration-500 ease-out"
-              style={{
-                width: `${progress}%`,
-                backgroundColor: progress === 100 ? '#16A34A' : theme.primary,
-              }}
-            />
-          </div>
-        </div>
-      </div>
+  const saveEmergencyContact = (contact: EmergencyContact) => {
+    setEmergencyContact(contact);
+  };
 
-      <div className="flex-1 overflow-y-auto px-4 py-5">
-        <div className="relative">
-          <div
-            className="absolute right-[1.85rem] top-6 bottom-6 w-0.5"
-            style={{ backgroundColor: '#E5E7EB' }}
-          />
+  const saveLocation = (location: SavedLocation | null) => {
+    setSavedLocationState(location);
+  };
 
-          <div className="space-y-4">
-            {medicationSchedule.map((med: MedicationScheduleItem) => {
-              const isDone = isMedicationTakenToday(med.id);
-              const isJust = justMarked === med.id;
-              const past = isPast(med.time);
+  const setLocationPermissionGranted = (granted: boolean) => {
+    setLocationPermissionGrantedState(granted);
+  };
 
-              return (
-                <div key={med.id} className="flex items-start gap-4">
-                  <div className="relative z-10 flex-shrink-0 mt-5">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-400"
-                      style={{
-                        backgroundColor: isDone ? '#16A34A' : past ? theme.primaryBg : '#F3F4F6',
-                        border: `2px solid ${isDone ? '#16A34A' : past ? theme.primary : '#E5E7EB'}`,
-                      }}
-                    >
-                      {isDone ? (
-                        <CheckCircle2 size={14} color="white" strokeWidth={2.5} />
-                      ) : past ? (
-                        <AlertCircle size={14} strokeWidth={2} style={{ color: '#E11D48' }} />
-                      ) : (
-                        <Clock size={13} strokeWidth={2} style={{ color: '#9CA3AF' }} />
-                      )}
-                    </div>
-                  </div>
+  const markMedicationTaken = (medicationId: string) => {
+    const todayKey = getTodayKey();
 
-                  <div
-                    className={`flex-1 rounded-2xl p-5 transition-all duration-300 ${isJust ? 'scale-[1.01]' : ''}`}
-                    style={{
-                      backgroundColor: isDone ? '#F0FDF4' : '#FFFFFF',
-                      border: `1.5px solid ${isDone ? '#BBF7D0' : '#F3F4F6'}`,
-                      boxShadow: isDone
-                        ? '0 2px 12px rgba(22, 163, 74, 0.08)'
-                        : '0 2px 8px rgba(0,0,0,0.05)',
-                    }}
-                  >
-                    <div className="flex items-start justify-between gap-3 mb-4">
-                      <div
-                        className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0"
-                        style={{
-                          backgroundColor: isDone ? '#DCFCE7' : theme.primaryBg,
-                          color: isDone ? '#16A34A' : theme.primary,
-                        }}
-                      >
-                        {med.type === 'injection' ? (
-                          <Syringe size={20} strokeWidth={1.5} />
-                        ) : (
-                          <Pill size={20} strokeWidth={1.5} />
-                        )}
-                      </div>
+    setMedicationLogs((prev) => {
+      const withoutOld = prev.filter(
+        (log) => !(log.medicationId === medicationId && log.dateKey === todayKey)
+      );
 
-                      <div className="flex-1 text-right">
-                        <div className="flex items-center justify-end gap-2 mb-0.5">
-                          <h3
-                            className="text-base leading-tight"
-                            style={{
-                              color: isDone ? '#15803D' : '#1F2937',
-                              fontWeight: 800,
-                              letterSpacing: '-0.01em',
-                            }}
-                          >
-                            {med.name}
-                          </h3>
-                          <span
-                            className="text-xs px-2 py-0.5 rounded-lg"
-                            style={{
-                              backgroundColor: isDone ? '#DCFCE7' : theme.primaryBg,
-                              color: isDone ? '#15803D' : theme.primary,
-                              fontWeight: 700,
-                            }}
-                          >
-                            {med.period}
-                          </span>
-                        </div>
+      return [
+        ...withoutOld,
+        {
+          medicationId,
+          dateKey: todayKey,
+          takenAt: new Date().toISOString(),
+        },
+      ];
+    });
+  };
 
-                        <p
-                          className="text-sm"
-                          style={{
-                            color: isDone ? '#16A34A' : '#6B7280',
-                            fontWeight: 500,
-                          }}
-                        >
-                          {med.dosage}
-                        </p>
-                      </div>
-                    </div>
+  const unmarkMedicationTaken = (medicationId: string) => {
+    const todayKey = getTodayKey();
 
-                    <div
-                      className="flex items-center justify-between mb-4 pb-4"
-                      style={{
-                        borderBottom: `1px solid ${isDone ? '#BBF7D0' : '#F3F4F6'}`,
-                      }}
-                    >
-                      <p
-                        className="text-xs"
-                        style={{ color: '#9CA3AF', fontWeight: 400 }}
-                      >
-                        {med.notes}
-                      </p>
+    setMedicationLogs((prev) =>
+      prev.filter(
+        (log) => !(log.medicationId === medicationId && log.dateKey === todayKey)
+      )
+    );
+  };
 
-                      <div className="flex items-center gap-1.5">
-                        <Clock size={13} strokeWidth={2} style={{ color: '#9CA3AF' }} />
-                        <span
-                          className="text-sm"
-                          style={{
-                            color: isDone ? '#15803D' : '#374151',
-                            fontWeight: 700,
-                          }}
-                        >
-                          {med.time}
-                        </span>
-                      </div>
-                    </div>
+  const logMeal = (meal: Omit<LoggedMeal, 'id' | 'loggedAt'>) => {
+    setTodayMeals((prev) => [
+      ...prev,
+      {
+        ...meal,
+        id: Date.now().toString(),
+        loggedAt: new Date().toISOString(),
+      },
+    ]);
+  };
 
-                    <button
-                      onClick={() => toggle(med.id)}
-                      className="w-full h-12 rounded-xl text-base transition-all duration-300 active:scale-[0.97]"
-                      style={{
-                        backgroundColor: isDone ? '#16A34A' : theme.primary,
-                        color: '#ffffff',
-                        fontWeight: 700,
-                        boxShadow: isDone
-                          ? '0 4px 16px rgba(22, 163, 74, 0.3)'
-                          : `0 4px 16px ${theme.primaryShadow}`,
-                      }}
-                    >
-                      {isDone
-                        ? genderedText(userProfile.gender, 'בוצע ✓', 'בוצע ✓')
-                        : genderedText(userProfile.gender, 'סמני כבוצע', 'סמן כבוצע')}
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+  const clearTodayMeals = () => {
+    setTodayMeals([]);
+  };
 
-        {doneCount === medicationSchedule.length && (
-          <div
-            className="mt-5 rounded-2xl p-5 text-center animate-fade-in"
-            style={{
-              backgroundColor: '#F0FDF4',
-              border: '1.5px solid #BBF7D0',
-            }}
-          >
-            <p
-              className="text-lg"
-              style={{ color: '#15803D', fontWeight: 800 }}
-            >
-              כל התרופות נלקחו
-            </p>
-            <p
-              className="text-sm mt-1"
-              style={{ color: '#16A34A', fontWeight: 500 }}
-            >
-              {genderedText(userProfile.gender, 'עבודה מצוינת! המשיכי כך', 'עבודה מצוינת! המשך כך')}
-            </p>
-          </div>
-        )}
+  const clearMedicationLogs = () => {
+    setMedicationLogs([]);
+  };
 
-        <div className="h-6" />
-      </div>
-    </div>
+  useEffect(() => {
+    if (typeof Notification === 'undefined') return;
+    if (Notification.permission === 'default') {
+      void requestBrowserNotificationPermission();
+    }
+  }, []);
+
+  const value = useMemo<AppContextValue>(
+    () => ({
+      userProfile,
+      onboardingDone,
+      theme,
+      todayMeals,
+      emergencyContact,
+      savedLocation,
+      locationPermissionGranted,
+      notificationPermission,
+      medicationSchedule,
+      medicationLogs,
+      saveUserProfile,
+      completeOnboarding,
+      resetOnboarding,
+      saveEmergencyContact,
+      saveLocation,
+      setLocationPermissionGranted,
+      requestBrowserNotificationPermission,
+      markMedicationTaken,
+      unmarkMedicationTaken,
+      isMedicationTakenToday,
+      getMedicationTakenAt,
+      logMeal,
+      clearTodayMeals,
+      clearMedicationLogs,
+    }),
+    [
+      userProfile,
+      onboardingDone,
+      theme,
+      todayMeals,
+      emergencyContact,
+      savedLocation,
+      locationPermissionGranted,
+      notificationPermission,
+      medicationSchedule,
+      medicationLogs,
+    ]
   );
+
+  return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
+
+export function useAppContext() {
+  const ctx = useContext(AppContext);
+  if (!ctx) throw new Error('useAppContext must be used within AppProvider');
+  return ctx;
+}  הבעיה?‮રકોટ editor.parseError: Unexpected EOF તરીકે
+The issue is due to a missing closing brace `}` for the `Theme` interface. I’ll add it right after the `headerShadow` property.
