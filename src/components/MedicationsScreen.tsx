@@ -1,46 +1,14 @@
 import { X, Pill, Syringe, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useAppContext, genderedText } from '../context/AppContext';
+import {
+  useAppContext,
+  genderedText,
+  MedicationScheduleItem,
+} from '../context/AppContext';
 
-interface Medication {
-  id: string;
-  time: string;
-  period: string;
-  name: string;
-  dosage: string;
-  type: 'pill' | 'injection';
-  notes?: string;
+interface MedicationsScreenProps {
+  onClose: () => void;
 }
-
-const MEDICATIONS: Medication[] = [
-  {
-    id: 'morning',
-    time: '08:00',
-    period: 'בוקר',
-    name: 'מטפורמין',
-    dosage: '500 מ"ג',
-    type: 'pill',
-    notes: 'ליטול עם ארוחת הבוקר',
-  },
-  {
-    id: 'noon',
-    time: '13:00',
-    period: 'צהריים',
-    name: 'כדור לפני ארוחה',
-    dosage: 'גלוקובאנס 2.5/500',
-    type: 'pill',
-    notes: '30 דקות לפני הארוחה',
-  },
-  {
-    id: 'evening',
-    time: '21:00',
-    period: 'ערב',
-    name: 'הזרקת אינסולין',
-    dosage: '10 יחידות לנטוס',
-    type: 'injection',
-    notes: 'הזרקה בטן או ירך',
-  },
-];
 
 function isPast(timeStr: string): boolean {
   const [h, m] = timeStr.split(':').map(Number);
@@ -48,13 +16,16 @@ function isPast(timeStr: string): boolean {
   return now.getHours() > h || (now.getHours() === h && now.getMinutes() >= m);
 }
 
-interface MedicationsScreenProps {
-  onClose: () => void;
-}
-
 export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
-  const { completedMedications, toggleMedication, theme, userProfile } = useAppContext();
-  const done = completedMedications;
+  const {
+    medicationSchedule,
+    isMedicationTakenToday,
+    markMedicationTaken,
+    unmarkMedicationTaken,
+    theme,
+    userProfile,
+  } = useAppContext();
+
   const [justMarked, setJustMarked] = useState<string | null>(null);
 
   useEffect(() => {
@@ -65,15 +36,23 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
   }, []);
 
   const toggle = (id: string) => {
-    toggleMedication(id);
-    if (!done.has(id)) {
-      setJustMarked(id);
-      setTimeout(() => setJustMarked(null), 1000);
+    const isDone = isMedicationTakenToday(id);
+
+    if (isDone) {
+      unmarkMedicationTaken(id);
+      return;
     }
+
+    markMedicationTaken(id);
+    setJustMarked(id);
+    setTimeout(() => setJustMarked(null), 1000);
   };
 
-  const doneCount = done.size;
-  const progress = Math.round((doneCount / MEDICATIONS.length) * 100);
+  const doneCount = medicationSchedule.filter((med) =>
+    isMedicationTakenToday(med.id)
+  ).length;
+
+  const progress = Math.round((doneCount / medicationSchedule.length) * 100);
 
   return (
     <div
@@ -148,7 +127,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
               className="text-xs"
               style={{ color: '#6B7280', fontWeight: 600 }}
             >
-              {doneCount}/{MEDICATIONS.length} בוצעו
+              {doneCount}/{medicationSchedule.length} בוצעו
             </span>
             <span
               className="text-xs"
@@ -184,8 +163,8 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
           />
 
           <div className="space-y-4">
-            {MEDICATIONS.map((med) => {
-              const isDone = done.has(med.id);
+            {medicationSchedule.map((med: MedicationScheduleItem) => {
+              const isDone = isMedicationTakenToday(med.id);
               const isJust = justMarked === med.id;
               const past = isPast(med.time);
 
@@ -307,7 +286,6 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                         boxShadow: isDone
                           ? '0 4px 16px rgba(22, 163, 74, 0.3)'
                           : `0 4px 16px ${theme.primaryShadow}`,
-                        letterSpacing: isDone ? '0' : '-0.01em',
                       }}
                     >
                       {isDone
@@ -321,7 +299,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
           </div>
         </div>
 
-        {doneCount === MEDICATIONS.length && (
+        {doneCount === medicationSchedule.length && (
           <div
             className="mt-5 rounded-2xl p-5 text-center animate-fade-in"
             style={{
