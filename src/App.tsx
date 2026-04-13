@@ -108,7 +108,7 @@ function AppInner() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
-      <ComingSoonModal
+           <ComingSoonModal
         isOpen={comingSoon !== null}
         featureName={comingSoon ?? ''}
         onClose={() => setComingSoon(null)}
