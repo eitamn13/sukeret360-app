@@ -1,11 +1,23 @@
-import { useState } from 'react';
-import { X, Check, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { X, Check, User, Phone, Siren } from 'lucide-react';
 import { Gender, UserProfile, useAppContext } from '../context/AppContext';
 
 interface ProfileSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+type EmergencyContact = {
+  name: string;
+  phone: string;
+  message: string;
+};
+
+const DEFAULT_EMERGENCY_CONTACT: EmergencyContact = {
+  name: '',
+  phone: '',
+  message: 'אני צריך עזרה דחופה. זה המיקום שלי:',
+};
 
 export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalProps) {
   const { userProfile, saveUserProfile, theme } = useAppContext();
@@ -16,6 +28,37 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
   const [diabetesType, setDiabetesType] = useState<'1' | '2' | ''>(userProfile.diabetesType);
   const [saved, setSaved] = useState(false);
 
+  const [emergencyName, setEmergencyName] = useState(DEFAULT_EMERGENCY_CONTACT.name);
+  const [emergencyPhone, setEmergencyPhone] = useState(DEFAULT_EMERGENCY_CONTACT.phone);
+  const [emergencyMessage, setEmergencyMessage] = useState(DEFAULT_EMERGENCY_CONTACT.message);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    setName(userProfile.name);
+    setAge(userProfile.age);
+    setGender(userProfile.gender);
+    setDiabetesType(userProfile.diabetesType);
+
+    try {
+      const raw = localStorage.getItem('emergency_contact');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        setEmergencyName(parsed?.name || '');
+        setEmergencyPhone(parsed?.phone || '');
+        setEmergencyMessage(parsed?.message || DEFAULT_EMERGENCY_CONTACT.message);
+      } else {
+        setEmergencyName('');
+        setEmergencyPhone('');
+        setEmergencyMessage(DEFAULT_EMERGENCY_CONTACT.message);
+      }
+    } catch {
+      setEmergencyName('');
+      setEmergencyPhone('');
+      setEmergencyMessage(DEFAULT_EMERGENCY_CONTACT.message);
+    }
+  }, [isOpen, userProfile]);
+
   if (!isOpen) return null;
 
   const handleSave = () => {
@@ -25,7 +68,18 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
       gender,
       diabetesType,
     };
+
     saveUserProfile(updated);
+
+    localStorage.setItem(
+      'emergency_contact',
+      JSON.stringify({
+        name: emergencyName.trim(),
+        phone: emergencyPhone.trim(),
+        message: emergencyMessage.trim() || DEFAULT_EMERGENCY_CONTACT.message,
+      })
+    );
+
     setSaved(true);
     setTimeout(() => {
       setSaved(false);
@@ -43,7 +97,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
     >
       <div
         className="w-full max-w-md bg-white rounded-t-3xl px-5 pt-3 pb-10"
-        style={{ boxShadow: '0 -8px 60px rgba(0,0,0,0.2)' }}
+        style={{ boxShadow: '0 -8px 60px rgba(0,0,0,0.2)', maxHeight: '92vh', overflowY: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ backgroundColor: '#E5E7EB' }} />
@@ -166,6 +220,101 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                   </p>
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div
+            className="rounded-3xl p-4"
+            style={{
+              border: `2px solid ${theme.primaryBorder}`,
+              backgroundColor: theme.primaryBg,
+            }}
+          >
+            <div className="flex items-center justify-end gap-2 mb-4">
+              <h3 className="text-sm" style={{ color: '#1F2937', fontWeight: 800 }}>
+                איש קשר לחירום
+              </h3>
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center"
+                style={{ backgroundColor: 'white' }}
+              >
+                <Siren size={18} strokeWidth={1.8} style={{ color: theme.primary }} />
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm text-right mb-2" style={{ color: '#6B7280', fontWeight: 600 }}>
+                  שם איש קשר
+                </label>
+                <input
+                  type="text"
+                  value={emergencyName}
+                  onChange={(e) => setEmergencyName(e.target.value)}
+                  dir="rtl"
+                  placeholder="אמא, אבא, בן זוג..."
+                  className="w-full h-13 px-4 py-3.5 rounded-2xl text-right text-base outline-none transition-all"
+                  style={{
+                    border: `2px solid ${emergencyName.trim() ? theme.primaryBorder : '#F3F4F6'}`,
+                    backgroundColor: 'white',
+                    color: '#1F2937',
+                    fontWeight: 500,
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-right mb-2" style={{ color: '#6B7280', fontWeight: 600 }}>
+                  טלפון איש קשר
+                </label>
+                <div className="relative">
+                  <Phone
+                    size={16}
+                    strokeWidth={2}
+                    style={{
+                      color: theme.primaryMuted,
+                      position: 'absolute',
+                      left: 14,
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                    }}
+                  />
+                  <input
+                    type="tel"
+                    value={emergencyPhone}
+                    onChange={(e) => setEmergencyPhone(e.target.value)}
+                    dir="rtl"
+                    placeholder="0501234567"
+                    className="w-full h-13 px-4 py-3.5 rounded-2xl text-right text-base outline-none transition-all"
+                    style={{
+                      border: `2px solid ${emergencyPhone.trim() ? theme.primaryBorder : '#F3F4F6'}`,
+                      backgroundColor: 'white',
+                      color: '#1F2937',
+                      fontWeight: 500,
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm text-right mb-2" style={{ color: '#6B7280', fontWeight: 600 }}>
+                  הודעת חירום
+                </label>
+                <textarea
+                  value={emergencyMessage}
+                  onChange={(e) => setEmergencyMessage(e.target.value)}
+                  dir="rtl"
+                  className="w-full px-4 py-3.5 rounded-2xl text-right text-base outline-none transition-all"
+                  style={{
+                    border: `2px solid ${theme.primaryBorder}`,
+                    backgroundColor: 'white',
+                    color: '#1F2937',
+                    fontWeight: 500,
+                    minHeight: '88px',
+                    resize: 'none',
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
