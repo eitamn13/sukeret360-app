@@ -1,51 +1,55 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useAppContext, genderedText } from "../context/AppContext";
 
 type SOSModalProps = {
   isOpen: boolean;
   onClose: () => void;
 };
 
-type EmergencyContact = {
-  name: string;
-  phone: string;
-  message: string;
-};
-
-const DEFAULT_CONTACT: EmergencyContact = {
-  name: "",
-  phone: "",
-  message: "אני צריך עזרה דחופה. זה המיקום שלי:",
-};
-
 export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
+  const {
+    userProfile,
+    emergencyContact,
+    savedLocation,
+    saveLocation,
+    setLocationPermissionGranted,
+  } = useAppContext();
+
   const [countdown, setCountdown] = useState(3);
   const [isCounting, setIsCounting] = useState(false);
   const [locationText, setLocationText] = useState("");
   const [loadingLocation, setLoadingLocation] = useState(false);
-  const [contact, setContact] = useState<EmergencyContact>(DEFAULT_CONTACT);
+  const [statusText, setStatusText] = useState("");
   const [alarmAudio] = useState(
     () => new Audio("https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg")
   );
 
+  const hasContact = useMemo(
+    () => Boolean(emergencyContact.phone?.trim()),
+    [emergencyContact.phone]
+  );
+
   useEffect(() => {
-    const saved = localStorage.getItem("emergency_contact");
-    if (saved) {
-      try {
-        setContact(JSON.parse(saved));
-      } catch {
-        setContact(DEFAULT_CONTACT);
-      }
+    if (savedLocation) {
+      setLocationText(`https://maps.google.com/?q=${savedLocation.lat},${savedLocation.lng}`);
     }
-  }, []);
+  }, [savedLocation]);
 
   useEffect(() => {
     if (!isOpen) {
       setCountdown(3);
       setIsCounting(false);
+      setStatusText("");
       alarmAudio.pause();
       alarmAudio.currentTime = 0;
     }
   }, [isOpen, alarmAudio]);
+
+  useEffect(() => {
+    if (isOpen && !locationText) {
+      getLocation(true);
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isCounting) return;
@@ -66,9 +70,16 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
   const startEmergencyCall = () => {
     setCountdown(3);
     setIsCounting(true);
+    setStatusText(
+      genderedText(
+        userProfile.gender,
+        "החיוג למד״א מתחיל מיד. אפשר לבטל בתוך 3 שניות.",
+        "החיוג למד״א מתחיל מיד. אפשר לבטל בתוך 3 שניות."
+      )
+    );
 
     if (navigator.vibrate) {
-      navigator.vibrate([300, 100, 300, 100, 500]);
+      navigator.vibrate([400, 120, 400, 120, 700]);
     }
 
     alarmAudio.loop = true;
@@ -78,52 +89,126 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
   const cancelEmergency = () => {
     setIsCounting(false);
     setCountdown(3);
+    setStatusText(
+      genderedText(userProfile.gender, "החיוג בוטל.", "החיוג בוטל.")
+    );
     alarmAudio.pause();
     alarmAudio.currentTime = 0;
   };
 
-  const getLocation = () => {
+  const getLocation = (silent = false) => {
     if (!navigator.geolocation) {
-      alert("הדפדפן לא תומך במיקום");
+      if (!silent) alert("הדפדפן לא תומך במיקום");
       return;
     }
 
     setLoadingLocation(true);
+    setStatusText(
+      genderedText(userProfile.gender, "מאתרת מיקום...", "מאתר מיקום...")
+    );
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const lat = position.coords.latitude;
         const lng = position.coords.longitude;
         const mapsUrl = `https://maps.google.com/?q=${lat},${lng}`;
+
+        saveLocation({
+          lat,
+          lng,
+          updatedAt: new Date().toISOString(),
+        });
+        setLocationPermissionGranted(true);
         setLocationText(mapsUrl);
         setLoadingLocation(false);
+        setStatusText(
+          genderedText(
+            userProfile.gender,
+            "המיקום נשמר ומוכן לשיתוף.",
+            "המיקום נשמר ומוכן לשיתוף."
+          )
+        );
       },
       () => {
         setLoadingLocation(false);
-        alert("לא הצלחנו לקבל מיקום");
+        setLocationPermissionGranted(false);
+        setStatusText(
+          genderedText(
+            userProfile.gender,
+            "לא הצלחנו לקבל מיקום.",
+            "לא הצלחנו לקבל מיקום."
+          )
+        );
+        if (!silent) {
+          alert("לא הצלחנו לקבל מיקום");
+        }
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
   };
 
+  const shareLocation = async () => {
+    const url = locationText || "";
+
+    try {
+      if (navigator.share && url) {
+        await navigator.share({
+          title: "מיקום חירום",
+          text: "זה המיקום שלי כרגע:",
+          url,
+        });
+        setStatusText(
+          genderedText(
+            userProfile.gender,
+            "המיקום שותף בהצלחה.",
+            "המיקום שותף בהצלחה."
+          )
+        );
+        return;
+      }
+
+      if (navigator.clipboard && url) {
+        await navigator.clipboard.writeText(url);
+        setStatusText(
+          genderedText(
+            userProfile.gender,
+            "קישור המיקום הועתק ללוח.",
+            "קישור המיקום הועתק ללוח."
+          )
+        );
+        return;
+      }
+
+      getLocation();
+    } catch {
+      setStatusText(
+        genderedText(
+          userProfile.gender,
+          "לא הצלחנו לשתף עכשיו.",
+          "לא הצלחנו לשתף עכשיו."
+        )
+      );
+    }
+  };
+
   const sendSmsToContact = () => {
-    if (!contact.phone.trim()) {
+    if (!hasContact) {
       alert("אין איש קשר לחירום שמור");
       return;
     }
 
-    const body = `${contact.message} ${locationText || ""}`.trim();
-    window.location.href = `sms:${contact.phone}?body=${encodeURIComponent(body)}`;
+    const body = `${emergencyContact.message} ${locationText || ""}`.trim();
+    window.location.href = `sms:${emergencyContact.phone}?body=${encodeURIComponent(body)}`;
   };
 
   const sendWhatsAppToContact = () => {
-    if (!contact.phone.trim()) {
+    if (!hasContact) {
       alert("אין איש קשר לחירום שמור");
       return;
     }
 
-    const text = `${contact.message} ${locationText || ""}`.trim();
-    const phone = contact.phone.replace(/[^\d+]/g, "");
+    const text = `${emergencyContact.message} ${locationText || ""}`.trim();
+    const phone = emergencyContact.phone.replace(/[^\d]/g, "");
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
@@ -146,7 +231,7 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
       <div
         style={{
           width: "100%",
-          maxWidth: "420px",
+          maxWidth: "430px",
           maxHeight: "90vh",
           overflowY: "auto",
           background: "linear-gradient(180deg, #fff5f5 0%, #ffe3e3 100%)",
@@ -158,7 +243,7 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
       >
         <div
           style={{
-            background: "#b91c1c",
+            background: "linear-gradient(135deg, #dc2626, #991b1b)",
             color: "white",
             borderRadius: "18px",
             padding: "16px",
@@ -169,7 +254,11 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
             מצב חירום
           </div>
           <div style={{ fontSize: "14px", opacity: 0.95 }}>
-            בחרי פעולה מהירה. לא צריך למלא שום דבר עכשיו.
+            {genderedText(
+              userProfile.gender,
+              "בחרי פעולה מהירה. לא צריך למלא שום דבר עכשיו.",
+              "בחר פעולה מהירה. לא צריך למלא שום דבר עכשיו."
+            )}
           </div>
         </div>
 
@@ -178,28 +267,47 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
             onClick={startEmergencyCall}
             style={buttonStyle("#dc2626", "white")}
           >
-            {isCounting ? `מחייג למד״א בעוד ${countdown}...` : "התקשרי למד״א"}
+            {isCounting
+              ? `${genderedText(userProfile.gender, "מחייגת", "מחייג")} למד״א בעוד ${countdown}...`
+              : genderedText(userProfile.gender, "התקשרי למד״א", "התקשר למד״א")}
           </button>
 
           <button
-            onClick={getLocation}
+            onClick={() => getLocation()}
             style={buttonStyle("#2563eb", "white")}
           >
-            {loadingLocation ? "מאתר מיקום..." : "שלחי מיקום"}
+            {loadingLocation
+              ? genderedText(userProfile.gender, "מאתרת מיקום...", "מאתר מיקום...")
+              : genderedText(userProfile.gender, "עדכני מיקום", "עדכן מיקום")}
+          </button>
+
+          <button
+            onClick={shareLocation}
+            style={buttonStyle("#4f46e5", "white")}
+          >
+            {genderedText(userProfile.gender, "שתפי מיקום", "שתף מיקום")}
           </button>
 
           <button
             onClick={sendSmsToContact}
             style={buttonStyle("#0f766e", "white")}
           >
-            שלחי SMS לאיש קשר
+            {genderedText(
+              userProfile.gender,
+              "שלחי SMS לאיש קשר",
+              "שלח SMS לאיש קשר"
+            )}
           </button>
 
           <button
             onClick={sendWhatsAppToContact}
             style={buttonStyle("#16a34a", "white")}
           >
-            שלחי WhatsApp לאיש קשר
+            {genderedText(
+              userProfile.gender,
+              "שלחי WhatsApp לאיש קשר",
+              "שלח WhatsApp לאיש קשר"
+            )}
           </button>
 
           {isCounting && (
@@ -207,9 +315,27 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
               onClick={cancelEmergency}
               style={buttonStyle("#f3f4f6", "#111827")}
             >
-              בטלי
+              {genderedText(userProfile.gender, "בטלי", "בטל")}
             </button>
           )}
+        </div>
+
+        <div
+          style={{
+            background: "white",
+            borderRadius: "18px",
+            padding: "14px",
+            border: "1px solid #fecaca",
+            marginBottom: "12px",
+          }}
+        >
+          <div style={sectionTitle}>איש קשר לחירום</div>
+          <div style={{ fontSize: "14px", color: "#111827", fontWeight: 700 }}>
+            {emergencyContact.name || "לא נשמר עדיין"}
+          </div>
+          <div style={{ fontSize: "13px", color: "#6B7280", marginTop: 4 }}>
+            {emergencyContact.phone || "אין טלפון שמור"}
+          </div>
         </div>
 
         <div
@@ -224,6 +350,11 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
           <div style={{ fontSize: "13px", wordBreak: "break-word", color: "#374151" }}>
             {locationText || "עדיין לא נאסף מיקום"}
           </div>
+          {statusText && (
+            <div style={{ marginTop: 10, fontSize: "12px", color: "#b91c1c", fontWeight: 700 }}>
+              {statusText}
+            </div>
+          )}
         </div>
 
         <button
@@ -239,7 +370,7 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
             padding: "10px",
           }}
         >
-          סגרי
+          {genderedText(userProfile.gender, "סגרי", "סגור")}
         </button>
       </div>
     </div>
