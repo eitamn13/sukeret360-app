@@ -1,4 +1,5 @@
 import SOSButton from "./components/SOSButton";
+import SOSModal from "./components/SOSModal";
 import { useState } from 'react';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { Header } from './components/Header';
@@ -29,6 +30,7 @@ function AppInner() {
   const [showDoctorConsult, setShowDoctorConsult] = useState(false);
   const [showMeals, setShowMeals] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showSOS, setShowSOS] = useState(false);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
   if (!onboardingDone) return <OnboardingScreen />;
@@ -117,7 +119,12 @@ function AppInner() {
         onClose={() => setComingSoon(null)}
       />
 
-      <SOSButton />
+      <SOSButton onClick={() => setShowSOS(true)} />
+
+      <SOSModal
+        isOpen={showSOS}
+        onClose={() => setShowSOS(false)}
+      />
     </div>
   );
 }
