@@ -33,7 +33,9 @@ function AppInner() {
   const [showSOS, setShowSOS] = useState(false);
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
-  if (!onboardingDone) return <OnboardingScreen />;
+  if (!onboardingDone) {
+    return <OnboardingScreen />;
+  }
 
   const handleSugarSave = (_value: number) => {
     setShowSugarModal(false);
@@ -44,22 +46,27 @@ function AppInner() {
       setShowMedications(true);
       return;
     }
+
     if (id === 'tip') {
       setShowDailyTip(true);
       return;
     }
+
     if (id === 'meals') {
       setShowMeals(true);
       return;
     }
+
     if (id === 'history') {
       setShowHistory(true);
       return;
     }
+
     if (id === 'doctor') {
       setShowDoctorConsult(true);
       return;
     }
+
     setComingSoon(label);
   };
 
@@ -74,13 +81,16 @@ function AppInner() {
     >
       <div className="max-w-md mx-auto">
         <Header onSettingsClick={() => setShowSettings(true)} />
+
         <main className="pb-8">
           <GreetingSection />
+
           <ActionGrid
             onMealLoggerClick={() => setShowMealLogger(true)}
             onSugarClick={() => setShowSugarModal(true)}
             onActionClick={handleActionClick}
           />
+
           <CommunitySection
             onCommunityClick={() => setShowCommunity(true)}
             onItemClick={handleCommunityItemClick}
