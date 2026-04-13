@@ -108,12 +108,13 @@ function AppInner() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
-
       <ComingSoonModal
         isOpen={comingSoon !== null}
         featureName={comingSoon ?? ''}
         onClose={() => setComingSoon(null)}
       />
+
+      <SOSButton />
     </div>
   );
 }
@@ -122,7 +123,6 @@ function App() {
   return (
     <AppProvider>
       <AppInner />
-      <SOSButton />
     </AppProvider>
   );
 }
