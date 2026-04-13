@@ -1,6 +1,6 @@
 import { X, Pill, Syringe, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useAppContext } from '../context/AppContext';
+import { useAppContext, genderedText } from '../context/AppContext';
 
 interface Medication {
   id: string;
@@ -53,13 +53,15 @@ interface MedicationsScreenProps {
 }
 
 export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
-  const { completedMedications, toggleMedication, theme } = useAppContext();
+  const { completedMedications, toggleMedication, theme, userProfile } = useAppContext();
   const done = completedMedications;
   const [justMarked, setJustMarked] = useState<string | null>(null);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.body.style.overflow = '';
+    };
   }, []);
 
   const toggle = (id: string) => {
@@ -74,17 +76,28 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
   const progress = Math.round((doneCount / MEDICATIONS.length) * 100);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col animate-slide-in-right" style={{ background: theme.gradientFull }}>
+    <div
+      className="fixed inset-0 z-50 flex flex-col animate-slide-in-right"
+      style={{ background: theme.gradientFull }}
+    >
       <div
         className="flex-shrink-0 px-5 pt-12 pb-4"
-        style={{ backgroundColor: theme.headerBg, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: `1px solid ${theme.primaryBorder}` }}
+        style={{
+          backgroundColor: theme.headerBg,
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          borderBottom: `1px solid ${theme.primaryBorder}`,
+        }}
       >
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={onClose}
             className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95"
-            style={{ border: `1.5px solid ${theme.primaryBorder}`, backgroundColor: 'white' }}
-            aria-label="סגור"
+            style={{
+              border: `1.5px solid ${theme.primaryBorder}`,
+              backgroundColor: 'white',
+            }}
+            aria-label={genderedText(userProfile.gender, 'סגרי', 'סגור')}
           >
             <X size={20} strokeWidth={2} style={{ color: theme.primary }} />
           </button>
@@ -92,7 +105,11 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
           <div className="text-center">
             <h1
               className="text-lg leading-tight"
-              style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
+              style={{
+                color: '#1F2937',
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+              }}
             >
               ניהול תרופות יומי
             </h1>
@@ -100,13 +117,20 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
               className="text-xs mt-0.5"
               style={{ color: theme.primaryMuted, fontWeight: 500 }}
             >
-              {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
+              {new Date().toLocaleDateString('he-IL', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+              })}
             </p>
           </div>
 
           <div
             className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ backgroundColor: theme.primaryBg, border: `1.5px solid ${theme.primaryBorder}` }}
+            style={{
+              backgroundColor: theme.primaryBg,
+              border: `1.5px solid ${theme.primaryBorder}`,
+            }}
           >
             <Pill size={18} strokeWidth={1.5} style={{ color: theme.primary }} />
           </div>
@@ -114,22 +138,29 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
 
         <div
           className="rounded-xl p-3.5"
-          style={{ backgroundColor: '#F9FAFB', border: '1px solid #F3F4F6' }}
+          style={{
+            backgroundColor: '#F9FAFB',
+            border: '1px solid #F3F4F6',
+          }}
         >
           <div className="flex items-center justify-between mb-2">
             <span
-              className="text-xs font-600"
+              className="text-xs"
               style={{ color: '#6B7280', fontWeight: 600 }}
             >
               {doneCount}/{MEDICATIONS.length} בוצעו
             </span>
             <span
-              className="text-xs font-700"
-              style={{ color: progress === 100 ? '#16A34A' : theme.primary, fontWeight: 700 }}
+              className="text-xs"
+              style={{
+                color: progress === 100 ? '#16A34A' : theme.primary,
+                fontWeight: 700,
+              }}
             >
               {progress}%
             </span>
           </div>
+
           <div
             className="w-full h-2 rounded-full overflow-hidden"
             style={{ backgroundColor: '#E5E7EB' }}
@@ -153,7 +184,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
           />
 
           <div className="space-y-4">
-            {MEDICATIONS.map((med, idx) => {
+            {MEDICATIONS.map((med) => {
               const isDone = done.has(med.id);
               const isJust = justMarked === med.id;
               const past = isPast(med.time);
@@ -206,7 +237,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                       <div className="flex-1 text-right">
                         <div className="flex items-center justify-end gap-2 mb-0.5">
                           <h3
-                            className="text-base font-800 leading-tight"
+                            className="text-base leading-tight"
                             style={{
                               color: isDone ? '#15803D' : '#1F2937',
                               fontWeight: 800,
@@ -216,7 +247,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                             {med.name}
                           </h3>
                           <span
-                            className="text-xs font-700 px-2 py-0.5 rounded-lg"
+                            className="text-xs px-2 py-0.5 rounded-lg"
                             style={{
                               backgroundColor: isDone ? '#DCFCE7' : theme.primaryBg,
                               color: isDone ? '#15803D' : theme.primary,
@@ -226,9 +257,13 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                             {med.period}
                           </span>
                         </div>
+
                         <p
-                          className="text-sm font-500"
-                          style={{ color: isDone ? '#16A34A' : '#6B7280', fontWeight: 500 }}
+                          className="text-sm"
+                          style={{
+                            color: isDone ? '#16A34A' : '#6B7280',
+                            fontWeight: 500,
+                          }}
                         >
                           {med.dosage}
                         </p>
@@ -237,19 +272,25 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
 
                     <div
                       className="flex items-center justify-between mb-4 pb-4"
-                      style={{ borderBottom: `1px solid ${isDone ? '#BBF7D0' : '#F3F4F6'}` }}
+                      style={{
+                        borderBottom: `1px solid ${isDone ? '#BBF7D0' : '#F3F4F6'}`,
+                      }}
                     >
                       <p
-                        className="text-xs font-400"
+                        className="text-xs"
                         style={{ color: '#9CA3AF', fontWeight: 400 }}
                       >
                         {med.notes}
                       </p>
+
                       <div className="flex items-center gap-1.5">
                         <Clock size={13} strokeWidth={2} style={{ color: '#9CA3AF' }} />
                         <span
-                          className="text-sm font-700"
-                          style={{ color: isDone ? '#15803D' : '#374151', fontWeight: 700 }}
+                          className="text-sm"
+                          style={{
+                            color: isDone ? '#15803D' : '#374151',
+                            fontWeight: 700,
+                          }}
                         >
                           {med.time}
                         </span>
@@ -258,7 +299,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
 
                     <button
                       onClick={() => toggle(med.id)}
-                      className="w-full h-12 rounded-xl font-700 text-base transition-all duration-300 active:scale-[0.97]"
+                      className="w-full h-12 rounded-xl text-base transition-all duration-300 active:scale-[0.97]"
                       style={{
                         backgroundColor: isDone ? '#16A34A' : theme.primary,
                         color: '#ffffff',
@@ -269,7 +310,9 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                         letterSpacing: isDone ? '0' : '-0.01em',
                       }}
                     >
-                      {isDone ? 'בוצע ✓' : 'סמני כבוצע'}
+                      {isDone
+                        ? genderedText(userProfile.gender, 'בוצע ✓', 'בוצע ✓')
+                        : genderedText(userProfile.gender, 'סמני כבוצע', 'סמן כבוצע')}
                     </button>
                   </div>
                 </div>
@@ -281,19 +324,22 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
         {doneCount === MEDICATIONS.length && (
           <div
             className="mt-5 rounded-2xl p-5 text-center animate-fade-in"
-            style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #BBF7D0' }}
+            style={{
+              backgroundColor: '#F0FDF4',
+              border: '1.5px solid #BBF7D0',
+            }}
           >
             <p
-              className="text-lg font-800"
+              className="text-lg"
               style={{ color: '#15803D', fontWeight: 800 }}
             >
               כל התרופות נלקחו
             </p>
             <p
-              className="text-sm font-500 mt-1"
+              className="text-sm mt-1"
               style={{ color: '#16A34A', fontWeight: 500 }}
             >
-              עבודה מצוינת! המשיכי כך
+              {genderedText(userProfile.gender, 'עבודה מצוינת! המשיכי כך', 'עבודה מצוינת! המשך כך')}
             </p>
           </div>
         )}
