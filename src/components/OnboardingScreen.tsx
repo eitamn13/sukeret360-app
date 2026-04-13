@@ -14,7 +14,13 @@ export function OnboardingScreen() {
   const [age, setAge] = useState('');
   const [diabetesType, setDiabetesType] = useState<'1' | '2' | ''>('');
 
-  const totalSteps = 4;
+  const [emergencyName, setEmergencyName] = useState('');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
+  const [emergencyMessage, setEmergencyMessage] = useState(
+    'אני צריך עזרה דחופה. זה המיקום שלי:'
+  );
+
+  const totalSteps = 5;
 
   const goNext = () => {
     if (step < totalSteps - 1) setStep((s) => s + 1);
@@ -28,7 +34,18 @@ export function OnboardingScreen() {
       diabetesType,
       gender,
     };
+
     saveUserProfile(profile);
+
+    localStorage.setItem(
+      'emergency_contact',
+      JSON.stringify({
+        name: emergencyName,
+        phone: emergencyPhone,
+        message: emergencyMessage,
+      })
+    );
+
     completeOnboarding();
   };
 
@@ -36,7 +53,8 @@ export function OnboardingScreen() {
     step === 0 ? name.trim().length > 0 :
     step === 1 ? gender !== '' :
     step === 2 ? age.trim().length > 0 && Number(age) > 0 && Number(age) < 120 :
-    diabetesType !== '';
+    step === 3 ? diabetesType !== '' :
+    true;
 
   return (
     <div
@@ -62,19 +80,28 @@ export function OnboardingScreen() {
           ))}
         </div>
 
-        <div className="bg-white rounded-3xl p-7 shadow-xl" style={{ boxShadow: '0 20px 60px rgba(225,29,72,0.12)' }}>
+        <div
+          className="bg-white rounded-3xl p-7 shadow-xl"
+          style={{ boxShadow: '0 20px 60px rgba(225,29,72,0.12)' }}
+        >
           {step === 0 && (
             <div>
               <div className="flex items-center justify-center mb-2">
                 <span className="text-3xl">👋</span>
               </div>
-              <h2 className="text-2xl text-center mb-1" style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <h2
+                className="text-2xl text-center mb-1"
+                style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
+              >
                 נעים להכיר!
               </h2>
               <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
                 מה שמך? נתאים את החוויה עבורך
               </p>
-              <label className="block text-sm text-right mb-2" style={{ color: '#6B7280', fontWeight: 600 }}>
+              <label
+                className="block text-sm text-right mb-2"
+                style={{ color: '#6B7280', fontWeight: 600 }}
+              >
                 שמך
               </label>
               <input
@@ -101,7 +128,10 @@ export function OnboardingScreen() {
               <div className="flex items-center justify-center mb-2">
                 <span className="text-3xl">🙋</span>
               </div>
-              <h2 className="text-2xl text-center mb-1" style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <h2
+                className="text-2xl text-center mb-1"
+                style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
+              >
                 מגדר
               </h2>
               <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
@@ -123,7 +153,10 @@ export function OnboardingScreen() {
                     }}
                   >
                     <p className="text-3xl mb-2">{emoji}</p>
-                    <p className="text-lg" style={{ color: gender === value ? ROSE : '#374151', fontWeight: 800 }}>
+                    <p
+                      className="text-lg"
+                      style={{ color: gender === value ? ROSE : '#374151', fontWeight: 800 }}
+                    >
                       {label}
                     </p>
                   </button>
@@ -137,13 +170,19 @@ export function OnboardingScreen() {
               <div className="flex items-center justify-center mb-2">
                 <span className="text-3xl">🎂</span>
               </div>
-              <h2 className="text-2xl text-center mb-1" style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <h2
+                className="text-2xl text-center mb-1"
+                style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
+              >
                 {genderedText(gender, `כמה את בת, ${name}?`, `כמה אתה בן, ${name}?`)}
               </h2>
               <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
                 נתאים את ההמלצות לגיל שלך
               </p>
-              <label className="block text-sm text-right mb-2" style={{ color: '#6B7280', fontWeight: 600 }}>
+              <label
+                className="block text-sm text-right mb-2"
+                style={{ color: '#6B7280', fontWeight: 600 }}
+              >
                 גיל
               </label>
               <input
@@ -172,7 +211,10 @@ export function OnboardingScreen() {
               <div className="flex items-center justify-center mb-2">
                 <span className="text-3xl">💊</span>
               </div>
-              <h2 className="text-2xl text-center mb-1" style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}>
+              <h2
+                className="text-2xl text-center mb-1"
+                style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
+              >
                 סוג הסוכרת
               </h2>
               <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
@@ -190,15 +232,105 @@ export function OnboardingScreen() {
                       boxShadow: diabetesType === type ? `0 4px 20px ${ROSE}22` : 'none',
                     }}
                   >
-                    <p className="text-2xl mb-1" style={{ color: diabetesType === type ? ROSE : '#374151', fontWeight: 900 }}>
+                    <p
+                      className="text-2xl mb-1"
+                      style={{ color: diabetesType === type ? ROSE : '#374151', fontWeight: 900 }}
+                    >
                       סוג {type}
                     </p>
-                    <p className="text-xs" style={{ color: diabetesType === type ? '#BE123C' : '#9CA3AF' }}>
+                    <p
+                      className="text-xs"
+                      style={{ color: diabetesType === type ? '#BE123C' : '#9CA3AF' }}
+                    >
                       {type === '1' ? 'תלוית אינסולין' : 'ללא אינסולין'}
                     </p>
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div>
+              <div className="flex items-center justify-center mb-2">
+                <span className="text-3xl">🚨</span>
+              </div>
+              <h2
+                className="text-2xl text-center mb-1"
+                style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.02em' }}
+              >
+                איש קשר לחירום
+              </h2>
+              <p className="text-sm text-center mb-6" style={{ color: '#9CA3AF' }}>
+                במקרה חירום, נוכל לשלוח אליו הודעה אוטומטית
+              </p>
+
+              <label
+                className="block text-sm text-right mb-2"
+                style={{ color: '#6B7280', fontWeight: 600 }}
+              >
+                שם איש קשר
+              </label>
+              <input
+                type="text"
+                value={emergencyName}
+                onChange={(e) => setEmergencyName(e.target.value)}
+                placeholder="לדוגמה: אמא, אבא, בן זוג..."
+                dir="rtl"
+                className="w-full h-14 px-4 rounded-2xl text-right text-base outline-none transition-all mb-3"
+                style={{
+                  border: `2px solid ${emergencyName.trim() ? ROSE_BORDER : '#F3F4F6'}`,
+                  backgroundColor: emergencyName.trim() ? ROSE_LIGHT : '#F9FAFB',
+                  color: '#1F2937',
+                  fontWeight: 500,
+                }}
+              />
+
+              <label
+                className="block text-sm text-right mb-2"
+                style={{ color: '#6B7280', fontWeight: 600 }}
+              >
+                טלפון איש קשר
+              </label>
+              <input
+                type="tel"
+                value={emergencyPhone}
+                onChange={(e) => setEmergencyPhone(e.target.value)}
+                placeholder="0501234567"
+                dir="rtl"
+                className="w-full h-14 px-4 rounded-2xl text-right text-base outline-none transition-all mb-3"
+                style={{
+                  border: `2px solid ${emergencyPhone.trim() ? ROSE_BORDER : '#F3F4F6'}`,
+                  backgroundColor: emergencyPhone.trim() ? ROSE_LIGHT : '#F9FAFB',
+                  color: '#1F2937',
+                  fontWeight: 500,
+                }}
+              />
+
+              <label
+                className="block text-sm text-right mb-2"
+                style={{ color: '#6B7280', fontWeight: 600 }}
+              >
+                הודעת חירום
+              </label>
+              <textarea
+                value={emergencyMessage}
+                onChange={(e) => setEmergencyMessage(e.target.value)}
+                dir="rtl"
+                className="w-full px-4 py-3 rounded-2xl text-right text-base outline-none transition-all"
+                style={{
+                  border: `2px solid ${ROSE_BORDER}`,
+                  backgroundColor: ROSE_LIGHT,
+                  color: '#1F2937',
+                  fontWeight: 500,
+                  minHeight: '96px',
+                  resize: 'none',
+                }}
+              />
+
+              <p className="text-xs text-center mt-3" style={{ color: '#9CA3AF' }}>
+                אפשר גם לדלג ולהוסיף אחר כך דרך ההגדרות
+              </p>
             </div>
           )}
 
