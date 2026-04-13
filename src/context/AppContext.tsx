@@ -195,7 +195,7 @@ function writeJson(key: string, value: unknown) {
   }
 }
 
-function getTodayKey() {
+function getTodayKey(): string {
   return new Date().toISOString().split('T')[0];
 }
 
@@ -427,7 +427,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
 export function useAppContext() {
   const ctx = useContext(AppContext);
-  if (!ctx) throw new Error('useAppContext must be used within AppProvider');
+  if (!ctx) {
+    throw new Error('useAppContext must be used within AppProvider');
+  }
   return ctx;
-}  הבעיה?‮રકોટ editor.parseError: Unexpected EOF તરીકે
-The issue is due to a missing closing brace `}` for the `Theme` interface. I’ll add it right after the `headerShadow` property.
+}
