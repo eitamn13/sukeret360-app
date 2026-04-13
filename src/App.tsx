@@ -1,5 +1,5 @@
-import SOSButton from "./components/SOSButton"; 
-import { useState } from 'react'; 
+import SOSButton from "./components/SOSButton";
+import { useState } from 'react';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { Header } from './components/Header';
 import { GreetingSection } from './components/GreetingSection';
@@ -49,10 +49,12 @@ function AppInner() {
   const handleCommunityItemClick = (label: string) => {
     setComingSoon(label);
   };
+
+  return (
     <div
-  className="min-h-screen transition-all duration-500"
-  style={{ background: theme.gradientFull }}
->
+      className="min-h-screen transition-all duration-500"
+      style={{ background: theme.gradientFull }}
+    >
       <div className="max-w-md mx-auto">
         <Header onSettingsClick={() => setShowSettings(true)} />
         <main className="pb-8">
@@ -108,7 +110,8 @@ function AppInner() {
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
       />
-           <ComingSoonModal
+
+      <ComingSoonModal
         isOpen={comingSoon !== null}
         featureName={comingSoon ?? ''}
         onClose={() => setComingSoon(null)}
