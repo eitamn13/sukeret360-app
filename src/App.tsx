@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import SOSButton from "./components/SOSButton"; 
+import { useState } from 'react'; 
 import { AppProvider, useAppContext } from './context/AppContext';
 import { Header } from './components/Header';
 import { GreetingSection } from './components/GreetingSection';
@@ -48,10 +49,7 @@ function AppInner() {
   const handleCommunityItemClick = (label: string) => {
     setComingSoon(label);
   };
-
-  return (
-    <div
-      className="min-h-screen transition-all duration-500"
+      className="min-h-screen transition-all duration-500"A
       style={{ background: theme.gradientFull }}
     >
       <div className="max-w-md mx-auto">
@@ -123,6 +121,7 @@ function App() {
   return (
     <AppProvider>
       <AppInner />
+      <SOSButton />
     </AppProvider>
   );
 }
