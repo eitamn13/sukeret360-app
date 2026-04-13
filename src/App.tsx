@@ -49,9 +49,10 @@ function AppInner() {
   const handleCommunityItemClick = (label: string) => {
     setComingSoon(label);
   };
-      className="min-h-screen transition-all duration-500"
-      style={{ background: theme.gradientFull }}
-    >
+    <div
+  className="min-h-screen transition-all duration-500"
+  style={{ background: theme.gradientFull }}
+>
       <div className="max-w-md mx-auto">
         <Header onSettingsClick={() => setShowSettings(true)} />
         <main className="pb-8">
