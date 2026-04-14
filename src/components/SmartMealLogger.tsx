@@ -16,6 +16,10 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
   const [manualMeals, setManualMeals] = useState<DetectedFood[]>([]);
   const [loading, setLoading] = useState(false);
 
+  // For manual input
+  const [newFoodName, setNewFoodName] = useState("");
+  const [newFoodCarbs, setNewFoodCarbs] = useState<number>(0);
+
   const mealTypes: { value: MealType; label: string }[] = [
     { value: "breakfast", label: "בוקר" },
     { value: "lunch", label: "צהריים" },
@@ -31,16 +35,48 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
       formData.append("file", file);
       const response = await fetch("/api/vision", { method: "POST", body: formData });
       const data = await response.json();
-      setAISuggestions(data.foods || []);
-    } catch {
+
+      // Safely parse response
+      let foods: DetectedFood[] = [];
+      if (data.foods) {
+        try {
+          foods = Array.isArray(data.foods) ? data.foods : JSON.parse(data.foods);
+        } catch {
+          foods = [{ name: data.foods.toString(), carbs: 0 }];
+        }
+      } else {
+        foods = [{ name: "לא זוהה", carbs: 0 }];
+      }
+
+      setAISuggestions(foods);
+    } catch (err) {
+      console.error(err);
       alert(genderedText(gender, "לא הצלחנו לזהות את המזון. נסי שוב.", "לא הצלחנו לזהות את המזון. נסה שוב."));
-    } finally { setLoading(false); }
+    } finally {
+      setLoading(false);
+    }
   };
 
   const addMeal = (food: DetectedFood) => setManualMeals((prev) => [...prev, food]);
   const removeMeal = (index: number) => setManualMeals((prev) => prev.filter((_, i) => i !== index));
+  
+  const addManualFood = () => {
+    if (!newFoodName) return;
+    addMeal({ name: newFoodName, carbs: newFoodCarbs });
+    setNewFoodName("");
+    setNewFoodCarbs(0);
+  };
+
   const saveMeals = () => {
-    manualMeals.forEach((food) => logMeal({ ...food, id: Date.now().toString(), loggedAt: new Date().toISOString() }));
+    if (manualMeals.length === 0) return alert("יש להוסיף לפחות מזון אחד.");
+    manualMeals.forEach((food) =>
+      logMeal({
+        ...food,
+        id: Date.now().toString(),
+        loggedAt: new Date().toISOString(),
+        mealType, // Save meal type
+      })
+    );
     onClose();
   };
 
@@ -76,12 +112,12 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
             </label>
             {loading && <p>{genderedText(gender, "מאתרת אוכל...", "מאתר אוכל...")}</p>}
-            {aiSuggestions.map((f, idx) => (
+            {aiSuggestions.length > 0 ? aiSuggestions.map((f, idx) => (
               <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 6, border: "1px solid #E5E7EB", borderRadius: 12 }}>
                 <span>{f.name} - {f.carbs}g פחמימות</span>
                 <button onClick={() => addMeal(f)}><Plus size={16} /></button>
               </div>
-            ))}
+            )) : <p>אין הצעות זיהוי, אפשר להוסיף ידנית.</p>}
             <button onClick={() => setStep(2)} style={{ marginTop: 12, width: "100%", padding: 12, borderRadius: 12, backgroundColor: theme.primary, color: "white", fontWeight: 700 }}>{genderedText(gender, "המשך", "המשך")}</button>
           </div>
         )}
@@ -95,6 +131,14 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 <button onClick={() => removeMeal(idx)}><X size={16} /></button>
               </div>
             ))}
+
+            {/* Add manual input */}
+            <div style={{ display: "flex", gap: 6 }}>
+              <input type="text" placeholder="שם מזון" value={newFoodName} onChange={(e) => setNewFoodName(e.target.value)} style={{ flex: 2, padding: 6, borderRadius: 6, border: "1px solid #E5E7EB" }} />
+              <input type="number" placeholder="פחמימות" value={newFoodCarbs} onChange={(e) => setNewFoodCarbs(Number(e.target.value))} style={{ flex: 1, padding: 6, borderRadius: 6, border: "1px solid #E5E7EB" }} />
+              <button onClick={addManualFood} style={{ backgroundColor: theme.primary, color: "#fff", padding: "6px 12px", borderRadius: 6 }}>הוסף</button>
+            </div>
+
             <button onClick={saveMeals} style={{ marginTop: 12, width: "100%", padding: 12, borderRadius: 12, backgroundColor: theme.primary, color: "white", fontWeight: 700 }}>{genderedText(gender, "שמור", "שמור")}</button>
           </div>
         )}
