@@ -1,59 +1,38 @@
-
-// src/pages/api/vision.ts
 import { NextApiRequest, NextApiResponse } from "next";
-import formidable from "formidable";
-import fs from "fs";
+import OpenAI from "openai";
 
-// ביטול פרסינג אוטומטי כדי לקבל קובץ
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY, // 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
+});
+
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: {
+      sizeLimit: "5mb", // מאפשר קבצי תמונה עד 5 מגה
+    },
   },
 };
 
-// סוג הנתונים שנחזיר
-interface DetectedFood {
-  name: string;
-  carbs: number;
-}
-
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
-  }
+  if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
   try {
-    const form = new formidable.IncomingForm();
-    const data = await new Promise<{ filePath: string }>((resolve, reject) => {
-      form.parse(req, (err, fields, files: any) => {
-        if (err) return reject(err);
-        if (!files.file) return reject(new Error("No file uploaded"));
-        resolve({ filePath: files.file.filepath });
-      });
+    const file = req.body.file; // אם אתה שולח כ-FormData
+    if (!file) return res.status(400).json({ error: "No file uploaded" });
+
+    // שלח את התמונה ל־OpenAI Vision (דוגמה למודל GPT-4o Mini Vision)
+    const response = await openai.images.analyze({
+      model: "gpt-4o-mini",
+      image: file,
+      task: "Identify food and approximate carbs",
     });
 
-    const imageBuffer = fs.readFileSync(data.filePath);
-
-    // 🔹 כאן נשלח ל-OpenAI API (GPT-4o Mini או DALL·E / Vision)
-    const response = await fetch("https://api.openai.com/v1/images/analyze", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: imageBuffer,
-    });
-
-    const json = await response.json();
-
-    // 🔹 לדוגמה, ממיר את התשובה לרשימת מזונות
-    const foods: DetectedFood[] = (json.items || []).map((item: any) => ({
-      name: item.name || "לא מזוהה",
-      carbs: item.carbs || 10, // ברירת מחדל פחמימות
-    }));
+    // נניח ש־response.data מכיל רשימת מאכלים עם פחמימות
+    const foods = response.data.foods || [];
 
     res.status(200).json({ foods });
   } catch (err) {
-    console.error("Vision API error:", err);
-    res.status(500).json({ error: "Failed to analyze image" });
+    console.error(err);
+    res.status(500).json({ error: "Error detecting food" });
   }
 }
