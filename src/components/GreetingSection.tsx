@@ -1,28 +1,93 @@
+import { useMemo } from 'react';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { useAppContext, genderedText } from '../context/AppContext';
 
+function isWithinLastDays(isoDate: string, days: number) {
+  const targetTime = new Date(isoDate).getTime();
+  const minTime = Date.now() - days * 24 * 60 * 60 * 1000;
+  return targetTime >= minTime;
+}
+
 export function GreetingSection() {
   const { timeString, greeting, dateString } = useCurrentTime();
-  const { userProfile, theme } = useAppContext();
+  const {
+    userProfile,
+    theme,
+    sugarLogs,
+    todayMeals,
+    medicationSchedule,
+    medicationLogs,
+  } = useAppContext();
 
   const displayName = userProfile.name || genderedText(userProfile.gender, 'אורחת', 'אורח');
   const gender = userProfile.gender;
+  const targetLow = Number(userProfile.targetLow || 80);
+  const targetHigh = Number(userProfile.targetHigh || 140);
+
+  const latestSugar = sugarLogs[0];
+  const weeklySugarLogs = useMemo(
+    () => sugarLogs.filter((log) => isWithinLastDays(log.loggedAt, 7)),
+    [sugarLogs]
+  );
+  const weeklyAverage = weeklySugarLogs.length
+    ? Math.round(
+        weeklySugarLogs.reduce((sum, log) => sum + log.level, 0) / weeklySugarLogs.length
+      )
+    : null;
+  const inRangePercent = weeklySugarLogs.length
+    ? Math.round(
+        (weeklySugarLogs.filter(
+          (log) => log.level >= targetLow && log.level <= targetHigh
+        ).length /
+          weeklySugarLogs.length) *
+          100
+      )
+    : null;
+
+  const todayKey = new Date().toISOString().split('T')[0];
+  const medicationDoneCount = medicationLogs.filter((log) => log.dateKey === todayKey).length;
+  const medicationProgress =
+    medicationSchedule.length > 0
+      ? Math.round((medicationDoneCount / medicationSchedule.length) * 100)
+      : null;
 
   const feelingText = genderedText(
     gender,
-    'איך את מרגישה היום?',
-    'איך אתה מרגיש היום?'
+    'הנה תמונת המצב של היום שלך במקום אחד.',
+    'הנה תמונת המצב של היום שלך במקום אחד.'
   );
 
-  const connectedText = genderedText(
-    gender,
-    'מחוברת',
-    'מחובר'
-  );
+  const connectedText = genderedText(gender, 'מחוברת', 'מחובר');
+  const personalGreeting = `${greeting}, ${displayName}!`;
 
-  const personalGreeting = userProfile.name
-    ? `${greeting}, ${displayName}!`
-    : genderedText(gender, `${greeting}!`, `${greeting}!`);
+  const quickStats = [
+    {
+      label: 'סוכר אחרון',
+      value: latestSugar ? String(latestSugar.level) : '--',
+      suffix: latestSugar ? 'mg/dL' : 'התחל/י רישום',
+    },
+    {
+      label: 'ממוצע 7 ימים',
+      value: weeklyAverage ? String(weeklyAverage) : '--',
+      suffix: weeklyAverage ? 'mg/dL' : 'אין מספיק נתונים',
+    },
+    {
+      label: 'בטווח היעד',
+      value: inRangePercent !== null ? `${inRangePercent}%` : '--',
+      suffix: `${targetLow}-${targetHigh} mg/dL`,
+    },
+    {
+      label: 'היום עד עכשיו',
+      value:
+        medicationProgress !== null
+          ? `${medicationProgress}%`
+          : `${todayMeals.length}`,
+      suffix:
+        medicationProgress !== null
+          ? 'עמידה בתרופות'
+          : `${todayMeals.length} ארוחות`,
+    },
+  ];
 
   return (
     <div
@@ -65,18 +130,16 @@ export function GreetingSection() {
             </p>
           </div>
 
-          <div>
-            <div
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs"
-              style={{
-                background: 'rgba(255,255,255,0.18)',
-                color: 'rgba(255,255,255,0.95)',
-                fontWeight: 600,
-              }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-green-300 inline-block" />
-              {connectedText}
-            </div>
+          <div
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs"
+            style={{
+              background: 'rgba(255,255,255,0.18)',
+              color: 'rgba(255,255,255,0.95)',
+              fontWeight: 600,
+            }}
+          >
+            <span className="w-1.5 h-1.5 rounded-full bg-green-300 inline-block" />
+            {connectedText}
           </div>
         </div>
 
@@ -97,59 +160,62 @@ export function GreetingSection() {
         </div>
 
         <div
-          className="mt-5 flex gap-3 rounded-2xl p-3"
+          className="mt-5 rounded-2xl p-3"
           style={{
             background: 'rgba(255,255,255,0.13)',
             backdropFilter: 'blur(8px)',
           }}
         >
-          <div className="flex-1 text-center">
-            <p
-              className="text-xs mb-0.5"
-              style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}
-            >
-              סוכר אחרון
+          <div className="grid grid-cols-2 gap-3">
+            {quickStats.map((stat) => (
+              <div
+                key={stat.label}
+                className="rounded-2xl p-3 text-center"
+                style={{ backgroundColor: 'rgba(255,255,255,0.1)' }}
+              >
+                <p
+                  className="text-xs mb-1"
+                  style={{ color: 'rgba(255,255,255,0.65)', fontWeight: 600 }}
+                >
+                  {stat.label}
+                </p>
+                <p className="text-2xl text-white" style={{ fontWeight: 900 }}>
+                  {stat.value}
+                </p>
+                <p className="text-xs" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                  {stat.suffix}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <div
+            className="rounded-2xl px-4 py-3 flex-1"
+            style={{ backgroundColor: 'rgba(255,255,255,0.14)' }}
+          >
+            <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12, fontWeight: 700 }}>
+              מדידה אחרונה
             </p>
-            <p className="text-2xl text-white" style={{ fontWeight: 900 }}>
-              142
-            </p>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              mg/dL
+            <p style={{ color: 'white', fontWeight: 800, marginTop: 4 }}>
+              {latestSugar
+                ? `${latestSugar.contextLabel} • ${new Date(latestSugar.loggedAt).toLocaleTimeString('he-IL', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}`
+                : 'עדיין לא נרשמה מדידת סוכר היום'}
             </p>
           </div>
 
-          <div className="w-px" style={{ background: 'rgba(255,255,255,0.2)' }} />
-
-          <div className="flex-1 text-center">
-            <p
-              className="text-xs mb-0.5"
-              style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}
-            >
-              ממוצע שבועי
+          <div
+            className="rounded-2xl px-4 py-3"
+            style={{ backgroundColor: 'rgba(255,255,255,0.14)' }}
+          >
+            <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12, fontWeight: 700 }}>
+              ארוחות היום
             </p>
-            <p className="text-2xl text-white" style={{ fontWeight: 900 }}>
-              128
-            </p>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              mg/dL
-            </p>
-          </div>
-
-          <div className="w-px" style={{ background: 'rgba(255,255,255,0.2)' }} />
-
-          <div className="flex-1 text-center">
-            <p
-              className="text-xs mb-0.5"
-              style={{ color: 'rgba(255,255,255,0.6)', fontWeight: 500 }}
-            >
-              HbA1c
-            </p>
-            <p className="text-2xl text-white" style={{ fontWeight: 900 }}>
-              6.8
-            </p>
-            <p className="text-xs" style={{ color: 'rgba(255,255,255,0.5)' }}>
-              %
-            </p>
+            <p style={{ color: 'white', fontWeight: 900, fontSize: 24 }}>{todayMeals.length}</p>
           </div>
         </div>
       </div>

@@ -1,5 +1,5 @@
-import { X, Send, Sparkles, User, AlertCircle } from 'lucide-react';
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { X, Send, Sparkles, User, AlertCircle, Mic, Volume2, VolumeX } from 'lucide-react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { useAppContext } from '../context/AppContext';
 
 interface DoctorConsultScreenProps {
@@ -18,6 +18,36 @@ interface HistoryEntry {
   content: string;
 }
 
+interface SpeechRecognitionResultLike {
+  isFinal: boolean;
+  0: {
+    transcript: string;
+  };
+}
+
+interface SpeechRecognitionEventLike {
+  results: ArrayLike<SpeechRecognitionResultLike>;
+}
+
+interface SpeechRecognitionLike {
+  lang: string;
+  interimResults: boolean;
+  maxAlternatives: number;
+  continuous: boolean;
+  start(): void;
+  stop(): void;
+  onresult: ((event: SpeechRecognitionEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+}
+
+declare global {
+  interface Window {
+    webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+    SpeechRecognition?: new () => SpeechRecognitionLike;
+  }
+}
+
 function nowTime() {
   return new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 }
@@ -27,15 +57,15 @@ const CHAT_ENDPOINT = '/api/chat';
 const INITIAL_MESSAGE: Message = {
   id: 'm0',
   from: 'ai',
-  text: 'שלום! אני עוזרת הבריאות שלך, מבוססת בינה מלאכותית. אוכל לענות על שאלות לגבי סוכרת, תזונה, תרופות ופעילות גופנית. במה אוכל לעזור לך היום?',
+  text: 'שלום, אני עוזרת הבריאות שלך. אפשר לשאול אותי על סוכרת, תרופות, תזונה, פעילות גופנית או מה לבדוק עכשיו.',
   time: nowTime(),
 };
 
 const QUICK_SUGGESTIONS = [
   'מה הסוכר התקין לפני ארוחה?',
   'מתי הכי טוב לקחת מטפורמין?',
-  'איזה ספורט מתאים לסוכרתיות?',
-  'מה מותר לאכול בארוחת בוקר?',
+  'איזו ארוחת ערב טובה לחולי סוכרת?',
+  'מה לבדוק אם יש חולשה או סחרחורת?',
 ];
 
 export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
@@ -45,12 +75,69 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isListening, setIsListening] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
+
+  const speechRecognitionSupported = Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
+  const speechSynthesisSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  const speakText = useCallback((text: string) => {
+    if (!speechSynthesisSupported || !autoSpeak) return;
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'he-IL';
+    utterance.rate = 0.95;
+    window.speechSynthesis.speak(utterance);
+  }, [autoSpeak, speechSynthesisSupported]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
+
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+      if (speechSynthesisSupported) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [speechSynthesisSupported]);
+
+  const startListening = () => {
+    if (!speechRecognitionSupported || isListening) return;
+
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) return;
+
+    const recognition = new Recognition();
+    recognition.lang = 'he-IL';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript ?? '')
+        .join(' ')
+        .trim();
+
+      if (transcript) {
+        setInput(transcript);
+      }
+    };
+    recognition.onerror = () => {
+      setIsListening(false);
+    };
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
+  };
 
   const sendMessage = useCallback(async (text?: string) => {
     const messageText = (text ?? input).trim();
@@ -89,10 +176,10 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       }
 
       const replyText: string =
-        data?.reply ?? 'מצטערת, לא הצלחתי להשיב כרגע. נסי שוב.';
+        data?.reply ?? 'מצטערת, לא הצלחתי להשיב כרגע. נסו שוב בעוד רגע.';
 
       const replyMsg: Message = {
-        id: (Date.now() + 1).toString(),
+        id: `${Date.now()}-reply`,
         from: 'ai',
         text: replyText,
         time: nowTime(),
@@ -104,20 +191,21 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
         { role: 'user', content: messageText },
         { role: 'assistant', content: replyText },
       ]);
+      speakText(replyText);
     } catch (err) {
       console.error('DoctorConsultScreen sendMessage failed:', err);
-      setError('לא ניתן להתחבר לשירות כרגע. בדקי את החיבור לאינטרנט ונסי שוב.');
-      setMessages((prev) => prev.filter((m) => m.id !== userMsg.id));
+      setError('לא ניתן להתחבר לשירות כרגע. בדקו את החיבור ונסו שוב.');
+      setMessages((prev) => prev.filter((message) => message.id !== userMsg.id));
       setInput(messageText);
     } finally {
       setIsTyping(false);
     }
-  }, [input, isTyping, history]);
+  }, [history, input, isTyping, speakText]);
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      void sendMessage();
     }
   };
 
@@ -151,30 +239,47 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
               style={{ boxShadow: '0 0 6px rgba(134,239,172,0.8)' }}
             />
             <p className="text-xs" style={{ color: 'rgba(255,255,255,0.85)', fontWeight: 500 }}>
-              GPT-4o-mini · זמינה תמיד
+              חכמה, קולית, נגישה וברורה
             </p>
           </div>
         </div>
 
-        <div
-          className="w-12 h-12 rounded-xl flex items-center justify-center"
-          style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
-        >
-          <Sparkles size={20} strokeWidth={1.5} color="white" />
+        <div className="flex items-center gap-2">
+          {speechSynthesisSupported && (
+            <button
+              onClick={() => setAutoSpeak((current) => !current)}
+              className="w-12 h-12 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+              aria-label="הקראה קולית"
+            >
+              {autoSpeak ? (
+                <Volume2 size={19} strokeWidth={1.8} color="white" />
+              ) : (
+                <VolumeX size={19} strokeWidth={1.8} color="white" />
+              )}
+            </button>
+          )}
+
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center"
+            style={{ backgroundColor: 'rgba(255,255,255,0.2)' }}
+          >
+            <Sparkles size={20} strokeWidth={1.5} color="white" />
+          </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
-        {messages.map((msg) => (
+        {messages.map((message) => (
           <div
-            key={msg.id}
-            className={`flex items-end gap-3 ${msg.from === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
+            key={message.id}
+            className={`flex items-end gap-3 ${message.from === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
           >
             <div
               className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
-              style={{ background: msg.from === 'ai' ? theme.gradientCard : '#F3F4F6' }}
+              style={{ background: message.from === 'ai' ? theme.gradientCard : '#F3F4F6' }}
             >
-              {msg.from === 'ai' ? (
+              {message.from === 'ai' ? (
                 <Sparkles size={16} strokeWidth={1.5} color="white" />
               ) : (
                 <User size={17} strokeWidth={1.5} style={{ color: '#374151' }} />
@@ -185,26 +290,27 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
               <div
                 className="px-4 py-3.5 text-sm leading-relaxed"
                 style={{
-                  backgroundColor: msg.from === 'user' ? theme.primary : '#FFFFFF',
-                  color: msg.from === 'user' ? '#FFFFFF' : '#1F2937',
-                  fontWeight: 400,
-                  borderRadius: msg.from === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
-                  border: msg.from === 'ai' ? `1.5px solid ${theme.primaryBorder}` : 'none',
+                  backgroundColor: message.from === 'user' ? theme.primary : '#FFFFFF',
+                  color: message.from === 'user' ? '#FFFFFF' : '#1F2937',
+                  fontWeight: 500,
+                  borderRadius: message.from === 'user' ? '18px 18px 4px 18px' : '4px 18px 18px 18px',
+                  border: message.from === 'ai' ? `1.5px solid ${theme.primaryBorder}` : 'none',
                   boxShadow:
-                    msg.from === 'ai'
+                    message.from === 'ai'
                       ? `0 2px 8px ${theme.primary}14`
                       : `0 4px 12px ${theme.primaryShadow}`,
                   textAlign: 'right',
                   direction: 'rtl',
+                  lineHeight: 1.8,
                 }}
               >
-                {msg.text}
+                {message.text}
               </div>
               <p
-                className={`text-xs mt-1.5 ${msg.from === 'user' ? 'text-left' : 'text-right'}`}
+                className={`text-xs mt-1.5 ${message.from === 'user' ? 'text-left' : 'text-right'}`}
                 style={{ color: '#9CA3AF' }}
               >
-                {msg.time}
+                {message.time}
               </p>
             </div>
           </div>
@@ -227,13 +333,13 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
                 boxShadow: `0 2px 8px ${theme.primary}14`,
               }}
             >
-              {[0, 1, 2].map((i) => (
+              {[0, 1, 2].map((index) => (
                 <div
-                  key={i}
+                  key={index}
                   className="w-2.5 h-2.5 rounded-full"
                   style={{
                     backgroundColor: theme.primaryMuted,
-                    animation: `bounce 1.2s ease-in-out ${i * 0.2}s infinite`,
+                    animation: `bounce 1.2s ease-in-out ${index * 0.2}s infinite`,
                   }}
                 />
               ))}
@@ -255,26 +361,23 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
 
         {showSuggestions && (
           <div className="space-y-2.5 mt-2">
-            <p
-              className="text-xs text-right pr-1"
-              style={{ color: theme.primaryMuted, fontWeight: 600 }}
-            >
+            <p className="text-xs text-right pr-1" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
               שאלות מהירות:
             </p>
-            {QUICK_SUGGESTIONS.map((s) => (
+            {QUICK_SUGGESTIONS.map((suggestion) => (
               <button
-                key={s}
-                onClick={() => sendMessage(s)}
+                key={suggestion}
+                onClick={() => void sendMessage(suggestion)}
                 className="w-full text-right px-5 py-4 rounded-2xl text-sm transition-all active:scale-[0.98]"
                 style={{
                   backgroundColor: '#FFFFFF',
                   border: `1.5px solid ${theme.primaryBorder}`,
                   color: theme.primary,
-                  fontWeight: 600,
+                  fontWeight: 700,
                   boxShadow: `0 2px 8px ${theme.primary}0A`,
                 }}
               >
-                {s}
+                {suggestion}
               </button>
             ))}
           </div>
@@ -292,7 +395,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       >
         <div className="flex items-center gap-3">
           <button
-            onClick={() => sendMessage()}
+            onClick={() => void sendMessage()}
             disabled={!input.trim() || isTyping}
             className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-200 active:scale-95"
             style={{
@@ -303,25 +406,39 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
             <Send size={20} strokeWidth={2} color={input.trim() && !isTyping ? 'white' : '#9CA3AF'} />
           </button>
 
+          {speechRecognitionSupported && (
+            <button
+              onClick={startListening}
+              disabled={isListening}
+              className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-200 active:scale-95"
+              style={{
+                backgroundColor: isListening ? '#DBEAFE' : theme.primaryBg,
+                border: `1.5px solid ${isListening ? '#60A5FA' : theme.primaryBorder}`,
+                color: isListening ? '#1D4ED8' : theme.primary,
+              }}
+            >
+              <Mic size={19} strokeWidth={2} />
+            </button>
+          )}
+
           <input
-            ref={inputRef}
             type="text"
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(event) => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="שאלי כל שאלה על הסוכרת שלך..."
+            placeholder={isListening ? 'מאזינה...' : 'שאלו כל שאלה על הסוכרת, התרופות או הארוחות'}
             dir="rtl"
             className="flex-1 h-12 px-4 rounded-2xl text-sm outline-none transition-all"
             style={{
               backgroundColor: theme.primaryBg,
               border: `1.5px solid ${input ? theme.primary : theme.primaryBorder}`,
               color: '#1F2937',
-              fontWeight: 400,
+              fontWeight: 500,
               boxShadow: input ? `0 0 0 3px ${theme.primaryShadow}22` : 'none',
             }}
           />
         </div>
-        <p className="text-xs text-center mt-2.5" style={{ color: theme.primaryMuted, fontWeight: 400 }}>
+        <p className="text-xs text-center mt-2.5" style={{ color: theme.primaryMuted, fontWeight: 500 }}>
           תשובות AI אינן תחליף לייעוץ רפואי מקצועי
         </p>
       </div>

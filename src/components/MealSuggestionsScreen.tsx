@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { type ReactNode, useState } from 'react';
 import { X, CheckSquare, Square, UtensilsCrossed, Moon, Sun, Coffee, ChevronLeft } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 import { RecipeModal, RecipeDetail } from './RecipeModal';
@@ -101,7 +101,7 @@ const habits: HabitItem[] = [
   { id: 'sugar', label: 'בדקתי רמת סוכר', icon: '🩸' },
 ];
 
-const MEAL_ICONS: Record<string, React.ReactNode> = {
+const MEAL_ICONS: Record<string, ReactNode> = {
   breakfast: <Coffee size={17} strokeWidth={1.75} />,
   lunch: <Sun size={17} strokeWidth={1.75} />,
   dinner: <Moon size={17} strokeWidth={1.75} />,

@@ -2,12 +2,26 @@ import { Bell, Settings } from 'lucide-react';
 import { Logo } from './Logo';
 import { useAppContext } from '../context/AppContext';
 
-interface HeaderProps {
-  onSettingsClick: () => void;
+function getTodayKey() {
+  return new Date().toISOString().split('T')[0];
 }
 
-export function Header({ onSettingsClick }: HeaderProps) {
-  const { theme } = useAppContext();
+export function Header({ onSettingsClick }: { onSettingsClick: () => void }) {
+  const { theme, medicationSchedule, medicationLogs } = useAppContext();
+  const todayKey = getTodayKey();
+  const takenMedicationIds = new Set(
+    medicationLogs
+      .filter((log) => log.dateKey === todayKey)
+      .map((log) => log.medicationId)
+  );
+
+  const notificationCount = medicationSchedule.filter((medication) => {
+    if (takenMedicationIds.has(medication.id)) return false;
+    const [hours, minutes] = medication.time.split(':').map(Number);
+    const scheduledAt = new Date();
+    scheduledAt.setHours(hours || 0, minutes || 0, 0, 0);
+    return scheduledAt.getTime() <= Date.now();
+  }).length;
 
   return (
     <header
@@ -32,7 +46,7 @@ export function Header({ onSettingsClick }: HeaderProps) {
               הסוכרת שלי
             </h1>
             <p className="text-xs mt-0.5" style={{ color: theme.primaryMuted, fontWeight: 500, transition: 'color 0.4s ease' }}>
-              התמודדות חכמה עם סוכרת
+              חוויית ניהול חכמה, בטוחה ונגישה יותר
             </p>
           </div>
         </div>
@@ -41,12 +55,17 @@ export function Header({ onSettingsClick }: HeaderProps) {
           <button
             className="p-2.5 rounded-xl relative transition-colors"
             style={{ color: theme.primary, backgroundColor: `${theme.primary}12` }}
+            aria-label="התראות"
           >
             <Bell size={22} strokeWidth={1.75} />
-            <span
-              className="absolute top-2 right-2 w-2 h-2 rounded-full"
-              style={{ backgroundColor: theme.primary }}
-            />
+            {notificationCount > 0 && (
+              <span
+                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[11px] flex items-center justify-center"
+                style={{ backgroundColor: '#EF4444', color: '#FFFFFF', fontWeight: 800 }}
+              >
+                {notificationCount}
+              </span>
+            )}
           </button>
           <button
             onClick={onSettingsClick}

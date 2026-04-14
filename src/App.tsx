@@ -19,7 +19,7 @@ import { MealSuggestionsScreen } from './components/MealSuggestionsScreen';
 import { ProfileSettingsModal } from './components/ProfileSettingsModal';
 
 function AppInner() {
-  const { onboardingDone, theme } = useAppContext();
+  const { onboardingDone, theme, logSugar } = useAppContext();
 
   const [showMealLogger, setShowMealLogger] = useState(false);
   const [showSugarModal, setShowSugarModal] = useState(false);
@@ -37,7 +37,12 @@ function AppInner() {
     return <OnboardingScreen />;
   }
 
-  const handleSugarSave = () => {
+  const handleSugarSave = (value: number, contextLabel: string, context: 'fasting' | 'before_meal' | 'after_meal' | 'bedtime' | 'exercise' | 'custom') => {
+    logSugar({
+      level: value,
+      context,
+      contextLabel,
+    });
     setShowSugarModal(false);
   };
 

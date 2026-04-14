@@ -8,10 +8,11 @@ import {
   UtensilsCrossed,
   Video,
 } from 'lucide-react';
+import { type ReactNode } from 'react';
 import { Gender, useAppContext, genderedText } from '../context/AppContext';
 
 interface ActionItem {
-  icon: React.ReactNode;
+  icon: ReactNode;
   labelFn?: (gender: Gender) => string;
   label?: string;
   sublabel: string;

@@ -29,6 +29,19 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
     [emergencyContact.phone]
   );
 
+  const normalizePhoneForWhatsApp = useCallback((phone: string) => {
+    const digits = phone.replace(/[^\d]/g, "");
+    if (!digits) return "";
+    if (digits.startsWith("972")) return digits;
+    if (digits.startsWith("0")) return `972${digits.slice(1)}`;
+    return digits;
+  }, []);
+
+  const emergencyText = useMemo(() => {
+    const namePrefix = userProfile.name ? `${userProfile.name}: ` : "";
+    return `${namePrefix}${emergencyContact.message} ${locationText || ""}`.trim();
+  }, [emergencyContact.message, locationText, userProfile.name]);
+
   useEffect(() => {
     if (savedLocation) {
       setLocationText(`https://maps.google.com/?q=${savedLocation.lat},${savedLocation.lng}`);
@@ -197,7 +210,7 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
       return;
     }
 
-    const body = `${emergencyContact.message} ${locationText || ""}`.trim();
+    const body = emergencyText;
     window.location.href = `sms:${emergencyContact.phone}?body=${encodeURIComponent(body)}`;
   };
 
@@ -207,8 +220,8 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
       return;
     }
 
-    const text = `${emergencyContact.message} ${locationText || ""}`.trim();
-    const phone = emergencyContact.phone.replace(/[^\d]/g, "");
+    const text = emergencyText;
+    const phone = normalizePhoneForWhatsApp(emergencyContact.phone);
     window.open(`https://wa.me/${phone}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
