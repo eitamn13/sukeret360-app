@@ -1,13 +1,14 @@
 // src/components/SmartMealLogger.tsx
 import React, { useState } from "react";
 import { useAppContext } from "../context/AppContext";
-import { X, Camera, Plus } from "lucide-react";
+import { X, Camera, Plus, Trash2 } from "lucide-react";
 
 type MealType = "breakfast" | "lunch" | "dinner" | "snack";
 
 interface DetectedFood {
   name: string;
   carbs: number;
+  image?: string;
 }
 
 export function SmartMealLogger({ onClose }: { onClose: () => void }) {
@@ -31,27 +32,39 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
     setImage(file);
     setLoading(true);
 
-    // 🔹 כאן תשלח את התמונה ל-API אמיתי
-    // לדוגמה בלבד, מחזיר שני מזונות
-    setTimeout(() => {
-      setAISuggestions([
-        { name: "לחם מלא", carbs: 15 },
-        { name: "עגבנייה", carbs: 3 },
-      ]);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // 🔹 API אמיתי לזיהוי אוכל
+      const response = await fetch("/api/vision", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      // data.foods = [{ name: 'לחם מלא', carbs: 15, image: '🍞' }, ...]
+      setAISuggestions(data.foods || []);
+    } catch (error) {
+      console.error("Error detecting food:", error);
+      alert("לא הצלחנו לזהות את המזון. נסה שוב.");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
-  const addMeal = (food: DetectedFood) => {
-    setManualMeals((prev) => [...prev, food]);
-  };
-
-  const removeMeal = (index: number) => {
-    setManualMeals((prev) => prev.filter((_, i) => i !== index));
-  };
+  const addMeal = (food: DetectedFood) => setManualMeals((prev) => [...prev, food]);
+  const removeMeal = (index: number) => setManualMeals((prev) => prev.filter((_, i) => i !== index));
 
   const saveMeals = () => {
-    manualMeals.forEach((food) => logMeal({ ...food, id: Date.now().toString(), loggedAt: new Date().toISOString() }));
+    manualMeals.forEach((food) =>
+      logMeal({
+        ...food,
+        id: Date.now().toString(),
+        loggedAt: new Date().toISOString(),
+      })
+    );
     onClose();
   };
 
@@ -71,7 +84,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
       <div
         style={{
           width: "100%",
-          maxWidth: 420,
+          maxWidth: 440,
           maxHeight: "90vh",
           overflowY: "auto",
           background: theme.primaryBg,
@@ -81,6 +94,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           direction: "rtl",
         }}
       >
+        {/* כותרת וסגירה */}
         <div className="flex justify-between items-center mb-4">
           <h2 style={{ fontWeight: 800, fontSize: 20 }}>רישום ארוחה חכמה</h2>
           <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
@@ -91,7 +105,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
         {/* שלב 1: בחירת סוג ארוחה */}
         {step === 0 && (
           <div className="space-y-3">
-            <p>בחר סוג ארוחה:</p>
+            <p>בחר סוג הארוחה:</p>
             <div className="grid grid-cols-2 gap-2">
               {mealTypes.map((m) => (
                 <button
@@ -127,50 +141,92 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {/* שלב 2: צילום / העלאת תמונה */}
+        {/* שלב 2: צילום או העלאת תמונה */}
         {step === 1 && (
           <div className="space-y-3">
             <p>צלם או העלה תמונה של הארוחה:</p>
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-            />
+            <label
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 6,
+                cursor: "pointer",
+                padding: 12,
+                background: theme.primary,
+                color: "white",
+                borderRadius: 12,
+                fontWeight: 700,
+              }}
+            >
+              <Camera size={18} />
+              העלה תמונה
+              <input
+                type="file"
+                accept="image/*"
+                style={{ display: "none" }}
+                onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+              />
+            </label>
+
             {loading && <p>מאתר אוכל...</p>}
-            {aiSuggestions.map((f, idx) => (
-              <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px", border: "1px solid #E5E7EB", borderRadius: 12 }}>
-                <span>{f.name} - {f.carbs}g פחמימות</span>
-                <button onClick={() => addMeal(f)}>
-                  <Plus size={16} />
-                </button>
+
+            {aiSuggestions.length > 0 && (
+              <div className="space-y-2">
+                {aiSuggestions.map((f, idx) => (
+                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px", border: "1px solid #E5E7EB", borderRadius: 12 }}>
+                    <span>{f.name} - {f.carbs}g פחמימות {f.image}</span>
+                    <button onClick={() => addMeal(f)}>
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                ))}
               </div>
-            ))}
+            )}
+
             <button
               onClick={() => setStep(2)}
-              style={{ marginTop: 12, width: "100%", padding: "12px", borderRadius: 12, backgroundColor: theme.primary, color: "white", fontWeight: 700 }}
+              style={{
+                marginTop: 12,
+                width: "100%",
+                padding: "12px",
+                borderRadius: 12,
+                backgroundColor: theme.primary,
+                color: "white",
+                fontWeight: 700,
+              }}
             >
               המשך
             </button>
           </div>
         )}
 
-        {/* שלב 3: סיכום / עריכה */}
+        {/* שלב 3: סיכום ושמירה */}
         {step === 2 && (
           <div className="space-y-3">
             <p>סיכום הארוחה:</p>
             {manualMeals.map((f, idx) => (
               <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px", border: "1px solid #E5E7EB", borderRadius: 12 }}>
-                <span>{f.name} - {f.carbs}g פחמימות</span>
+                <span>{f.name} - {f.carbs}g פחמימות {f.image}</span>
                 <button onClick={() => removeMeal(idx)}>
-                  <X size={16} />
+                  <Trash2 size={16} />
                 </button>
               </div>
             ))}
+
             <button
               onClick={saveMeals}
-              style={{ marginTop: 12, width: "100%", padding: "12px", borderRadius: 12, backgroundColor: theme.primary, color: "white", fontWeight: 700 }}
+              style={{
+                marginTop: 12,
+                width: "100%",
+                padding: "12px",
+                borderRadius: 12,
+                backgroundColor: theme.primary,
+                color: "white",
+                fontWeight: 700,
+              }}
             >
-              שמור
+              שמור ארוחה
             </button>
           </div>
         )}
