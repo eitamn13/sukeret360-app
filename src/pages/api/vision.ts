@@ -21,7 +21,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for await (const chunk of req) buffers.push(chunk);
     const fileBuffer = Buffer.concat(buffers);
 
-    // שולחים ל-OpenAI
+    // שולחים ל-OpenAI עם הנחיה מפורשת ל-JSON
     const response = await openai.responses.create({
       model: "gpt-4.1-mini",
       input: [
@@ -51,7 +51,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         const parsed = JSON.parse(response.output_text);
         if (Array.isArray(parsed)) foods = parsed;
       } catch {
-        foods = [{ name: response.output_text, carbs: 0 }];
+        // fallback: אם JSON לא תקין, מחזיר את הטקסט כהצעה אחת
+        foods = [{ name: response.output_text || "לא זוהה", carbs: 0 }];
       }
     }
 
