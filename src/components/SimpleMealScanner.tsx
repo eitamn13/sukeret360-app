@@ -1,7 +1,6 @@
 // /components/SimpleMealScanner.tsx
 import React, { useState } from "react";
-import { Camera, Plus } from "lucide-react";
-import { useAppContext } from "../context/AppContext";
+import { Camera } from "lucide-react";
 
 interface DetectedFood {
   name: string;
@@ -9,7 +8,6 @@ interface DetectedFood {
 }
 
 export default function SimpleMealScanner() {
-  const { logMeal, theme } = useAppContext();
   const [image, setImage] = useState<File | null>(null);
   const [foods, setFoods] = useState<DetectedFood[]>([]);
   const [loading, setLoading] = useState(false);
@@ -34,89 +32,52 @@ export default function SimpleMealScanner() {
       }
 
       setFoods(data.foods);
-    } catch (err) {
-      console.error(err);
+    } catch {
       setError("שגיאה בטעינת המזון. נסה שוב.");
     } finally {
       setLoading(false);
     }
   };
 
-  const saveFood = (food: DetectedFood) => {
-    logMeal({
-      ...food,
-      id: Date.now().toString(),
-      loggedAt: new Date().toISOString(),
-    });
-  };
-
   return (
     <div style={{ padding: 16, maxWidth: 500, margin: "0 auto" }}>
       <h2>סריקת ארוחה חכמה</h2>
 
-      <label
-        style={{
-          display: "inline-flex",
-          alignItems: "center",
-          gap: 8,
-          cursor: "pointer",
-          padding: 10,
-          backgroundColor: theme.primary,
-          color: "#fff",
-          borderRadius: 8,
-          marginTop: 12,
-        }}
-      >
+      <label style={{
+        display: "inline-flex",
+        alignItems: "center",
+        gap: 8,
+        cursor: "pointer",
+        padding: 10,
+        backgroundColor: "#4f46e5",
+        color: "#fff",
+        borderRadius: 8,
+        marginTop: 12,
+      }}>
         <Camera size={18} /> צלם / העלה תמונה
-        <input
-          type="file"
-          accept="image/*"
-          style={{ display: "none" }}
-          onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-        />
+        <input type="file" accept="image/*" style={{ display: "none" }}
+          onChange={e => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
       </label>
 
-      {loading && (
-        <p style={{ marginTop: 12 }}>מאתר מזון...</p>
-      )}
-
-      {error && (
-        <p style={{ marginTop: 12, color: "red" }}>{error}</p>
-      )}
+      {loading && <p style={{ marginTop: 12 }}>מאתר מזון...</p>}
+      {error && <p style={{ marginTop: 12, color: "red" }}>{error}</p>}
 
       {foods.length > 0 && (
         <div style={{ marginTop: 16 }}>
           <h3>המזונות שזוהו:</h3>
           {foods.map((f, i) => (
-            <div
-              key={i}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                padding: 6,
-                border: "1px solid #E5E7EB",
-                borderRadius: 6,
-                marginBottom: 4,
-              }}
-            >
+            <div key={i} style={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: 6,
+              border: "1px solid #E5E7EB",
+              borderRadius: 6,
+              marginBottom: 4,
+            }}>
               <span>{f.name} - {f.carbs}g פחמימות</span>
-              <button
-                onClick={() => saveFood(f)}
-                style={{ backgroundColor: theme.primary, color: "#fff", padding: "4px 8px", borderRadius: 4 }}
-              >
-                שמור
-              </button>
             </div>
           ))}
-
-          <div
-            style={{
-              marginTop: 12,
-              padding: 8,
-              backgroundColor: "#FEF3F2",
-              borderRadius: 6,
-            }}
-          >
+          <div style={{ marginTop: 12, padding: 8, backgroundColor: "#FEF3F2", borderRadius: 6 }}>
             <strong>טיפים לחולי סכרת:</strong>
             <ul style={{ margin: 0, paddingLeft: 16 }}>
               <li>הוסף סיבים בתזונה</li>
