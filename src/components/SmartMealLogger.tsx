@@ -1,18 +1,17 @@
-// src/components/SmartMealLogger.tsx
 import React, { useState } from "react";
-import { useAppContext } from "../context/AppContext";
-import { X, Camera, Plus, Trash2 } from "lucide-react";
+import { useAppContext, genderedText } from "../context/AppContext";
+import { X, Camera, Plus } from "lucide-react";
 
 type MealType = "breakfast" | "lunch" | "dinner" | "snack";
 
 interface DetectedFood {
   name: string;
   carbs: number;
-  image?: string;
 }
 
 export function SmartMealLogger({ onClose }: { onClose: () => void }) {
-  const { logMeal, theme } = useAppContext();
+  const { logMeal, theme, userProfile } = useAppContext();
+  const gender = userProfile.gender;
 
   const [step, setStep] = useState(0);
   const [mealType, setMealType] = useState<MealType>("breakfast");
@@ -22,10 +21,10 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
   const [loading, setLoading] = useState(false);
 
   const mealTypes: { value: MealType; label: string }[] = [
-    { value: "breakfast", label: "בוקר" },
-    { value: "lunch", label: "צהריים" },
-    { value: "dinner", label: "ערב" },
-    { value: "snack", label: "חטיף" },
+    { value: "breakfast", label: genderedText(gender, "בוקר", "בוקר") },
+    { value: "lunch", label: genderedText(gender, "צהריים", "צהריים") },
+    { value: "dinner", label: genderedText(gender, "ערב", "ערב") },
+    { value: "snack", label: genderedText(gender, "חטיף", "חטיף") },
   ];
 
   const handleImageUpload = async (file: File) => {
@@ -36,34 +35,33 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
       const formData = new FormData();
       formData.append("file", file);
 
-      // 🔹 API אמיתי לזיהוי אוכל
+      // כאן נשלח ל-API לזיהוי אוכל
       const response = await fetch("/api/vision", {
         method: "POST",
         body: formData,
       });
-
       const data = await response.json();
 
-      // data.foods = [{ name: 'לחם מלא', carbs: 15, image: '🍞' }, ...]
       setAISuggestions(data.foods || []);
     } catch (error) {
-      console.error("Error detecting food:", error);
-      alert("לא הצלחנו לזהות את המזון. נסה שוב.");
+      console.error(error);
+      alert(genderedText(gender, "לא הצלחנו לזהות את המזון. נסי שוב.", "לא הצלחנו לזהות את המזון. נסה שוב."));
     } finally {
       setLoading(false);
     }
   };
 
-  const addMeal = (food: DetectedFood) => setManualMeals((prev) => [...prev, food]);
-  const removeMeal = (index: number) => setManualMeals((prev) => prev.filter((_, i) => i !== index));
+  const addMeal = (food: DetectedFood) => {
+    setManualMeals((prev) => [...prev, food]);
+  };
+
+  const removeMeal = (index: number) => {
+    setManualMeals((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const saveMeals = () => {
     manualMeals.forEach((food) =>
-      logMeal({
-        ...food,
-        id: Date.now().toString(),
-        loggedAt: new Date().toISOString(),
-      })
+      logMeal({ ...food, id: Date.now().toString(), loggedAt: new Date().toISOString() })
     );
     onClose();
   };
@@ -94,18 +92,17 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           direction: "rtl",
         }}
       >
-        {/* כותרת וסגירה */}
         <div className="flex justify-between items-center mb-4">
-          <h2 style={{ fontWeight: 800, fontSize: 20 }}>רישום ארוחה חכמה</h2>
+          <h2 style={{ fontWeight: 800, fontSize: 20 }}>{genderedText(gender, "רישום ארוחה חכמה", "רישום ארוחה חכמה")}</h2>
           <button onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer" }}>
             <X size={22} />
           </button>
         </div>
 
-        {/* שלב 1: בחירת סוג ארוחה */}
+        {/* שלב 1: סוג הארוחה */}
         {step === 0 && (
           <div className="space-y-3">
-            <p>בחר סוג הארוחה:</p>
+            <p>{genderedText(gender, "בחרי סוג ארוחה:", "בחר סוג ארוחה:")}</p>
             <div className="grid grid-cols-2 gap-2">
               {mealTypes.map((m) => (
                 <button
@@ -126,30 +123,21 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
             </div>
             <button
               onClick={() => setStep(1)}
-              style={{
-                marginTop: 12,
-                width: "100%",
-                padding: "12px",
-                borderRadius: 12,
-                backgroundColor: theme.primary,
-                color: "white",
-                fontWeight: 700,
-              }}
+              style={{ marginTop: 12, width: "100%", padding: "12px", borderRadius: 12, backgroundColor: theme.primary, color: "white", fontWeight: 700 }}
             >
-              המשך
+              {genderedText(gender, "המשך", "המשך")}
             </button>
           </div>
         )}
 
-        {/* שלב 2: צילום או העלאת תמונה */}
+        {/* שלב 2: צילום / העלאת תמונה */}
         {step === 1 && (
           <div className="space-y-3">
-            <p>צלם או העלה תמונה של הארוחה:</p>
+            <p>{genderedText(gender, "צלמי או העלי תמונה של הארוחה:", "צלם או העלה תמונה של הארוחה:")}</p>
             <label
               style={{
                 display: "inline-flex",
                 alignItems: "center",
-                justifyContent: "center",
                 gap: 6,
                 cursor: "pointer",
                 padding: 12,
@@ -160,73 +148,42 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               }}
             >
               <Camera size={18} />
-              העלה תמונה
-              <input
-                type="file"
-                accept="image/*"
-                style={{ display: "none" }}
-                onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-              />
+              {genderedText(gender, "העלי תמונה", "העלה תמונה")}
+              <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
             </label>
-
-            {loading && <p>מאתר אוכל...</p>}
-
-            {aiSuggestions.length > 0 && (
-              <div className="space-y-2">
-                {aiSuggestions.map((f, idx) => (
-                  <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px", border: "1px solid #E5E7EB", borderRadius: 12 }}>
-                    <span>{f.name} - {f.carbs}g פחמימות {f.image}</span>
-                    <button onClick={() => addMeal(f)}>
-                      <Plus size={16} />
-                    </button>
-                  </div>
-                ))}
+            {loading && <p>{genderedText(gender, "מאתרת אוכל...", "מאתר אוכל...")}</p>}
+            {aiSuggestions.map((f, idx) => (
+              <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 6, border: "1px solid #E5E7EB", borderRadius: 12 }}>
+                <span>{f.name} - {f.carbs}g פחמימות</span>
+                <button onClick={() => addMeal(f)}>
+                  <Plus size={16} />
+                </button>
               </div>
-            )}
-
+            ))}
             <button
               onClick={() => setStep(2)}
-              style={{
-                marginTop: 12,
-                width: "100%",
-                padding: "12px",
-                borderRadius: 12,
-                backgroundColor: theme.primary,
-                color: "white",
-                fontWeight: 700,
-              }}
+              style={{ marginTop: 12, width: "100%", padding: 12, borderRadius: 12, backgroundColor: theme.primary, color: "white", fontWeight: 700 }}
             >
-              המשך
+              {genderedText(gender, "המשך", "המשך")}
             </button>
           </div>
         )}
 
-        {/* שלב 3: סיכום ושמירה */}
+        {/* שלב 3: סיכום */}
         {step === 2 && (
           <div className="space-y-3">
-            <p>סיכום הארוחה:</p>
+            <p>{genderedText(gender, "סיכום הארוחה:", "סיכום הארוחה:")}</p>
             {manualMeals.map((f, idx) => (
-              <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px", border: "1px solid #E5E7EB", borderRadius: 12 }}>
-                <span>{f.name} - {f.carbs}g פחמימות {f.image}</span>
-                <button onClick={() => removeMeal(idx)}>
-                  <Trash2 size={16} />
-                </button>
+              <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 6, border: "1px solid #E5E7EB", borderRadius: 12 }}>
+                <span>{f.name} - {f.carbs}g פחמימות</span>
+                <button onClick={() => removeMeal(idx)}><X size={16} /></button>
               </div>
             ))}
-
             <button
               onClick={saveMeals}
-              style={{
-                marginTop: 12,
-                width: "100%",
-                padding: "12px",
-                borderRadius: 12,
-                backgroundColor: theme.primary,
-                color: "white",
-                fontWeight: 700,
-              }}
+              style={{ marginTop: 12, width: "100%", padding: 12, borderRadius: 12, backgroundColor: theme.primary, color: "white", fontWeight: 700 }}
             >
-              שמור ארוחה
+              {genderedText(gender, "שמור", "שמור")}
             </button>
           </div>
         )}
