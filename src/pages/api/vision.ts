@@ -1,17 +1,12 @@
-// pages/api/vision.ts
+// /pages/api/vision.ts
 import type { NextApiRequest, NextApiResponse } from "next";
 import OpenAI from "openai";
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
-export const config = {
-  api: { bodyParser: false },
-};
+export const config = { api: { bodyParser: false } };
 
-interface DetectedFood {
-  name: string;
-  carbs: number;
-}
+interface DetectedFood { name: string; carbs: number; }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
@@ -21,24 +16,17 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     for await (const chunk of req) buffers.push(chunk);
     const fileBuffer = Buffer.concat(buffers);
 
-    // שולחים ל-OpenAI עם הנחיה מפורשת ל-JSON + טיפים לחולי סכרת
     const response = await openai.responses.create({
       model: "gpt-4.1-mini",
       input: [
         {
           role: "user",
           content: [
-            {
-              type: "input_text",
-              text: `
-אנא זיהוי את המזון בתמונה המצורפת והחזר JSON במבנה הבא:
-[
-  { "name": "שם המזון", "carbs": פחמימות בגרם }
-]
-אם לא ניתן לזהות מזון, החזר [{ "name": "לא זוהה", "carbs": 0 }].
-בנוסף, הוסף המלצות קצרות לחולי סכרת לכל מזון.
-`
-            },
+            { type: "input_text", text: `
+אנא זיהוי את המזון בתמונה המצורפת והחזר JSON במבנה:
+[{ "name": "שם המזון", "carbs": פחמימות בגרם }]
+אם לא ניתן לזהות מזון, החזר [{ "name": "לא זוהה", "carbs": 0 }]
+` },
             { type: "input_image", image_data: fileBuffer.toString("base64") },
           ],
         },
@@ -46,25 +34,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
 
     let foods: DetectedFood[] = [{ name: "לא זוהה", carbs: 0 }];
-
     if (response.output_text) {
-      try {
-        const parsed = JSON.parse(response.output_text);
-        if (Array.isArray(parsed)) foods = parsed;
-      } catch {
-        foods = [{ name: response.output_text || "לא זוהה", carbs: 0 }];
-      }
+      try { foods = JSON.parse(response.output_text); } 
+      catch { foods = [{ name: response.output_text || "לא זוהה", carbs: 0 }]; }
     }
 
-    // החזרה במבנה אחיד + טיפים לדוגמא
-    res.status(200).json({
-      foods,
-      tips: [
-        "הוסף סיבים בתזונה",
-        "הקפד על שתיית מים אחרי הארוחה",
-        "בדוק את רמת הסוכר לפי הצורך",
-      ],
-    });
+    res.status(200).json({ foods });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "לא הצלחנו לזהות את המזון. נסה שוב." });
