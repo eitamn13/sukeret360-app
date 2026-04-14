@@ -20,7 +20,7 @@ const DEFAULT_EMERGENCY_CONTACT: EmergencyContact = {
 };
 
 export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalProps) {
-  const { userProfile, saveUserProfile, theme } = useAppContext();
+  const { userProfile, saveUserProfile, saveEmergencyContact, theme } = useAppContext();
 
   const [name, setName] = useState(userProfile.name);
   const [age, setAge] = useState(userProfile.age);
@@ -71,14 +71,11 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
 
     saveUserProfile(updated);
 
-    localStorage.setItem(
-      'emergency_contact',
-      JSON.stringify({
-        name: emergencyName.trim(),
-        phone: emergencyPhone.trim(),
-        message: emergencyMessage.trim() || DEFAULT_EMERGENCY_CONTACT.message,
-      })
-    );
+    saveEmergencyContact({
+      name: emergencyName.trim(),
+      phone: emergencyPhone.trim(),
+      message: emergencyMessage.trim() || DEFAULT_EMERGENCY_CONTACT.message,
+    });
 
     setSaved(true);
     setTimeout(() => {

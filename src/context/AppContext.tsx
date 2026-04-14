@@ -1,6 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 
 export type Gender = 'female' | 'male' | '';
+export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 
 export function genderedText(
   gender: Gender,
@@ -51,6 +52,7 @@ export interface LoggedMeal {
   name: string;
   icon: string;
   carbs: number;
+  mealType: MealType;
   loggedAt: string;
 }
 
@@ -199,6 +201,13 @@ function getTodayKey(): string {
   return new Date().toISOString().split('T')[0];
 }
 
+function getTodayDateForTime(time: string): Date {
+  const [hours, minutes] = time.split(':').map(Number);
+  const date = new Date();
+  date.setHours(hours, minutes, 0, 0);
+  return date;
+}
+
 function getThemeForProfile(profile: UserProfile): Theme {
   return profile.gender === 'male' ? MALE_THEME : FEMALE_THEME;
 }
@@ -237,8 +246,19 @@ export function AppProvider({ children }: { children: ReactNode }) {
     readJson<MedicationLogEntry[]>('medication_logs', [])
   );
 
+  const [sentMedicationNotifications, setSentMedicationNotifications] = useState<string[]>(() => {
+    const todayKey = getTodayKey();
+    return readJson<string[]>('medication_notification_log', []).filter((entry) =>
+      entry.startsWith(todayKey)
+    );
+  });
+
   const [todayMeals, setTodayMeals] = useState<LoggedMeal[]>(() =>
-    readJson<LoggedMeal[]>('todayMeals', [])
+    readJson<LoggedMeal[]>('todayMeals', []).map((meal) => ({
+      ...meal,
+      icon: meal.icon || '🍽️',
+      mealType: meal.mealType || 'snack',
+    }))
   );
 
   const theme = useMemo(() => getThemeForProfile(userProfile), [userProfile]);
@@ -271,23 +291,31 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [medicationLogs]);
 
   useEffect(() => {
+    const todayKey = getTodayKey();
+    writeJson(
+      'medication_notification_log',
+      sentMedicationNotifications.filter((entry) => entry.startsWith(todayKey))
+    );
+  }, [sentMedicationNotifications]);
+
+  useEffect(() => {
     writeJson('todayMeals', todayMeals);
   }, [todayMeals]);
 
-  const isMedicationTakenToday = (medicationId: string) => {
+  const isMedicationTakenToday = useCallback((medicationId: string) => {
     const todayKey = getTodayKey();
     return medicationLogs.some(
       (log) => log.medicationId === medicationId && log.dateKey === todayKey
     );
-  };
+  }, [medicationLogs]);
 
-  const getMedicationTakenAt = (medicationId: string) => {
+  const getMedicationTakenAt = useCallback((medicationId: string) => {
     const todayKey = getTodayKey();
     const entry = medicationLogs.find(
       (log) => log.medicationId === medicationId && log.dateKey === todayKey
     );
     return entry?.takenAt ?? null;
-  };
+  }, [medicationLogs]);
 
   const requestBrowserNotificationPermission = async (): Promise<NotificationPermission | 'default'> => {
     if (typeof Notification === 'undefined') return 'default';
@@ -381,6 +409,82 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  useEffect(() => {
+    const todayKey = getTodayKey();
+    setSentMedicationNotifications((prev) =>
+      prev.filter((entry) => entry.startsWith(todayKey))
+    );
+  }, [medicationLogs]);
+
+  useEffect(() => {
+    if (typeof Notification === 'undefined') return;
+    if (notificationPermission !== 'granted') return;
+
+    const checkMedicationReminders = () => {
+      const todayKey = getTodayKey();
+      const now = new Date();
+      const takenMedicationIds = new Set(
+        medicationLogs
+          .filter((log) => log.dateKey === todayKey)
+          .map((log) => log.medicationId)
+      );
+
+      const nextNotificationKeys: string[] = [];
+
+      for (const medication of medicationSchedule) {
+        if (takenMedicationIds.has(medication.id)) {
+          continue;
+        }
+
+        const scheduledAt = getTodayDateForTime(medication.time);
+        const minutesLate = Math.floor((now.getTime() - scheduledAt.getTime()) / 60000);
+
+        if (minutesLate < 0) {
+          continue;
+        }
+
+        const dueKey = `${todayKey}:${medication.id}:due`;
+        const overdueKey = `${todayKey}:${medication.id}:overdue`;
+
+        if (minutesLate >= 30 && !sentMedicationNotifications.includes(overdueKey)) {
+          new Notification('תזכורת דחופה לתרופה', {
+            body: emergencyContact.name
+              ? `${medication.name} עדיין לא סומנה. אפשר לעדכן גם את ${emergencyContact.name}.`
+              : `${medication.name} עדיין לא סומנה במסך התרופות.`,
+            tag: overdueKey,
+          });
+          nextNotificationKeys.push(overdueKey);
+          continue;
+        }
+
+        if (!sentMedicationNotifications.includes(dueKey)) {
+          new Notification('זמן לקחת תרופה', {
+            body: `${medication.name} • ${medication.dosage} בשעה ${medication.time}`,
+            tag: dueKey,
+          });
+          nextNotificationKeys.push(dueKey);
+        }
+      }
+
+      if (nextNotificationKeys.length > 0) {
+        setSentMedicationNotifications((prev) =>
+          Array.from(new Set([...prev, ...nextNotificationKeys]))
+        );
+      }
+    };
+
+    checkMedicationReminders();
+    const intervalId = window.setInterval(checkMedicationReminders, 60_000);
+
+    return () => window.clearInterval(intervalId);
+  }, [
+    emergencyContact.name,
+    medicationLogs,
+    medicationSchedule,
+    notificationPermission,
+    sentMedicationNotifications,
+  ]);
+
   const value = useMemo<AppContextValue>(
     () => ({
       userProfile,
@@ -419,6 +523,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       notificationPermission,
       medicationSchedule,
       medicationLogs,
+      isMedicationTakenToday,
+      getMedicationTakenAt,
     ]
   );
 

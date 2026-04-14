@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useAppContext, genderedText } from "../context/AppContext";
 
 type SOSModalProps = {
@@ -46,12 +46,6 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
   }, [isOpen, alarmAudio]);
 
   useEffect(() => {
-    if (isOpen && !locationText) {
-      getLocation(true);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
     if (!isCounting) return;
 
     if (countdown <= 0) {
@@ -96,7 +90,7 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
     alarmAudio.currentTime = 0;
   };
 
-  const getLocation = (silent = false) => {
+  const getLocation = useCallback((silent = false) => {
     if (!navigator.geolocation) {
       if (!silent) alert("הדפדפן לא תומך במיקום");
       return;
@@ -145,7 +139,13 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
       },
       { enableHighAccuracy: true, timeout: 10000 }
     );
-  };
+  }, [saveLocation, setLocationPermissionGranted, userProfile.gender]);
+
+  useEffect(() => {
+    if (isOpen && !locationText) {
+      getLocation(true);
+    }
+  }, [getLocation, isOpen, locationText]);
 
   const shareLocation = async () => {
     const url = locationText || "";

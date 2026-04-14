@@ -8,11 +8,11 @@ import {
   UtensilsCrossed,
   Video,
 } from 'lucide-react';
-import { useAppContext, genderedText } from '../context/AppContext';
+import { Gender, useAppContext, genderedText } from '../context/AppContext';
 
 interface ActionItem {
   icon: React.ReactNode;
-  labelFn?: (gender: string) => string;
+  labelFn?: (gender: Gender) => string;
   label?: string;
   sublabel: string;
   accent?: boolean;
@@ -65,7 +65,7 @@ const primaryActions: ActionItem[] = [
   },
   {
     icon: <Video size={26} strokeWidth={1.5} />,
-    labelFn: (g) => genderedText(g as any, 'עוזרת בריאות AI', 'עוזר בריאות AI'),
+    labelFn: (g) => genderedText(g, 'עוזרת בריאות AI', 'עוזר בריאות AI'),
     sublabel: 'שאל/י כל שאלה על הסוכרת',
     id: 'doctor',
   },

@@ -37,7 +37,7 @@ function AppInner() {
     return <OnboardingScreen />;
   }
 
-  const handleSugarSave = (_value: number) => {
+  const handleSugarSave = () => {
     setShowSugarModal(false);
   };
 

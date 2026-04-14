@@ -1,11 +1,41 @@
-export default async function handler(req: any, res: any) {
+type ApiRequest = {
+  method?: string;
+  body?: unknown;
+};
+
+type ApiResponse = {
+  status(code: number): {
+    json(payload: unknown): void;
+  };
+};
+
+function parseBody(body: unknown): { message?: string } {
+  if (!body) {
+    return {};
+  }
+
+  if (typeof body === 'string') {
+    try {
+      return JSON.parse(body) as { message?: string };
+    } catch {
+      return {};
+    }
+  }
+
+  if (typeof body === 'object') {
+    return body as { message?: string };
+  }
+
+  return {};
+}
+
+export default async function handler(req: ApiRequest, res: ApiResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
   try {
-    const body = typeof req.body === "string" ? JSON.parse(req.body) : req.body;
-    const message = body?.message;
+    const { message } = parseBody(req.body);
 
     if (!message) {
       return res.status(400).json({ error: "Message required" });
