@@ -116,7 +116,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {/* Step 0 */}
+        {/* Step 0: Meal Type */}
         {step === 0 && (
           <div className="space-y-3">
             <p>{genderedText(gender, "בחרי סוג ארוחה:", "בחר סוג ארוחה:")}</p>
@@ -134,13 +134,13 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 >{m.label}</button>
               ))}
             </div>
-            <button onClick={() => setStep(1)} style={{ marginTop: 12, width: "100%", padding: 12, borderRadius: 12, backgroundColor: theme.primary, color: "#fff", fontWeight: 700 }}>
+            <button onClick={() => setStep(1)} disabled={loading} style={{ marginTop: 12, width: "100%", padding: 12, borderRadius: 12, backgroundColor: theme.primary, color: "#fff", fontWeight: 700 }}>
               {genderedText(gender, "המשך", "המשך")}
             </button>
           </div>
         )}
 
-        {/* Step 1 */}
+        {/* Step 1: Image + AI */}
         {step === 1 && (
           <div className="space-y-3">
             <p>{genderedText(gender, "צלמי או העלי תמונה של הארוחה:", "צלם או העלה תמונה של הארוחה:")}</p>
@@ -149,9 +149,16 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               <input type="file" accept="image/*" style={{ display: "none" }} onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])} />
             </label>
 
-            {loading && <p>{genderedText(gender, "מאתרת אוכל...", "מאתר אוכל...")}</p>}
+            {loading && (
+              <div style={{
+                display: "flex", justifyContent: "center", alignItems: "center", padding: 12,
+                backgroundColor: "#E5E7EB", borderRadius: 12, marginTop: 6
+              }}>
+                <span>{genderedText(gender, "מאתרת אוכל...", "מאתר אוכל...")}</span>
+              </div>
+            )}
 
-            {aiSuggestions.length > 0 ? (
+            {aiSuggestions.length > 0 && !loading ? (
               aiSuggestions.map((f, idx) => (
                 <div key={idx} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: 6, border: "1px solid #E5E7EB", borderRadius: 12 }}>
                   <span>{f.name} - {f.carbs}g פחמימות</span>
@@ -168,13 +175,13 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               </div>
             )}
 
-            <button onClick={() => setStep(2)} style={{ marginTop: 12, width: "100%", padding: 12, borderRadius: 12, backgroundColor: theme.primary, color: "#fff", fontWeight: 700 }}>
+            <button onClick={() => setStep(2)} disabled={loading} style={{ marginTop: 12, width: "100%", padding: 12, borderRadius: 12, backgroundColor: theme.primary, color: "#fff", fontWeight: 700 }}>
               {genderedText(gender, "המשך", "המשך")}
             </button>
           </div>
         )}
 
-        {/* Step 2 */}
+        {/* Step 2: Summary + Manual */}
         {step === 2 && (
           <div className="space-y-3">
             <p>{genderedText(gender, "סיכום הארוחה:", "סיכום הארוחה:")}</p>
