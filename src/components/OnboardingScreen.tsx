@@ -191,7 +191,7 @@ export function OnboardingScreen() {
               boxShadow: `0 18px 38px ${brand.shadow}`,
             }}
           >
-            <Logo size={70} />
+              <Logo size={58} />
           </div>
         </div>
 

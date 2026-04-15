@@ -1,54 +1,52 @@
 <svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" rx="128" fill="url(#bg)" />
-  <rect x="22" y="22" width="468" height="468" rx="106" stroke="#FFFFFF" stroke-opacity="0.72" stroke-width="8" />
+  <rect width="512" height="512" rx="126" fill="url(#bg)" />
+  <rect x="20" y="20" width="472" height="472" rx="108" stroke="url(#frame)" stroke-width="8" />
 
   <path
-    d="M256 386C189 335 146 288 146 230C146 185 178 152 221 152C249 152 273 166 288 190C303 166 327 152 355 152C398 152 430 185 430 230C430 288 387 335 320 386L288 410L256 386Z"
-    fill="url(#heart)"
+    d="M240 395C171 346 126 300 126 237C126 186 164 149 213 149C245 149 273 165 290 193C307 165 335 149 367 149C416 149 454 186 454 237C454 300 409 346 340 395L290 432L240 395Z"
+    fill="url(#heartBackFill)"
+    stroke="url(#heartBackStroke)"
+    stroke-width="16"
+    stroke-linejoin="round"
   />
 
   <path
-    d="M284 292C261 262 249 236 249 208C249 171 274 145 306 145C338 145 363 171 363 208C363 236 351 262 328 292L306 318L284 292Z"
-    fill="url(#drop)"
+    d="M289 330C246 299 218 268 218 226C218 193 243 167 274 167C294 167 312 177 324 194C336 177 354 167 374 167C405 167 430 193 430 226C430 268 402 299 359 330L324 356L289 330Z"
+    fill="url(#heartFrontFill)"
   />
 
   <path
-    d="M292 206C292 191 299 178 311 170"
-    stroke="white"
-    stroke-width="10"
+    d="M286 214C299 202 316 196 334 196"
+    stroke="#7FA66E"
+    stroke-width="11"
     stroke-linecap="round"
-  />
-
-  <path
-    d="M174 257C170 208 182 166 207 134C237 97 286 91 323 119C347 137 361 163 363 193C388 188 412 195 429 213C453 238 453 278 429 303C395 338 333 343 243 327L208 320L196 288C183 257 177 265 174 257Z"
-    fill="url(#leaf)"
-  />
-
-  <path
-    d="M214 170C247 162 274 172 292 193"
-    stroke="#7AA572"
-    stroke-width="12"
-    stroke-linecap="round"
-    opacity="0.94"
   />
 
   <defs>
-    <linearGradient id="bg" x1="70" y1="42" x2="442" y2="466" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FFFDF8" />
-      <stop offset="0.45" stop-color="#FFF7F1" />
-      <stop offset="1" stop-color="#F4FAFF" />
+    <linearGradient id="bg" x1="56" y1="40" x2="448" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFDF9" />
+      <stop offset="0.56" stop-color="#FFF8F2" />
+      <stop offset="1" stop-color="#F5FAFF" />
     </linearGradient>
-    <linearGradient id="heart" x1="167" y1="156" x2="405" y2="392" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#FBE4EC" />
-      <stop offset="1" stop-color="#F2B6CA" />
+
+    <linearGradient id="frame" x1="54" y1="44" x2="448" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F2E4DA" stop-opacity="0.85" />
+      <stop offset="1" stop-color="#E3EDF8" stop-opacity="0.9" />
     </linearGradient>
-    <linearGradient id="drop" x1="258" y1="154" x2="344" y2="306" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#8DB7E6" />
-      <stop offset="1" stop-color="#5C86C3" />
+
+    <linearGradient id="heartBackFill" x1="156" y1="162" x2="392" y2="389" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF3F7" />
+      <stop offset="1" stop-color="#F8D2DE" />
     </linearGradient>
-    <linearGradient id="leaf" x1="184" y1="120" x2="418" y2="322" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#E6F3D8" />
-      <stop offset="1" stop-color="#BFDDA8" />
+
+    <linearGradient id="heartBackStroke" x1="164" y1="167" x2="397" y2="380" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E8A5BF" />
+      <stop offset="1" stop-color="#D57D9E" />
+    </linearGradient>
+
+    <linearGradient id="heartFrontFill" x1="239" y1="175" x2="404" y2="332" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E9F6D7" />
+      <stop offset="1" stop-color="#CBE8A9" />
     </linearGradient>
   </defs>
 </svg>

@@ -49,7 +49,7 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
         boxShadow: theme.headerShadow,
       }}
     >
-      <div className="max-w-md mx-auto px-4 py-3 grid grid-cols-[92px_1fr_64px] items-center gap-3">
+      <div className="max-w-md mx-auto px-4 py-2.5 grid grid-cols-[92px_1fr_52px] items-center gap-3">
         <div className="flex items-center gap-2 justify-self-start">
           <HeaderButton onClick={onSettingsClick} label="הגדרות" theme={theme}>
             <Settings size={20} strokeWidth={1.9} />
@@ -86,7 +86,7 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
         </div>
 
         <div className="justify-self-end">
-          <Logo size={54} />
+          <Logo size={42} />
         </div>
       </div>
     </header>

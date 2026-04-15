@@ -27,14 +27,14 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
         >
           <div className="flex justify-center mb-6">
             <div
-              className="w-28 h-28 rounded-[34px] flex items-center justify-center"
+              className="w-24 h-24 rounded-[30px] flex items-center justify-center"
               style={{
                 background: 'linear-gradient(145deg, #FFFDF9 0%, #FFF6F1 55%, #F1F9FF 100%)',
                 border: '1px solid #E7DDD0',
                 boxShadow: '0 18px 40px rgba(151, 129, 117, 0.16)',
               }}
             >
-              <Logo size={76} />
+              <Logo size={62} />
             </div>
           </div>
 

@@ -248,14 +248,6 @@ export function MealSuggestionsScreen({ onClose }: MealSuggestionsScreenProps) {
           theme={theme}
           onBack={onClose}
           onClose={onClose}
-          rightSlot={
-            <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center"
-              style={{ background: theme.gradientCard, color: '#FFFFFF' }}
-            >
-              <Sparkles size={18} strokeWidth={1.5} />
-            </div>
-          }
         />
 
         <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
@@ -297,7 +289,7 @@ export function MealSuggestionsScreen({ onClose }: MealSuggestionsScreenProps) {
           >
             <div className="flex items-center justify-between mb-4">
               <span
-                className="text-sm px-3 py-1.5 rounded-xl"
+                className="text-xs px-2.5 py-1 rounded-lg"
                 style={{ backgroundColor: theme.primaryBg, color: theme.primary, fontWeight: 800 }}
               >
                 חדש וייחודי

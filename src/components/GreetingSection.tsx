@@ -112,7 +112,7 @@ export function GreetingSection({
 
   return (
     <section
-      className="relative overflow-hidden rounded-[34px] mx-4 mt-4 p-5"
+      className="relative overflow-hidden rounded-[34px] mx-4 mt-3 p-4"
       dir="rtl"
       style={{
         background: theme.gradientCard,
@@ -136,7 +136,7 @@ export function GreetingSection({
           </button>
 
           <div className="text-right">
-            <p className="text-[30px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
+            <p className="text-[28px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
               {timeString}
             </p>
             <p className="text-sm mt-1" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
@@ -145,7 +145,7 @@ export function GreetingSection({
           </div>
         </div>
 
-        <div className="mt-6 text-right">
+        <div className="mt-5 text-right">
           <div className="flex items-center justify-start gap-2">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center"
@@ -159,14 +159,14 @@ export function GreetingSection({
           </div>
 
           <h2
-            className="text-[31px] leading-tight mt-3 text-right"
+            className="text-[28px] leading-tight mt-2.5 text-right"
             style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
           >
             {genderedText(userProfile.gender, 'איך את מרגישה היום?', 'איך אתה מרגיש היום?')}
           </h2>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-5">
+        <div className="grid grid-cols-2 gap-3 mt-4">
           {quickActions.map((action, index) => {
             const accent = index === 1 || index === 3;
 
@@ -176,7 +176,7 @@ export function GreetingSection({
                 onClick={action.onClick}
                 className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
                 style={{
-                  minHeight: 118,
+                  minHeight: 108,
                   background: accent ? accentCard.background : 'rgba(255,255,255,0.82)',
                   border: `1px solid ${accent ? accentCard.border : theme.primaryBorder}`,
                   boxShadow: accent ? accentCard.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
@@ -205,7 +205,7 @@ export function GreetingSection({
           })}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-4">
+        <div className="grid grid-cols-2 gap-3 mt-3">
           <CompactStatus
             label="סוכר אחרון"
             value={latestSugar ? `${latestSugar.level} mg/dL` : 'עוד לא נמדד'}

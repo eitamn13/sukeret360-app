@@ -1,5 +1,5 @@
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
-import { Camera, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
+import { Camera, Plus, Search, Trash2 } from 'lucide-react';
 import { FOOD_DATABASE, FoodDatabaseItem } from '../data/foodDatabase';
 import { MealType, useAppContext } from '../context/AppContext';
 import { DetectedFood, detectFoodsFromImage } from '../utils/vision';
@@ -63,7 +63,8 @@ function findFoodTemplateByName(name: string) {
 }
 
 export function SmartMealLogger({ onClose }: { onClose: () => void }) {
-  const { logMeal, mealLogs, theme } = useAppContext();
+  const { logMeal, mealLogs, theme, userProfile } = useAppContext();
+  const isMale = userProfile.gender === 'male';
   const [step, setStep] = useState(0);
   const [mealType, setMealType] = useState<MealType>('breakfast');
   const [imagePreviewUrl, setImagePreviewUrl] = useState('');
@@ -125,6 +126,14 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
       })
       .slice(0, 4);
   }, [mealLogs]);
+
+  const primaryButtonBackground = isMale
+    ? 'linear-gradient(135deg, #7EA8DF 0%, #4F6786 100%)'
+    : 'linear-gradient(135deg, #E8A7BD 0%, #B86186 100%)';
+
+  const primaryButtonShadow = isMale
+    ? '0 16px 32px rgba(107, 151, 214, 0.24)'
+    : '0 16px 32px rgba(216, 142, 168, 0.24)';
 
   const addFood = (food: SelectedMealFood) => setSelectedFoods((prev) => [food, ...prev]);
   const removeFood = (index: number) => setSelectedFoods((prev) => prev.filter((_, currentIndex) => currentIndex !== index));
@@ -231,7 +240,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
       dir="rtl"
     >
       <div
-        className="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-[28px]"
+        className="w-full max-w-[430px] sm:max-w-xl max-h-[92vh] overflow-y-auto rounded-[28px]"
         style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))', boxShadow: '0 30px 80px rgba(15,23,42,0.28)' }}
       >
         <div
@@ -245,11 +254,6 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
             onBack={() => (step > 0 ? setStep(step - 1) : onClose())}
             onClose={onClose}
             backLabel={step > 0 ? 'חזרה' : 'סגור'}
-            rightSlot={
-              <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: theme.gradientCard, color: '#FFFFFF' }}>
-                <Sparkles size={18} />
-              </div>
-            }
           />
           <div className="px-5 pb-4">
             <div className="flex gap-2">
@@ -264,7 +268,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="p-5 space-y-5">
+        <div className="p-4 sm:p-5 space-y-4">
           {errorMessage && (
             <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
               {errorMessage}
@@ -274,7 +278,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           {step === 0 && (
             <div className="space-y-4">
               <div
-                className="rounded-3xl p-5 text-right"
+                className="rounded-3xl p-4 text-right"
                 style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}`, boxShadow: `0 16px 32px ${theme.primaryShadow}` }}
               >
                 <p style={{ fontWeight: 900, fontSize: 22, color: '#0F172A' }}>איזו ארוחה זו?</p>
@@ -293,12 +297,13 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                       onClick={() => setMealType(value as MealType)}
                       className="rounded-3xl p-4 text-right transition-all active:scale-[0.98]"
                       style={{
+                        minHeight: 118,
                         border: `2px solid ${active ? meta.accent : '#E2E8F0'}`,
                         backgroundColor: active ? `${meta.accent}14` : '#FFFFFF',
                         boxShadow: active ? `0 14px 30px ${meta.accent}25` : 'none',
                       }}
                     >
-                      <div className="w-full flex justify-start text-3xl">{meta.icon}</div>
+                      <div className="w-full flex justify-end text-3xl">{meta.icon}</div>
                       <p style={{ fontWeight: 800, marginTop: 8, color: '#0F172A' }}>{meta.label}</p>
                       <p style={{ color: '#64748B', fontSize: 13, marginTop: 4 }}>תיעוד מותאם לארוחת {meta.label}</p>
                     </button>
@@ -309,7 +314,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               <button
                 onClick={() => setStep(1)}
                 className="w-full h-14 rounded-2xl text-white text-base transition-all active:scale-[0.99]"
-                style={{ background: theme.gradientCard, fontWeight: 800, boxShadow: `0 16px 32px ${theme.primaryShadow}` }}
+                style={{ background: primaryButtonBackground, fontWeight: 800, boxShadow: primaryButtonShadow }}
               >
                 המשך לצילום או להעלאה
               </button>
@@ -322,7 +327,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 className="rounded-3xl p-5 border-2 border-dashed text-center"
                 style={{ borderColor: theme.primaryBorder, backgroundColor: '#FFFFFF' }}
               >
-                <div className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center" style={{ background: theme.gradientCard, color: 'white' }}>
+                <div className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center" style={{ background: primaryButtonBackground, color: 'white' }}>
                   <Camera size={26} />
                 </div>
                 <p style={{ fontWeight: 800, fontSize: 20, marginTop: 16, color: '#0F172A' }}>צלמו את הצלחת או העלו תמונה</p>
@@ -331,7 +336,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 </p>
                 <label
                   className="inline-flex items-center gap-2 mt-5 px-5 h-12 rounded-2xl cursor-pointer"
-                  style={{ background: theme.gradientCard, color: 'white', fontWeight: 800 }}
+                  style={{ background: primaryButtonBackground, color: 'white', fontWeight: 800, boxShadow: primaryButtonShadow }}
                 >
                   <Camera size={18} />
                   העלאת תמונה
@@ -368,7 +373,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                       <span style={{ color: '#64748B', fontSize: 13, fontWeight: 700 }}>צילום הארוחה</span>
                     </div>
                     {imagePreviewUrl ? (
-                      <img src={imagePreviewUrl} alt="Meal preview" style={{ width: '100%', maxHeight: 240, objectFit: 'cover' }} />
+                      <img src={imagePreviewUrl} alt="Meal preview" style={{ width: '100%', maxHeight: 190, objectFit: 'cover', objectPosition: 'center center' }} />
                     ) : (
                       <div className="p-6 text-center" style={{ color: '#64748B' }}>
                         לא הועלתה תמונה. אפשר עדיין לבנות ארוחה מדויקת ידנית.
@@ -406,7 +411,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                   </div>
 
                   <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
-                    <div className="mb-3 flex items-center justify-start gap-2">
+                    <div className="mb-3 flex items-center justify-end gap-2">
                       <Search size={16} style={{ color: theme.primary }} />
                       <p style={{ fontWeight: 800, color: '#0F172A' }}>מאגר מזון לחולי סוכרת</p>
                     </div>
@@ -449,8 +454,8 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                       onChange={(event) => setFoodSearch(event.target.value)}
                       placeholder="חפשו מזון, פרי, לחם, קטניות..."
                       dir="rtl"
-                      className="w-full h-12 rounded-2xl px-4 outline-none"
-                      style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
+                      className="w-full h-12 rounded-2xl px-4 outline-none text-[15px] font-semibold text-slate-800 placeholder:text-slate-400"
+                      style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E1EE' }}
                     />
 
                     <div className="flex items-center gap-2 mt-3 mb-3">
@@ -460,13 +465,13 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                         step="0.5"
                         value={foodServings}
                         onChange={(event) => setFoodServings(Number(event.target.value) || 1)}
-                        className="w-24 h-10 rounded-xl px-3 outline-none"
-                        style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
+                        className="w-24 h-10 rounded-xl px-3 outline-none text-[15px] font-semibold text-slate-800"
+                        style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E1EE' }}
                       />
                       <span style={{ color: '#64748B', fontSize: 13 }}>מנות</span>
                     </div>
 
-                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
                       {databaseResults.map((item) => (
                         <FoodDatabaseRow
                           key={item.id}
@@ -488,8 +493,8 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                         onChange={(event) => setNewFoodName(event.target.value)}
                         placeholder="שם המזון"
                         dir="rtl"
-                        className="w-full h-12 rounded-2xl px-4 outline-none"
-                        style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
+                        className="w-full h-12 rounded-2xl px-4 outline-none text-[15px] font-semibold text-slate-800 placeholder:text-slate-400"
+                        style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E1EE' }}
                       />
                       <div className="grid grid-cols-[1fr_1fr_auto] gap-2">
                         <input
@@ -498,8 +503,8 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                           onChange={(event) => setNewFoodCalories(event.target.value ? Number(event.target.value) : '')}
                           placeholder="קלוריות"
                           dir="rtl"
-                          className="h-12 rounded-2xl px-4 outline-none"
-                          style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
+                          className="h-12 rounded-2xl px-4 outline-none text-[15px] font-semibold text-slate-800 placeholder:text-slate-400"
+                          style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E1EE' }}
                         />
                         <input
                           type="number"
@@ -507,13 +512,13 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                           onChange={(event) => setNewFoodCarbs(event.target.value ? Number(event.target.value) : '')}
                           placeholder="גרם פחמימות"
                           dir="rtl"
-                          className="h-12 rounded-2xl px-4 outline-none"
-                          style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
+                          className="h-12 rounded-2xl px-4 outline-none text-[15px] font-semibold text-slate-800 placeholder:text-slate-400"
+                          style={{ backgroundColor: '#FFFFFF', border: '1px solid #D7E1EE' }}
                         />
                         <button
                           onClick={addManualFood}
                           className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                          style={{ background: theme.gradientCard, color: 'white' }}
+                          style={{ background: primaryButtonBackground, color: 'white', boxShadow: primaryButtonShadow }}
                           aria-label="הוסף ידנית"
                         >
                           <Plus size={18} />
@@ -535,7 +540,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 <button
                   onClick={saveMeals}
                   className="flex-1 h-12 rounded-2xl text-white"
-                  style={{ background: theme.gradientCard, fontWeight: 800, boxShadow: `0 16px 32px ${theme.primaryShadow}` }}
+                  style={{ background: primaryButtonBackground, fontWeight: 800, boxShadow: primaryButtonShadow }}
                 >
                   שמירת הארוחה ליומן
                 </button>
@@ -570,17 +575,17 @@ function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => v
       </button>
 
       <div className="flex-1 text-right">
-        <div className="flex items-start gap-3">
+        <div className="flex flex-row-reverse items-start gap-3">
           <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
             {food.source === 'vision' ? '📷' : food.source === 'database' ? '🗂️' : '🍽️'}
           </div>
           <div className="flex-1">
-            <p style={{ fontWeight: 800, color: '#0F172A' }}>{food.name}</p>
+            <p style={{ fontWeight: 800, color: '#0F172A', fontSize: 17 }}>{food.name}</p>
             <div className="mt-1 flex flex-wrap justify-end gap-2">
-              <span className="px-2.5 py-1 rounded-full text-xs" style={{ backgroundColor: '#F5F3FF', color: '#7C3AED', fontWeight: 800 }}>
+              <span className="px-3 py-1.5 rounded-full text-[13px]" style={{ backgroundColor: '#F5F3FF', color: '#7C3AED', fontWeight: 800 }}>
                 {food.carbs} גרם פחמימות
               </span>
-              <span className="px-2.5 py-1 rounded-full text-xs" style={{ backgroundColor: '#FFF7ED', color: '#C2410C', fontWeight: 800 }}>
+              <span className="px-3 py-1.5 rounded-full text-[13px]" style={{ backgroundColor: '#FFF7ED', color: '#C2410C', fontWeight: 800 }}>
                 {food.calories || 0} קלוריות
               </span>
             </div>
@@ -588,7 +593,7 @@ function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => v
         </div>
 
         {(food.servingLabel || food.note) && (
-          <div className="mt-2 text-xs text-right" style={{ color: '#64748B' }}>
+          <div className="mt-2 text-sm text-right" style={{ color: '#64748B', lineHeight: 1.6 }}>
             {food.servingLabel && <div>{food.servingLabel}</div>}
             {food.note && <div>{food.note}</div>}
           </div>
@@ -615,7 +620,7 @@ function FoodDatabaseRow({
       className="w-full rounded-2xl p-3 text-right transition-all active:scale-[0.99]"
       style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex flex-row-reverse items-start gap-3">
         <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
           <span style={{ fontSize: 20 }}>{item.icon}</span>
         </div>
