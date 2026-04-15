@@ -1,4 +1,4 @@
-import { Users, MessageSquare, Heart, ChevronLeft, Trophy } from 'lucide-react';
+import { Heart, MessageSquare, Trophy, Users } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
 
 interface CommunitySectionProps {
@@ -9,28 +9,27 @@ interface CommunitySectionProps {
 const communityItems = [
   {
     id: 'community',
-    icon: <Users size={24} strokeWidth={1.5} />,
-    label: 'קהילה חכמה ותומכת',
-    sublabel: '2,340 חברים ומשפחות שכבר בפנים',
-    badge: 'פעיל',
+    icon: <Users size={22} strokeWidth={1.7} />,
+    label: 'קהילה',
+    hint: 'אנשים כמוך',
   },
   {
     id: 'forum',
-    icon: <MessageSquare size={24} strokeWidth={1.5} />,
-    label: 'פורום שאלות',
-    sublabel: 'מקום לשאול, ללמוד ולקבל עזרה מהר',
+    icon: <MessageSquare size={22} strokeWidth={1.7} />,
+    label: 'שאלות',
+    hint: 'פורום פתוח',
   },
   {
     id: 'support',
-    icon: <Heart size={24} strokeWidth={1.5} />,
-    label: 'מעגלי תמיכה',
-    sublabel: 'קבוצות עדינות למטופלים, משפחות ומבוגרים',
+    icon: <Heart size={22} strokeWidth={1.7} />,
+    label: 'תמיכה',
+    hint: 'עזרה מהירה',
   },
   {
     id: 'challenges',
-    icon: <Trophy size={24} strokeWidth={1.5} />,
-    label: 'אתגרי בריאות',
-    sublabel: 'משימות קצרות שבונות שגרה ויציבות',
+    icon: <Trophy size={22} strokeWidth={1.7} />,
+    label: 'אתגרים',
+    hint: 'מטרות קטנות',
   },
 ];
 
@@ -47,86 +46,51 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
   };
 
   return (
-    <div className="px-4 mt-6 pb-8">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="flex-1 h-px" style={{ background: theme.primaryBorder }} />
-        <span
-          className="text-xs uppercase tracking-widest px-1"
-          style={{
-            color: theme.primaryMuted,
-            fontWeight: 700,
-            letterSpacing: '0.12em',
-            whiteSpace: 'nowrap',
-          }}
+    <section className="px-4 mt-6 pb-8">
+      <div className="flex items-center justify-between mb-3">
+        <div
+          className="w-10 h-10 rounded-2xl flex items-center justify-center"
+          style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
         >
-          קהילה מתקדמת
-        </span>
-        <div className="flex-1 h-px" style={{ background: theme.primaryBorder }} />
+          <Users size={18} strokeWidth={1.9} />
+        </div>
+        <div className="text-right">
+          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>קהילה ותמיכה</h3>
+          <p style={{ color: '#64748B', fontSize: 13 }}>פחות מילים, יותר עזרה.</p>
+        </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-2 gap-3">
         {communityItems.map((item) => (
           <button
             key={item.id}
             onClick={() => handleClick(item.id, item.label)}
-            className="w-full flex items-center gap-4 rounded-2xl transition-all duration-200 group active:scale-[0.98]"
+            className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
             style={{
-              padding: '16px 18px',
-              background: '#FFFFFF',
+              minHeight: 112,
+              backgroundColor: '#FFFFFF',
               border: `1.5px solid ${theme.primaryBorder}`,
-              boxShadow: `0 2px 8px ${theme.primary}14`,
+              boxShadow: '0 10px 26px rgba(15, 23, 42, 0.05)',
             }}
           >
-            <div
-              className="rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ width: '52px', height: '52px', background: theme.primaryBg, color: theme.primary }}
-            >
-              {item.icon}
-            </div>
-
-            <div className="flex-1 text-right min-w-0">
-              <div className="flex items-center gap-2 justify-end">
-                <p className="text-base leading-tight truncate" style={{ color: '#1F2937', fontWeight: 700 }}>
-                  {item.label}
-                </p>
-                {item.badge && (
-                  <span
-                    className="text-xs px-1.5 py-0.5 rounded-md flex-shrink-0"
-                    style={{ background: theme.primaryBg, color: theme.primary, fontWeight: 700 }}
-                  >
-                    {item.badge}
-                  </span>
-                )}
+            <div className="flex flex-col items-end h-full">
+              <div
+                className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
+              >
+                {item.icon}
               </div>
-              <p className="text-sm mt-0.5 truncate" style={{ color: '#64748B', fontWeight: 500 }}>
-                {item.sublabel}
-              </p>
-            </div>
 
-            <ChevronLeft
-              size={18}
-              strokeWidth={2}
-              className="flex-shrink-0 transition-transform duration-200 group-hover:-translate-x-0.5"
-              style={{ color: theme.primaryMuted, opacity: 0.7 }}
-            />
+              <div className="mt-auto">
+                <p style={{ color: '#0F172A', fontWeight: 900 }}>{item.label}</p>
+                <p style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontWeight: 700 }}>
+                  {item.hint}
+                </p>
+              </div>
+            </div>
           </button>
         ))}
       </div>
-
-      <div
-        className="mt-6 rounded-2xl p-5 text-center"
-        style={{
-          background: `linear-gradient(135deg, ${theme.primaryBg} 0%, #FFFFFF 100%)`,
-          border: `1.5px solid ${theme.primaryBorder}`,
-        }}
-      >
-        <p className="text-sm leading-relaxed" style={{ color: theme.primaryDark, fontWeight: 700 }}>
-          הקהילה שלנו נבנתה כדי לתת תמיכה, רעיונות ושגרה חכמה למי שחי עם סוכרת בכל יום מחדש.
-        </p>
-        <p className="text-xs mt-1.5" style={{ color: theme.primaryMuted, fontWeight: 500 }}>
-          שיתוף, שאלות, אתגרים והתקדמות במקום אחד
-        </p>
-      </div>
-    </div>
+    </section>
   );
 }

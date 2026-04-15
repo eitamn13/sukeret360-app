@@ -183,7 +183,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       body: JSON.stringify({
         model: 'gpt-4.1-mini',
         instructions:
-          'You are Sukeret360, a supportive medical diabetes assistant. ' +
+          'You are the assistant of "הסוכרת שלי", a supportive medical diabetes assistant. ' +
           'Reply in simple, warm, professional Hebrew. ' +
           'Keep answers practical and easy for older adults to understand. ' +
           'Prefer short paragraphs, clear next steps, and calm language. ' +

@@ -105,7 +105,13 @@ function AppInner() {
         />
 
         <main className="pb-28">
-          <GreetingSection onSOSClick={() => setShowSOS(true)} />
+          <GreetingSection
+            onSOSClick={() => setShowSOS(true)}
+            onSugarClick={() => setShowSugarModal(true)}
+            onMealClick={() => setShowMealLogger(true)}
+            onMedicationsClick={() => setShowMedications(true)}
+            onDoctorClick={() => setShowDoctorConsult(true)}
+          />
 
           <ActionGrid
             onMealLoggerClick={() => setShowMealLogger(true)}

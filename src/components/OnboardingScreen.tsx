@@ -12,15 +12,15 @@ import {
 } from '../context/AppContext';
 
 const BRAND = {
-  navy: '#123B5D',
-  teal: '#0F766E',
-  tealDark: '#115E59',
-  bg: '#F6FBFD',
+  navy: '#1E3A8A',
+  teal: '#2563EB',
+  tealDark: '#1D4ED8',
+  bg: '#F8FAFC',
   card: '#FFFFFF',
-  border: '#D8E7EB',
-  muted: '#6B7F8E',
+  border: '#E2E8F0',
+  muted: '#64748B',
   text: '#0F172A',
-  soft: '#EDF7F8',
+  soft: '#EFF6FF',
   alert: '#DC2626',
 };
 
@@ -187,7 +187,7 @@ export function OnboardingScreen() {
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto px-4 py-8"
-      style={{ background: 'linear-gradient(180deg, #F7FBFD 0%, #EEF7F8 55%, #F7FBFA 100%)' }}
+      style={{ background: 'linear-gradient(180deg, #F8FBFF 0%, #EFF4FF 55%, #F8FAFC 100%)' }}
     >
       <div className="w-full max-w-md mx-auto">
         <div className="flex justify-center mb-6">
@@ -202,7 +202,7 @@ export function OnboardingScreen() {
               style={{
                 width: index === step ? 34 : 10,
                 height: 10,
-                backgroundColor: index === step ? BRAND.teal : index < step ? '#8ED1C8' : '#D8E7EB',
+                backgroundColor: index === step ? BRAND.teal : index < step ? '#93C5FD' : '#D8E7EB',
               }}
             />
           ))}
@@ -220,8 +220,8 @@ export function OnboardingScreen() {
             <div className="space-y-4">
               <IntroHeader
                 eyebrow="שלב ראשון"
-                title="נכיר אותך בקצרה"
-                subtitle="נבנה עבורך אפליקציה ברורה, רגועה וקלה לשימוש שמותאמת לחיים עם סוכרת."
+                title="כמה פרטים קצרים"
+                subtitle="נתחיל בשם ובמגדר."
               />
 
               <FieldLabel text="איך קוראים לך?" />
@@ -241,21 +241,28 @@ export function OnboardingScreen() {
                 {[
                   { value: 'female' as Gender, label: 'אישה', emoji: '👩' },
                   { value: 'male' as Gender, label: 'גבר', emoji: '👨' },
-                ].map(({ value, label, emoji }) => (
-                  <button
-                    key={value}
-                    onClick={() => setGender(value)}
-                    className="rounded-2xl p-4 text-center transition-all duration-200 active:scale-[0.98]"
-                    style={{
-                      border: `2px solid ${gender === value ? BRAND.teal : '#E5EEF1'}`,
-                      backgroundColor: gender === value ? BRAND.soft : '#FAFCFD',
-                      boxShadow: gender === value ? '0 14px 28px rgba(15,118,110,0.12)' : 'none',
-                    }}
-                  >
-                    <p className="text-3xl mb-2">{emoji}</p>
-                    <p style={{ color: gender === value ? BRAND.teal : '#334155', fontWeight: 800 }}>{label}</p>
-                  </button>
-                ))}
+                ].map(({ value, label, emoji }) => {
+                  const selected = gender === value;
+                  const accent = value === 'male'
+                    ? { border: '#2563EB', background: '#EFF6FF', text: '#1D4ED8', shadow: 'rgba(37,99,235,0.14)' }
+                    : { border: '#EC4899', background: '#FFF1F7', text: '#BE185D', shadow: 'rgba(236,72,153,0.14)' };
+
+                  return (
+                    <button
+                      key={value}
+                      onClick={() => setGender(value)}
+                      className="rounded-2xl p-4 text-center transition-all duration-200 active:scale-[0.98]"
+                      style={{
+                        border: `2px solid ${selected ? accent.border : '#E5EEF1'}`,
+                        backgroundColor: selected ? accent.background : '#FAFCFD',
+                        boxShadow: selected ? `0 14px 28px ${accent.shadow}` : 'none',
+                      }}
+                    >
+                      <p className="text-3xl mb-2">{emoji}</p>
+                      <p style={{ color: selected ? accent.text : '#334155', fontWeight: 800 }}>{label}</p>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -264,8 +271,8 @@ export function OnboardingScreen() {
             <div className="space-y-4">
               <IntroHeader
                 eyebrow="שלב שני"
-                title="הפרופיל הרפואי שלך"
-                subtitle="רק מה שבאמת צריך כדי להתאים מסכים, תזכורות ועוזר חכם."
+                title="המצב הרפואי שלך"
+                subtitle="גיל, סוג סוכרת וסוג טיפול."
               />
 
               <div className="grid grid-cols-2 gap-3">
@@ -354,8 +361,8 @@ export function OnboardingScreen() {
             <div className="space-y-4">
               <IntroHeader
                 eyebrow="שלב שלישי"
-                title="יעדים ושגרת יום"
-                subtitle="כך נציג לך נתונים אמיתיים ונשלח תזכורות בזמן שנכון לך."
+                title="יעדים ושעות"
+                subtitle="רק מה שצריך לתזכורות ולמדדים."
               />
 
               <div className="grid grid-cols-2 gap-3">
@@ -408,15 +415,6 @@ export function OnboardingScreen() {
                 </div>
               </div>
 
-              <div
-                className="rounded-3xl p-4"
-                style={{ backgroundColor: BRAND.soft, border: `1px solid ${BRAND.border}` }}
-              >
-                <p style={{ color: BRAND.tealDark, fontWeight: 800 }}>טיפ קטן</p>
-                <p style={{ color: BRAND.muted, lineHeight: 1.7, marginTop: 6 }}>
-                  תמיד אפשר לשנות את היעדים או את שעות היום גם אחר כך מתוך ההגדרות.
-                </p>
-              </div>
             </div>
           )}
 
@@ -425,20 +423,8 @@ export function OnboardingScreen() {
               <IntroHeader
                 eyebrow="שלב רביעי"
                 title="התרופות שלך"
-                subtitle="נסדר את זה פשוט: שם, שעה, סוג, ומראה התרופה כדי שיהיה קל לזהות."
+                subtitle="שם, שעה, סוג ומראה."
               />
-
-              <div
-                className="rounded-3xl p-4"
-                style={{ backgroundColor: BRAND.soft, border: `1px solid ${BRAND.border}` }}
-              >
-                <p style={{ color: BRAND.tealDark, fontWeight: 800 }}>
-                  אפשר למלא עכשיו רק את מה שחשוב
-                </p>
-                <p style={{ color: BRAND.muted, lineHeight: 1.7, marginTop: 6 }}>
-                  מספיק למלא שם תרופה ושעה. אחר כך אפשר להיכנס לעומק ולערוך הכול.
-                </p>
-              </div>
 
               <div className="space-y-3">
                 {medications.map((medication, index) => (
@@ -543,7 +529,7 @@ export function OnboardingScreen() {
 
                       <div>
                         <FieldLabel text="מראה התרופה" />
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-2 gap-3">
                           {MED_VISUALS.map((visual) => {
                             const active = medication.appearanceLabel === visual.label;
                             return (
@@ -555,26 +541,21 @@ export function OnboardingScreen() {
                                     appearanceLabel: visual.label,
                                   })
                                 }
-                                className="rounded-2xl p-3 text-right transition-all active:scale-[0.98]"
+                                className="rounded-2xl p-4 text-center transition-all active:scale-[0.98]"
                                 style={{
                                   border: `2px solid ${active ? BRAND.teal : '#E5EEF1'}`,
                                   backgroundColor: active ? BRAND.soft : '#FFFFFF',
-                                  boxShadow: active ? '0 10px 18px rgba(15,118,110,0.08)' : 'none',
+                                  boxShadow: active ? '0 10px 18px rgba(37,99,235,0.08)' : 'none',
                                 }}
                               >
-                                <div className="flex items-center justify-between gap-2">
+                                <div className="flex flex-col items-center justify-center gap-3">
                                   <div
-                                    className="w-9 h-9 rounded-2xl flex items-center justify-center"
+                                    className="w-12 h-12 rounded-full flex items-center justify-center"
                                     style={{ backgroundColor: `${visual.color}18`, color: visual.color }}
                                   >
-                                    <span style={{ fontSize: 20 }}>{visual.symbol}</span>
+                                    <span style={{ fontSize: 22 }}>{visual.symbol}</span>
                                   </div>
-                                  <div className="text-right">
-                                    <p style={{ fontWeight: 800, color: BRAND.text }}>{visual.label}</p>
-                                    <p style={{ color: BRAND.muted, fontSize: 12, marginTop: 3 }}>
-                                      לבחירה מהירה ונוחה
-                                    </p>
-                                  </div>
+                                  <p style={{ fontWeight: 800, color: BRAND.text }}>{visual.label}</p>
                                 </div>
                               </button>
                             );
@@ -620,7 +601,7 @@ export function OnboardingScreen() {
               <IntroHeader
                 eyebrow="שלב חמישי"
                 title="איש קשר לחירום"
-                subtitle="אם צריך עזרה או אם תרופה לא סומנה בזמן, נוכל להכין הודעה מהירה למשפחה."
+                subtitle="למקרה שצריך עזרה."
               />
 
               <FieldLabel text="שם איש קשר" />
@@ -656,25 +637,12 @@ export function OnboardingScreen() {
 
               <div
                 className="rounded-3xl p-4"
-                style={{ background: 'linear-gradient(135deg, #F3FBFA, #EEF5FB)', border: `1px solid ${BRAND.border}` }}
+                style={{ background: 'linear-gradient(135deg, #EFF6FF, #F8FAFC)', border: `1px solid ${BRAND.border}` }}
               >
-                <p style={{ color: BRAND.tealDark, fontWeight: 900 }}>מה תקבל כבר עכשיו</p>
-                <ul className="mt-3 space-y-2 text-sm" style={{ color: BRAND.muted, lineHeight: 1.7 }}>
-                  <li>מסך בית עם נתונים אמיתיים מהיומן שלך</li>
-                  <li>רישום ארוחה עם צילום ומאגר מזון</li>
-                  <li>עוזר בריאות AI עם גיבוי גם בזמן תקלה</li>
-                  <li>תזכורות תרופות ו־SOS חכם עם WhatsApp</li>
-                </ul>
-
-                <div
-                  className="rounded-2xl p-4 mt-4"
-                  style={{ backgroundColor: '#FFFFFF', border: `1px solid ${BRAND.border}` }}
-                >
-                  <p style={{ color: BRAND.text, fontWeight: 900 }}>תוכנית הטיפול שלך</p>
-                  <p style={{ color: BRAND.muted, marginTop: 6, lineHeight: 1.7 }}>
-                    {diabetesType ? `סוכרת סוג ${diabetesType}` : 'סוכרת'} · {getTreatmentLabel(treatmentType)} · יעד {targetLow}-{targetHigh}
-                  </p>
-                </div>
+                <p style={{ color: BRAND.tealDark, fontWeight: 900 }}>סיכום קצר</p>
+                <p style={{ color: BRAND.muted, marginTop: 8, lineHeight: 1.7 }}>
+                  {diabetesType ? `סוכרת סוג ${diabetesType}` : 'סוכרת'} · {getTreatmentLabel(treatmentType)} · יעד {targetLow}-{targetHigh}
+                </p>
               </div>
             </div>
           )}
@@ -685,12 +653,12 @@ export function OnboardingScreen() {
             className="w-full h-14 rounded-2xl mt-6 flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98]"
             style={{
               background: canNext
-                ? 'linear-gradient(135deg, #123B5D 0%, #0F766E 100%)'
+                ? 'linear-gradient(135deg, #1D4ED8 0%, #1E3A8A 100%)'
                 : '#E5E7EB',
               color: canNext ? '#FFFFFF' : '#94A3B8',
               fontWeight: 900,
               fontSize: '1rem',
-              boxShadow: canNext ? '0 18px 34px rgba(15,118,110,0.2)' : 'none',
+              boxShadow: canNext ? '0 18px 34px rgba(37,99,235,0.2)' : 'none',
             }}
           >
             {step === totalSteps - 1 ? (
@@ -762,9 +730,10 @@ function OnboardingLogo() {
       <div
         className="w-24 h-24 rounded-[30px] flex items-center justify-center"
         style={{
-          background: 'linear-gradient(135deg, #FFFFFF 0%, #FFF7FA 100%)',
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFF 100%)',
           border: `1px solid ${BRAND.border}`,
           boxShadow: '0 18px 36px rgba(18,59,93,0.12)',
+          color: BRAND.teal,
         }}
       >
         <Logo size={70} />
@@ -772,10 +741,10 @@ function OnboardingLogo() {
 
       <div className="text-center">
         <h1 className="text-[30px]" style={{ color: BRAND.text, fontWeight: 900, letterSpacing: '-0.03em' }}>
-          Sukeret360
+          הסוכרת שלי
         </h1>
         <p className="text-sm mt-1" style={{ color: BRAND.muted, fontWeight: 700 }}>
-          אפליקציה חכמה, רגועה וברורה לניהול החיים עם סוכרת
+          ניהול סוכרת פשוט וברור
         </p>
       </div>
     </div>
@@ -784,8 +753,8 @@ function OnboardingLogo() {
 
 function inputStyle(active: boolean) {
   return {
-    border: `2px solid ${active ? '#BFE1DB' : '#E5EEF1'}`,
-    backgroundColor: active ? '#F3FBFA' : '#FAFCFD',
+    border: `2px solid ${active ? '#BFDBFE' : '#E5EEF1'}`,
+    backgroundColor: active ? '#EFF6FF' : '#FAFCFD',
     color: BRAND.text,
     fontWeight: 700,
   };
@@ -793,7 +762,7 @@ function inputStyle(active: boolean) {
 
 function compactInputStyle(active: boolean) {
   return {
-    border: `2px solid ${active ? '#BFE1DB' : '#E5EEF1'}`,
+    border: `2px solid ${active ? '#BFDBFE' : '#E5EEF1'}`,
     backgroundColor: '#FFFFFF',
     color: BRAND.text,
     fontWeight: 700,

@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Bell, Settings } from 'lucide-react';
 import { Logo } from './Logo';
 import { useAppContext } from '../context/AppContext';
@@ -29,11 +30,12 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
     return scheduledAt.getTime() <= Date.now();
   }).length;
 
-  const notificationBadge = notificationPermission !== 'granted' && medicationSchedule.length > 0
-    ? '!'
-    : dueNotificationCount > 0
-      ? String(dueNotificationCount)
-      : null;
+  const notificationBadge =
+    notificationPermission !== 'granted' && medicationSchedule.length > 0
+      ? '!'
+      : dueNotificationCount > 0
+        ? String(dueNotificationCount)
+        : null;
 
   return (
     <header
@@ -46,35 +48,30 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
         boxShadow: theme.headerShadow,
       }}
     >
-      <div className="max-w-md mx-auto px-4 py-3.5 flex items-center justify-between gap-3">
+      <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div
-            className="w-12 h-12 rounded-[18px] flex items-center justify-center flex-shrink-0"
+            className="w-11 h-11 rounded-[18px] flex items-center justify-center flex-shrink-0"
             style={{
-              background: 'linear-gradient(135deg, #123B5D 0%, #0F766E 100%)',
-              boxShadow: `0 12px 24px ${theme.primaryShadow}`,
+              background: theme.gradientCard,
+              color: '#FFFFFF',
+              boxShadow: `0 14px 30px ${theme.primaryShadow}`,
             }}
           >
-            <Logo size={28} />
+            <Logo size={22} />
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 text-right">
             <h1
-              className="text-lg leading-none truncate"
+              className="text-[19px] leading-none truncate"
               style={{
                 color: theme.primary,
                 fontWeight: 900,
                 letterSpacing: '-0.03em',
               }}
             >
-              Sukeret360
+              הסוכרת שלי
             </h1>
-            <p
-              className="text-xs mt-1 truncate"
-              style={{ color: theme.primaryMuted, fontWeight: 600 }}
-            >
-              ליווי חכם, רגוע וברור לניהול היום עם סוכרת
-            </p>
           </div>
         </div>
 
@@ -84,7 +81,7 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
             label="התראות"
             theme={theme}
           >
-            <Bell size={21} strokeWidth={1.8} />
+            <Bell size={20} strokeWidth={1.9} />
             {notificationBadge && (
               <span
                 className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[11px] flex items-center justify-center"
@@ -104,7 +101,7 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
             label="הגדרות"
             theme={theme}
           >
-            <Settings size={21} strokeWidth={1.8} />
+            <Settings size={20} strokeWidth={1.9} />
           </HeaderButton>
         </div>
       </div>
@@ -118,7 +115,7 @@ function HeaderButton({
   onClick,
   theme,
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   label: string;
   onClick: () => void;
   theme: ReturnType<typeof useAppContext>['theme'];
