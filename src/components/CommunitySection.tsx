@@ -16,32 +16,10 @@ interface CommunityItem {
 }
 
 const COMMUNITY_ITEMS: CommunityItem[] = [
-  {
-    id: 'community',
-    icon: <Users size={22} strokeWidth={1.7} />,
-    label: 'קהילה',
-    hint: 'אנשים כמוך',
-  },
-  {
-    id: 'forum',
-    icon: <MessageSquare size={22} strokeWidth={1.7} />,
-    label: 'שאלות',
-    hint: 'פורום פתוח',
-    accent: true,
-  },
-  {
-    id: 'support',
-    icon: <Heart size={22} strokeWidth={1.7} />,
-    label: 'תמיכה',
-    hint: 'קבוצות רגועות',
-  },
-  {
-    id: 'challenges',
-    icon: <Trophy size={22} strokeWidth={1.7} />,
-    label: 'אתגרים',
-    hint: 'מטרות קטנות',
-    accent: true,
-  },
+  { id: 'community', icon: <Users size={22} strokeWidth={1.7} />, label: 'קהילה', hint: 'אנשים כמוך' },
+  { id: 'forum', icon: <MessageSquare size={22} strokeWidth={1.7} />, label: 'שאלות', hint: 'פורום פתוח', accent: true },
+  { id: 'support', icon: <Heart size={22} strokeWidth={1.7} />, label: 'תמיכה', hint: 'קבוצות רגועות' },
+  { id: 'challenges', icon: <Trophy size={22} strokeWidth={1.7} />, label: 'אתגרים', hint: 'מטרות קטנות', accent: true },
 ];
 
 export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySectionProps) {
@@ -60,7 +38,7 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
         plainIconBg: 'linear-gradient(135deg, #EFF5FD 0%, #E5EDF8 100%)',
       }
     : {
-        headerBadge: 'linear-gradient(135deg, rgba(248, 233, 220, 0.95) 0%, rgba(245, 213, 223, 0.95) 100%)',
+        headerBadge: 'linear-gradient(135deg, rgba(248,233,220,0.95) 0%, rgba(245,213,223,0.95) 100%)',
         card: 'linear-gradient(145deg, #FFF8F3 0%, #FBECEE 100%)',
         border: '#EAD6D8',
         shadow: '0 18px 34px rgba(211, 176, 177, 0.14)',
@@ -71,27 +49,20 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
       };
 
   const handleClick = (id: string, label: string) => {
-    if (id === 'community') {
-      onCommunityClick?.();
-      return;
-    }
-
+    if (id === 'community') return onCommunityClick?.();
     onItemClick?.(id, label);
   };
 
   return (
     <section className="px-4 mt-6 pb-8" dir="rtl">
-      <div className="mb-3 flex items-center justify-end gap-2" dir="ltr">
+      <div className="mb-3 flex flex-row-reverse items-center justify-start gap-2">
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-          style={{
-            background: accentSurface.headerBadge,
-            color: theme.primaryDark,
-          }}
+          style={{ background: accentSurface.headerBadge, color: theme.primaryDark }}
         >
           <Users size={18} strokeWidth={1.9} />
         </div>
-        <div className="text-right" dir="rtl">
+        <div className="text-right">
           <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>תמיכה וקהילה</h3>
         </div>
       </div>
@@ -106,20 +77,20 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
               minHeight: 116,
               background: item.accent ? accentSurface.card : accentSurface.plainBg,
               border: `1px solid ${item.accent ? accentSurface.border : theme.primaryBorder}`,
-              boxShadow: item.accent
-                ? accentSurface.shadow
-                : '0 12px 28px rgba(160, 134, 122, 0.08)',
+              boxShadow: item.accent ? accentSurface.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
             }}
           >
-            <div className="flex flex-col items-end h-full text-right">
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
-                style={{
-                  background: item.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
-                  color: item.accent ? accentSurface.iconColor : theme.primaryDark,
-                }}
-              >
-                {item.icon}
+            <div className="flex flex-col h-full text-right">
+              <div className="w-full flex flex-row-reverse justify-start">
+                <div
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: item.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
+                    color: item.accent ? accentSurface.iconColor : theme.primaryDark,
+                  }}
+                >
+                  {item.icon}
+                </div>
               </div>
 
               <div className="mt-auto w-full text-right">

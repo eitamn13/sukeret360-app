@@ -391,26 +391,31 @@ export function OnboardingScreen() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <FieldLabel text="שעת קימה" />
-                  <input
-                    type="time"
-                    value={wakeTime}
-                    onChange={(event) => setWakeTime(event.target.value)}
-                    className="w-full h-14 px-4 rounded-2xl text-right text-lg outline-none"
-                    style={inputStyle(Boolean(wakeTime))}
-                  />
+              <div
+                className="rounded-[28px] p-4"
+                style={{
+                  backgroundColor: '#FFFDF9',
+                  border: `1px solid ${BRAND.border}`,
+                  boxShadow: '0 10px 26px rgba(156,126,111,0.08)',
+                }}
+              >
+                <div className="text-right mb-3">
+                  <p style={{ color: BRAND.text, fontWeight: 900 }}>השגרה שלך</p>
+                  <p style={{ color: BRAND.muted, fontSize: 13, marginTop: 4 }}>
+                    השעות האלה ישמשו את התזכורות לאורך היום.
+                  </p>
                 </div>
 
-                <div>
-                  <FieldLabel text="שעת שינה" />
-                  <input
-                    type="time"
+                <div className="grid grid-cols-2 gap-3">
+                  <TimeFieldCard
+                    label="שעת קימה"
+                    value={wakeTime}
+                    onChange={setWakeTime}
+                  />
+                  <TimeFieldCard
+                    label="שעת שינה"
                     value={sleepTime}
-                    onChange={(event) => setSleepTime(event.target.value)}
-                    className="w-full h-14 px-4 rounded-2xl text-right text-lg outline-none"
-                    style={inputStyle(Boolean(sleepTime))}
+                    onChange={setSleepTime}
                   />
                 </div>
               </div>
@@ -767,4 +772,42 @@ function compactInputStyle(active: boolean) {
     color: BRAND.text,
     fontWeight: 700,
   };
+}
+
+function TimeFieldCard({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div
+      className="rounded-3xl p-3"
+      style={{
+        backgroundColor: '#FFFFFF',
+        border: `1px solid ${BRAND.border}`,
+      }}
+    >
+      <div className="flex flex-row-reverse items-center justify-between mb-2">
+        <span style={{ color: BRAND.muted, fontSize: 13, fontWeight: 800 }}>{label}</span>
+        <span style={{ color: BRAND.muted }}>🕒</span>
+      </div>
+      <input
+        type="time"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full h-12 rounded-2xl text-center text-lg outline-none"
+        style={{
+          border: '1px solid #EADFD2',
+          backgroundColor: '#FAFCFD',
+          color: BRAND.text,
+          fontWeight: 800,
+          direction: 'ltr',
+        }}
+      />
+    </div>
+  );
 }

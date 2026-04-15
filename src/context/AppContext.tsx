@@ -59,6 +59,7 @@ export interface LoggedMeal {
   name: string;
   icon: string;
   carbs: number;
+  calories?: number;
   mealType: MealType;
   loggedAt: string;
   source?: 'vision' | 'manual' | 'database';
@@ -271,6 +272,7 @@ function normalizeMealLogs(): LoggedMeal[] {
       icon: meal.icon || '🍽️',
       mealType: meal.mealType || 'snack',
       source: meal.source || 'manual',
+      calories: typeof meal.calories === 'number' ? meal.calories : undefined,
     }))
     .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
 }

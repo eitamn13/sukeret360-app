@@ -32,6 +32,7 @@ type VisionRequestBody = {
 type DetectedFood = {
   name: string;
   carbs: number;
+  calories: number;
 };
 
 function parseRequestBody(body: unknown): VisionRequestBody {
@@ -70,9 +71,18 @@ function extractOutputText(response: OpenAIResponsesResult): string {
   return '';
 }
 
+function clampNumber(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed) || parsed < 0) {
+    return 0;
+  }
+
+  return Math.round(parsed * 10) / 10;
+}
+
 function normalizeFoods(rawText: string): DetectedFood[] {
   if (!rawText.trim()) {
-    return [{ name: 'לא זוהה', carbs: 0 }];
+    return [{ name: 'לא זוהה', carbs: 0, calories: 0 }];
   }
 
   const arrayStart = rawText.indexOf('[');
@@ -83,26 +93,30 @@ function normalizeFoods(rawText: string): DetectedFood[] {
       : rawText;
 
   try {
-    const parsed = JSON.parse(candidate) as Array<{ name?: unknown; carbs?: unknown }>;
+    const parsed = JSON.parse(candidate) as Array<{
+      name?: unknown;
+      carbs?: unknown;
+      calories?: unknown;
+    }>;
+
     const foods = parsed
       .map((item) => {
         const name = typeof item?.name === 'string' ? item.name.trim() : '';
-        const carbs = Number(item?.carbs ?? 0);
-
         if (!name) {
           return null;
         }
 
         return {
           name,
-          carbs: Number.isFinite(carbs) && carbs > 0 ? Math.round(carbs * 10) / 10 : 0,
+          carbs: clampNumber(item?.carbs),
+          calories: clampNumber(item?.calories),
         };
       })
       .filter((item): item is DetectedFood => item !== null);
 
-    return foods.length > 0 ? foods : [{ name: 'לא זוהה', carbs: 0 }];
+    return foods.length > 0 ? foods : [{ name: 'לא זוהה', carbs: 0, calories: 0 }];
   } catch {
-    return [{ name: 'לא זוהה', carbs: 0 }];
+    return [{ name: 'לא זוהה', carbs: 0, calories: 0 }];
   }
 }
 
@@ -148,8 +162,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
                 type: 'input_text',
                 text:
                   'זהה את המאכלים שבתמונה והחזר רק JSON במבנה הזה: ' +
-                  '[{"name":"שם המזון","carbs":מספר}] ' +
-                  'אם אי אפשר לזהות מזון, החזר [{"name":"לא זוהה","carbs":0}].',
+                  '[{"name":"שם המזון","carbs":מספר,"calories":מספר}]. ' +
+                  'אם אי אפשר לזהות מזון, החזר [{"name":"לא זוהה","carbs":0,"calories":0}]. ' +
+                  'הערך calories צריך להיות קילוקלוריות משוערות למנה שנראית בתמונה.',
               },
               {
                 type: 'input_image',
@@ -158,7 +173,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             ],
           },
         ],
-        max_output_tokens: 300,
+        max_output_tokens: 350,
       }),
     });
 

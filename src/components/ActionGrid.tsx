@@ -26,50 +26,13 @@ interface ActionGridProps {
 }
 
 const PRIMARY_ACTIONS: ActionItem[] = [
-  {
-    icon: <Search size={24} strokeWidth={1.7} />,
-    label: 'רישום ארוחה',
-    hint: 'צילום או חיפוש',
-    accent: true,
-    id: 'meal-logger',
-  },
-  {
-    icon: <Droplets size={24} strokeWidth={1.7} />,
-    label: 'רישום סוכר',
-    hint: 'מדידה חדשה',
-    id: 'sugar',
-  },
-  {
-    icon: <Pill size={24} strokeWidth={1.7} />,
-    label: 'תרופות',
-    hint: 'לוח ותזכורות',
-    id: 'medications',
-  },
-  {
-    icon: <UtensilsCrossed size={24} strokeWidth={1.7} />,
-    label: 'ארוחות',
-    hint: 'רעיונות מהירים',
-    id: 'meals',
-  },
-  {
-    icon: <Stethoscope size={24} strokeWidth={1.7} />,
-    label: 'טיפ יומי',
-    hint: 'קצר וברור',
-    id: 'tip',
-  },
-  {
-    icon: <BookOpen size={24} strokeWidth={1.7} />,
-    label: 'היסטוריה',
-    hint: 'מה קרה השבוע',
-    id: 'history',
-  },
-  {
-    icon: <Video size={24} strokeWidth={1.7} />,
-    label: 'העוזר הרפואי שלי',
-    hint: 'שאלה רפואית קצרה',
-    accent: true,
-    id: 'doctor',
-  },
+  { icon: <Search size={24} strokeWidth={1.7} />, label: 'רישום ארוחה', hint: 'צילום או חיפוש', accent: true, id: 'meal-logger' },
+  { icon: <Droplets size={24} strokeWidth={1.7} />, label: 'רישום סוכר', hint: 'מדידה חדשה', id: 'sugar' },
+  { icon: <Pill size={24} strokeWidth={1.7} />, label: 'תרופות', hint: 'לוח ותזכורות', id: 'medications' },
+  { icon: <UtensilsCrossed size={24} strokeWidth={1.7} />, label: 'ארוחות', hint: 'רעיונות מהירים', id: 'meals' },
+  { icon: <Stethoscope size={24} strokeWidth={1.7} />, label: 'טיפ יומי', hint: 'קצר וברור', id: 'tip' },
+  { icon: <BookOpen size={24} strokeWidth={1.7} />, label: 'היסטוריה', hint: 'מה קרה השבוע', id: 'history' },
+  { icon: <Video size={24} strokeWidth={1.7} />, label: 'העוזר הרפואי שלי', hint: 'שאלה רפואית קצרה', accent: true, id: 'doctor' },
 ];
 
 export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: ActionGridProps) {
@@ -99,32 +62,21 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
       };
 
   const handleClick = (id: string, label: string) => {
-    if (id === 'meal-logger') {
-      onMealLoggerClick?.();
-      return;
-    }
-
-    if (id === 'sugar') {
-      onSugarClick?.();
-      return;
-    }
-
+    if (id === 'meal-logger') return onMealLoggerClick?.();
+    if (id === 'sugar') return onSugarClick?.();
     onActionClick?.(id, label);
   };
 
   return (
     <section className="px-4 mt-6" dir="rtl">
-      <div className="mb-3 flex items-center justify-end gap-2" dir="ltr">
+      <div className="mb-3 flex flex-row-reverse items-center justify-start gap-2">
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-          style={{
-            background: accentSurface.headerBadge,
-            color: theme.primaryDark,
-          }}
+          style={{ background: accentSurface.headerBadge, color: theme.primaryDark }}
         >
           <Sparkles size={18} strokeWidth={1.9} />
         </div>
-        <div className="text-right" dir="rtl">
+        <div className="text-right">
           <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>מה צריך עכשיו</h3>
         </div>
       </div>
@@ -139,20 +91,20 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
               minHeight: 118,
               background: action.accent ? accentSurface.card : accentSurface.plainBg,
               border: `1px solid ${action.accent ? accentSurface.border : theme.primaryBorder}`,
-              boxShadow: action.accent
-                ? accentSurface.shadow
-                : '0 12px 28px rgba(160, 134, 122, 0.08)',
+              boxShadow: action.accent ? accentSurface.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
             }}
           >
-            <div className="flex flex-col items-end h-full text-right">
-              <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
-                style={{
-                  background: action.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
-                  color: action.accent ? accentSurface.iconColor : theme.primaryDark,
-                }}
-              >
-                {action.icon}
+            <div className="flex flex-col h-full text-right">
+              <div className="w-full flex flex-row-reverse justify-start">
+                <div
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                  style={{
+                    background: action.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
+                    color: action.accent ? accentSurface.iconColor : theme.primaryDark,
+                  }}
+                >
+                  {action.icon}
+                </div>
               </div>
 
               <div className="mt-auto w-full text-right">

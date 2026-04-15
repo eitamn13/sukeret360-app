@@ -1,6 +1,7 @@
 export interface DetectedFood {
   name: string;
   carbs: number;
+  calories: number;
 }
 
 type VisionResponse = {
@@ -8,7 +9,7 @@ type VisionResponse = {
   error?: string;
 };
 
-function clampCarbs(value: unknown): number {
+function clampNumber(value: unknown): number {
   const parsed = Number(value);
   if (!Number.isFinite(parsed) || parsed < 0) {
     return 0;
@@ -36,7 +37,7 @@ export function normalizeDetectedFoods(input: unknown): DetectedFood[] {
     .map((item) => {
       if (typeof item === 'string') {
         const name = item.trim();
-        return name ? { name, carbs: 0 } : null;
+        return name ? { name, carbs: 0, calories: 0 } : null;
       }
 
       if (!item || typeof item !== 'object') {
@@ -54,7 +55,8 @@ export function normalizeDetectedFoods(input: unknown): DetectedFood[] {
 
       return {
         name,
-        carbs: clampCarbs((item as { carbs?: unknown }).carbs),
+        carbs: clampNumber((item as { carbs?: unknown }).carbs),
+        calories: clampNumber((item as { calories?: unknown }).calories),
       };
     })
     .filter((item): item is DetectedFood => item !== null);
