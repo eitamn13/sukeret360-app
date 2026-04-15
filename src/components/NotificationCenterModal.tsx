@@ -209,8 +209,12 @@ export function NotificationCenterModal({
             background:
               notificationPermission === 'granted'
                 ? 'linear-gradient(135deg,#16A34A,#15803D)'
-                : theme.gradientCard,
+                : `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
             color: '#FFFFFF',
+            boxShadow:
+              notificationPermission === 'granted'
+                ? '0 16px 30px rgba(22, 163, 74, 0.22)'
+                : `0 18px 34px ${theme.primaryShadow}`,
           }}
         >
           <div className="flex items-center justify-between gap-3">
@@ -257,9 +261,9 @@ export function NotificationCenterModal({
               onClick={onOpenMedications}
               className="h-11 rounded-2xl"
               style={{
-                backgroundColor: 'rgba(255,255,255,0.18)',
+                backgroundColor: 'rgba(255,255,255,0.2)',
                 color: '#FFFFFF',
-                border: '1px solid rgba(255,255,255,0.28)',
+                border: '1px solid rgba(255,255,255,0.34)',
                 fontWeight: 800,
               }}
             >
