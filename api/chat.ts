@@ -34,6 +34,41 @@ type OpenAIResponsesResult = {
   };
 };
 
+function createQuickReply(message: string): string | null {
+  const normalized = message.trim().toLowerCase();
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (['ai', 'היי', 'הי', 'שלום', 'hello', 'hey'].includes(normalized)) {
+    return 'אני כאן בשבילך. אפשר לשאול אותי על סוכר, תרופות, ארוחות, תסמינים או מה לעשות עכשיו כדי להישאר מאוזן יותר.';
+  }
+
+  if (normalized.includes('סוכר') && normalized.includes('לפני')) {
+    return 'בדרך כלל יעד מקובל לפני ארוחה הוא בערך 80 עד 130 mg/dL, אבל חשוב לפעול לפי היעד שהרופא או הצוות המטפל הגדירו עבורך באופן אישי.';
+  }
+
+  if (
+    normalized.includes('היפו') ||
+    normalized.includes('רעד') ||
+    normalized.includes('סחרחורת') ||
+    normalized.includes('חולשה')
+  ) {
+    return 'אם יש רעד, חולשה, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם הערך נמוך, נהוג לקחת פחמימה מהירה ולבדוק שוב אחרי כ־15 דקות. אם יש החמרה, בלבול או אובדן הכרה, צריך לפנות לעזרה רפואית מיד.';
+  }
+
+  if (normalized.includes('מטפורמין')) {
+    return 'מטפורמין נלקח בדרך כלל עם אוכל או אחרי אוכל כדי להפחית אי נוחות בבטן, אבל חשוב לפעול לפי ההנחיה האישית שקיבלת מהרופא.';
+  }
+
+  if (normalized.includes('ארוח') || normalized.includes('פחמימ')) {
+    return 'ארוחה טובה לחולי סוכרת בדרך כלל משלבת פחמימה מדודה, חלבון וירקות. לדוגמה: יוגורט עם אגוזים, חביתה עם סלט, או עוף עם כמות מדודה של אורז או קינואה.';
+  }
+
+  return null;
+}
+
 function parseRequestBody(body: unknown): ChatRequestBody {
   if (!body) {
     return {};
@@ -127,6 +162,12 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
     return res.status(400).json({ error: 'Message required.' });
   }
 
+  const quickReply = createQuickReply(userMessage);
+
+  if (quickReply) {
+    return res.status(200).json({ reply: quickReply });
+  }
+
   const conversation = normalizeHistory(history).map((entry) => ({
     role: entry.role,
     content: entry.content,
@@ -146,7 +187,9 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
           'Reply in simple, warm, professional Hebrew. ' +
           'Keep answers practical and easy for older adults to understand. ' +
           'Prefer short paragraphs, clear next steps, and calm language. ' +
-          'If the user writes something very short like "AI" or "hello", introduce yourself briefly and invite a diabetes-related question. ' +
+          'Always answer the user\'s actual last question directly in the first sentence. ' +
+          'Do not greet again unless the message is only a greeting like "AI", "hello", or "מי אתה". ' +
+          'Avoid generic introductions when the user asked a concrete diabetes question. ' +
           'If the user describes an emergency, tell them to contact a medical professional or emergency services immediately.',
         input: [
           ...conversation,
