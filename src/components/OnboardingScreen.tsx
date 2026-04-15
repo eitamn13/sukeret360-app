@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { ChevronLeft, Clock3, Pill, Plus, Shield, Sparkles, Trash2 } from 'lucide-react';
+import { Logo } from './Logo';
 import {
   Gender,
   MedicationScheduleItem,
@@ -759,13 +760,14 @@ function OnboardingLogo() {
   return (
     <div className="flex flex-col items-center gap-3">
       <div
-        className="w-20 h-20 rounded-[28px] flex items-center justify-center"
+        className="w-24 h-24 rounded-[30px] flex items-center justify-center"
         style={{
-          background: 'linear-gradient(135deg, #123B5D 0%, #0F766E 100%)',
-          boxShadow: '0 18px 36px rgba(18,59,93,0.16)',
+          background: 'linear-gradient(135deg, #FFFFFF 0%, #FFF7FA 100%)',
+          border: `1px solid ${BRAND.border}`,
+          boxShadow: '0 18px 36px rgba(18,59,93,0.12)',
         }}
       >
-        <Shield size={34} strokeWidth={1.9} color="#FFFFFF" />
+        <Logo size={70} />
       </div>
 
       <div className="text-center">

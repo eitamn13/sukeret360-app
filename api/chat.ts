@@ -129,12 +129,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
 
   const conversation = normalizeHistory(history).map((entry) => ({
     role: entry.role,
-    content: [
-      {
-        type: 'input_text',
-        text: entry.content,
-      },
-    ],
+    content: entry.content,
   }));
 
   try {
@@ -147,22 +142,21 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       body: JSON.stringify({
         model: 'gpt-4.1-mini',
         instructions:
-          'You are a supportive diabetes assistant. Reply in simple, clear Hebrew. ' +
-          'Keep the answer practical, brief, and medically cautious. ' +
+          'You are Sukeret360, a supportive medical diabetes assistant. ' +
+          'Reply in simple, warm, professional Hebrew. ' +
+          'Keep answers practical and easy for older adults to understand. ' +
+          'Prefer short paragraphs, clear next steps, and calm language. ' +
+          'If the user writes something very short like "AI" or "hello", introduce yourself briefly and invite a diabetes-related question. ' +
           'If the user describes an emergency, tell them to contact a medical professional or emergency services immediately.',
         input: [
           ...conversation,
           {
             role: 'user',
-            content: [
-              {
-                type: 'input_text',
-                text: userMessage,
-              },
-            ],
+            content: userMessage,
           },
         ],
         max_output_tokens: 350,
+        store: false,
       }),
     });
 

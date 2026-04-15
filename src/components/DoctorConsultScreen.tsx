@@ -19,28 +19,6 @@ interface HistoryEntry {
   content: string;
 }
 
-function createLocalFallbackReply(message: string) {
-  const normalized = message.toLowerCase();
-
-  if (normalized.includes('סוכר') && normalized.includes('לפני')) {
-    return 'בדרך כלל יעד נפוץ לפני ארוחה הוא בערך 80 עד 130 mg/dL, אבל תמיד חשוב להתאים את היעד להנחיית הרופא או האחות שלך.';
-  }
-
-  if (normalized.includes('היפו') || normalized.includes('חלש') || normalized.includes('סחרחורת')) {
-    return 'אם יש תחושת חולשה, רעד, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם יש ערך נמוך, נהוג לטפל בפחמימה מהירה ולבדוק שוב אחרי כ-15 דקות. אם המצב לא משתפר או מחמיר, צריך לפנות לעזרה רפואית.';
-  }
-
-  if (normalized.includes('ארוח') || normalized.includes('פחמימ')) {
-    return 'בארוחה מאוזנת לחולי סוכרת כדאי לשלב פחמימה מדודה עם חלבון וירקות. אפשר למשל יוגורט עם שקדים, חביתה עם סלט, או עוף עם קינואה בכמות מדודה.';
-  }
-
-  if (normalized.includes('תרופ') || normalized.includes('מטפורמין') || normalized.includes('אינסולין')) {
-    return 'לגבי תרופות, הכי בטוח להיצמד להנחיה האישית שנקבעה לך. אם תרצה, אפשר לכתוב לי את שם התרופה ושעת הלקיחה ואנסה לעזור בשאלה כללית.';
-  }
-
-  return 'יש כרגע קושי זמני בחיבור לעוזר המלא, אבל אני עדיין כאן כדי לעזור. נסה לנסח את השאלה בקצרה סביב סוכר, ארוחה, תרופות או תסמינים, ואענה לפי המידע הזמין.';
-}
-
 interface SpeechRecognitionResultLike {
   isFinal: boolean;
   0: {
@@ -75,12 +53,56 @@ function nowTime() {
   return new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 }
 
+function isGreeting(message: string) {
+  const normalized = message.trim().toLowerCase();
+  return ['ai', 'היי', 'הי', 'שלום', 'hey', 'hello'].includes(normalized);
+}
+
+function createLocalFallbackReply(message: string) {
+  const normalized = message.toLowerCase();
+
+  if (isGreeting(message)) {
+    return 'אני כאן בשבילך. אפשר לשאול אותי על סוכר, ארוחות, תרופות, היפו, היפר או הרגלים יומיים.';
+  }
+
+  if (normalized.includes('סוכר') && normalized.includes('לפני')) {
+    return 'בדרך כלל יעד מקובל לפני ארוחה הוא בערך 80 עד 130 mg/dL, אבל תמיד חשוב לפעול לפי היעד שהרופא או האחות הגדירו עבורך.';
+  }
+
+  if (
+    normalized.includes('היפו') ||
+    normalized.includes('חלש') ||
+    normalized.includes('רעד') ||
+    normalized.includes('סחרחורת')
+  ) {
+    return 'אם יש חולשה, רעד, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם הערך נמוך, נהוג לטפל בפחמימה מהירה ולבדוק שוב אחרי כ־15 דקות. אם יש החמרה או בלבול, צריך לפנות לעזרה רפואית מיד.';
+  }
+
+  if (normalized.includes('ארוח') || normalized.includes('פחמימ')) {
+    return 'כדאי לבנות ארוחה מאוזנת עם פחמימה מדודה, חלבון וירקות. לדוגמה: יוגורט עם אגוזים, חביתה עם סלט, או עוף עם כמות מדודה של אורז או קינואה.';
+  }
+
+  if (
+    normalized.includes('תרופ') ||
+    normalized.includes('מטפורמין') ||
+    normalized.includes('אינסולין')
+  ) {
+    return 'לגבי תרופות, הכי בטוח להיצמד להנחיה האישית שלך. אם תרצה, אפשר לכתוב לי את שם התרופה ואת שעת הלקיחה ואעזור להבין מה מקובל באופן כללי.';
+  }
+
+  if (normalized.includes('הליכה') || normalized.includes('ספורט') || normalized.includes('אימון')) {
+    return 'פעילות גופנית מתונה יכולה לעזור לאיזון, אבל אם יש אינסולין או ערכים לא יציבים, כדאי לבדוק סוכר לפני ואחרי ולוודא שיש פחמימה זמינה במקרה הצורך.';
+  }
+
+  return 'יש כרגע קושי זמני בחיבור לעוזר המלא, אבל אני עדיין כאן כדי לעזור. נסה לנסח את השאלה בקצרה סביב סוכר, ארוחה, תרופות, תסמינים או פעילות, ואענה לפי המידע הזמין.';
+}
+
 const CHAT_ENDPOINT = '/api/chat';
 
 const INITIAL_MESSAGE: Message = {
   id: 'welcome',
   from: 'ai',
-  text: 'שלום, אני עוזרת הבריאות שלך. אפשר לשאול אותי על סוכרת, תרופות, תזונה, פעילות גופנית ומה כדאי לעשות עכשיו.',
+  text: 'שלום, אני עוזר הבריאות של Sukeret360. אפשר לשאול אותי על סוכר, תרופות, תזונה, פעילות גופנית ותסמינים. אענה בצורה רגועה, פשוטה וברורה.',
   time: nowTime(),
 };
 
@@ -88,7 +110,7 @@ const QUICK_SUGGESTIONS = [
   'מה הסוכר התקין לפני ארוחה?',
   'מתי הכי טוב לקחת מטפורמין?',
   'איזו ארוחת ערב טובה לחולי סוכרת?',
-  'מה לבדוק אם יש חולשה או סחרחורת?',
+  'מה לעשות אם יש רעד או סחרחורת?',
 ];
 
 export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
@@ -97,7 +119,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
@@ -131,7 +153,8 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'he-IL';
-      utterance.rate = 0.95;
+      utterance.rate = 0.96;
+      utterance.pitch = 0.95;
       utterance.onend = () => {
         setIsSpeaking(false);
         utteranceRef.current = null;
@@ -150,7 +173,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isTyping]);
+  }, [isTyping, messages]);
 
   useEffect(() => {
     return () => {
@@ -158,6 +181,26 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       stopSpeaking();
     };
   }, [stopSpeaking]);
+
+  const pushAssistantReply = useCallback(
+    (replyText: string, userMessage: string) => {
+      const replyMessage: Message = {
+        id: `${Date.now()}-reply`,
+        from: 'ai',
+        text: replyText,
+        time: nowTime(),
+      };
+
+      setMessages((prev) => [...prev, replyMessage]);
+      setHistory((prev) => [
+        ...prev,
+        { role: 'user', content: userMessage },
+        { role: 'assistant', content: replyText },
+      ]);
+      speakText(replyText);
+    },
+    [speakText]
+  );
 
   const startListening = () => {
     if (!speechRecognitionSupported) return;
@@ -188,6 +231,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
     };
     recognition.onerror = () => {
       setIsListening(false);
+      setNotice('לא הצלחנו לקלוט את ההקלטה. אפשר לנסות שוב או להקליד.');
     };
     recognition.onend = () => {
       setIsListening(false);
@@ -203,7 +247,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       const messageText = (text ?? input).trim();
       if (!messageText || isTyping) return;
 
-      setError(null);
+      setNotice(null);
 
       const userMsg: Message = {
         id: Date.now().toString(),
@@ -214,10 +258,18 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
 
       setMessages((prev) => [...prev, userMsg]);
       setInput('');
+
+      if (isGreeting(messageText)) {
+        const greetingReply =
+          'אני כאן בשבילך. אפשר לשאול אותי על סוכר, תרופות, ארוחות, תסמינים או מה לעשות עכשיו כדי להישאר מאוזן יותר.';
+        pushAssistantReply(greetingReply, messageText);
+        return;
+      }
+
       setIsTyping(true);
 
       try {
-        const res = await fetch(CHAT_ENDPOINT, {
+        const response = await fetch(CHAT_ENDPOINT, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -228,54 +280,29 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
           }),
         });
 
-        const data = await res.json().catch(() => null);
+        const data = await response.json().catch(() => null);
 
-        if (!res.ok) {
-          console.error('Chat API error:', res.status, data);
-          throw new Error(`HTTP ${res.status}`);
+        if (!response.ok) {
+          console.error('Chat API error:', response.status, data);
+          throw new Error(`HTTP ${response.status}`);
         }
 
-        const replyText: string =
-          data?.reply ?? 'מצטערת, לא הצלחתי להשיב כרגע. נסו שוב בעוד רגע.';
+        const replyText =
+          typeof data?.reply === 'string' && data.reply.trim()
+            ? data.reply.trim()
+            : 'אני כאן, אבל לא הצלחתי לענות כרגע כמו שצריך. אפשר לנסות שוב בעוד רגע.';
 
-        const replyMsg: Message = {
-          id: `${Date.now()}-reply`,
-          from: 'ai',
-          text: replyText,
-          time: nowTime(),
-        };
-
-        setMessages((prev) => [...prev, replyMsg]);
-        setHistory((prev) => [
-          ...prev,
-          { role: 'user', content: messageText },
-          { role: 'assistant', content: replyText },
-        ]);
-        speakText(replyText);
-      } catch (err) {
-        console.error('DoctorConsultScreen sendMessage failed:', err);
-        setError('לא ניתן להתחבר לשירות כרגע. בדקו את החיבור ונסו שוב.');
+        pushAssistantReply(replyText, messageText);
+      } catch (error) {
+        console.error('DoctorConsultScreen sendMessage failed:', error);
         const fallbackReply = createLocalFallbackReply(messageText);
-        const fallbackMessage: Message = {
-          id: `${Date.now()}-fallback`,
-          from: 'ai',
-          text: fallbackReply,
-          time: nowTime(),
-        };
-
-        setError('יש תקלה זמנית בחיבור לעוזר המלא, אז עברתי לתשובת גיבוי כדי שלא תיתקע.');
-        setMessages((prev) => [...prev, fallbackMessage]);
-        setHistory((prev) => [
-          ...prev,
-          { role: 'user', content: messageText },
-          { role: 'assistant', content: fallbackReply },
-        ]);
-        speakText(fallbackReply);
+        setNotice('יש תקלה זמנית בחיבור לעוזר המלא, אז עברתי למענה גיבוי כדי שלא תיתקע.');
+        pushAssistantReply(fallbackReply, messageText);
       } finally {
         setIsTyping(false);
       }
     },
-    [history, input, isTyping, speakText]
+    [history, input, isTyping, pushAssistantReply]
   );
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -293,6 +320,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
     }
 
     setAutoSpeak(true);
+    setNotice('הקראה קולית הופעלה מחדש.');
   };
 
   const showSuggestions = messages.length === 1 && !isTyping;
@@ -303,8 +331,8 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       style={{ background: theme.gradientFull }}
     >
       <OverlayHeader
-        title="עוזרת בריאות AI"
-        subtitle="שיחה קולית וטקסטואלית ברורה, רגועה ונוחה"
+        title="עוזר בריאות AI"
+        subtitle="שיחה רגועה, ברורה ומותאמת לשאלות על סוכרת"
         theme={theme}
         onBack={onClose}
         onClose={onClose}
@@ -340,12 +368,23 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       />
 
       <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
+        <div
+          className="rounded-[26px] p-4"
+          style={{
+            background: `linear-gradient(135deg, ${theme.primaryBg} 0%, #FFFFFF 100%)`,
+            border: `1px solid ${theme.primaryBorder}`,
+          }}
+        >
+          <p style={{ color: '#0F172A', fontWeight: 900, fontSize: 16 }}>איך הכי נוח להשתמש בי?</p>
+          <p style={{ color: '#64748B', lineHeight: 1.7, marginTop: 8, fontSize: 14 }}>
+            שאלות קצרות מקבלות תשובות ברורות יותר. למשל: "מה הסוכר התקין לפני ארוחה?" או "מה לעשות אם יש רעד?".
+          </p>
+        </div>
+
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex items-end gap-3 ${
-              message.from === 'user' ? 'flex-row-reverse' : 'flex-row'
-            }`}
+            className={`flex items-end gap-3 ${message.from === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
           >
             <div
               className="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0"
@@ -380,10 +419,8 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
                 {message.text}
               </div>
               <p
-                className={`text-xs mt-1.5 ${
-                  message.from === 'user' ? 'text-left' : 'text-right'
-                }`}
-                style={{ color: '#9CA3AF' }}
+                className={`text-xs mt-1.5 ${message.from === 'user' ? 'text-left' : 'text-right'}`}
+                style={{ color: '#94A3B8' }}
               >
                 {message.time}
               </p>
@@ -422,27 +459,24 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
           </div>
         )}
 
-        {error && (
+        {notice && (
           <div
-            className="flex items-center gap-3 rounded-2xl px-4 py-3.5 mx-1"
-            style={{ backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA' }}
+            className="flex items-center gap-3 rounded-2xl px-4 py-3.5"
+            style={{
+              backgroundColor: '#EFF6FF',
+              border: '1.5px solid #BFDBFE',
+            }}
           >
-            <AlertCircle size={20} strokeWidth={2} style={{ color: '#DC2626', flexShrink: 0 }} />
-            <p
-              className="text-sm text-right flex-1"
-              style={{ color: '#DC2626', fontWeight: 500 }}
-            >
-              {error}
+            <AlertCircle size={18} strokeWidth={2} style={{ color: '#1D4ED8', flexShrink: 0 }} />
+            <p className="text-sm text-right flex-1" style={{ color: '#1D4ED8', fontWeight: 600 }}>
+              {notice}
             </p>
           </div>
         )}
 
         {showSuggestions && (
           <div className="space-y-2.5 mt-2">
-            <p
-              className="text-xs text-right pr-1"
-              style={{ color: theme.primaryMuted, fontWeight: 700 }}
-            >
+            <p className="text-xs text-right pr-1" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
               שאלות מהירות:
             </p>
             {QUICK_SUGGESTIONS.map((suggestion) => (
@@ -506,7 +540,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={isListening ? 'מאזינה...' : 'שאלו כל שאלה על הסוכרת, התרופות או הארוחות'}
+            placeholder={isListening ? 'מקשיב עכשיו...' : 'כתבו שאלה על סוכר, תרופות, ארוחות או תסמינים'}
             dir="rtl"
             className="flex-1 h-12 px-4 rounded-2xl text-sm outline-none transition-all"
             style={{
@@ -518,11 +552,9 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
             }}
           />
         </div>
-        <p
-          className="text-xs text-center mt-2.5"
-          style={{ color: theme.primaryMuted, fontWeight: 500 }}
-        >
-          תשובות AI אינן תחליף לייעוץ רפואי מקצועי
+
+        <p className="text-xs text-center mt-2.5" style={{ color: theme.primaryMuted, fontWeight: 500 }}>
+          תשובות AI אינן מחליפות ייעוץ רפואי מקצועי
         </p>
       </div>
     </div>
