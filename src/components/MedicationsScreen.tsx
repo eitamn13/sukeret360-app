@@ -392,8 +392,15 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
               onClick={notificationPermission === 'granted' ? sendTestNotification : requestNotifications}
               className="h-11 rounded-2xl"
               style={{
-                backgroundColor: '#FFFFFF',
-                color: notificationPermission === 'granted' ? '#15803D' : theme.primary,
+                background:
+                  notificationPermission === 'granted'
+                    ? '#FFFFFF'
+                    : `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`,
+                color: notificationPermission === 'granted' ? '#15803D' : '#FFFFFF',
+                boxShadow:
+                  notificationPermission === 'granted'
+                    ? 'none'
+                    : `0 14px 28px ${theme.primaryShadow}`,
                 fontWeight: 800,
               }}
             >
