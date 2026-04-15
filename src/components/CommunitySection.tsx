@@ -50,12 +50,14 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
 
   const accentSurface = isMale
     ? {
-        headerBadge: 'linear-gradient(135deg, rgba(226,237,253,0.96) 0%, rgba(244,248,255,0.96) 100%)',
+        headerBadge: 'linear-gradient(135deg, rgba(226,237,253,0.96) 0%, rgba(244,248,255,0.98) 100%)',
         card: 'linear-gradient(145deg, #F9FBFF 0%, #EEF4FD 100%)',
         border: '#DBE6F3',
         shadow: '0 18px 34px rgba(138, 169, 214, 0.13)',
         iconBg: 'linear-gradient(135deg, #D8E7FB 0%, #CBDCF5 100%)',
         iconColor: '#506A87',
+        plainBg: 'linear-gradient(145deg, #FFFFFF 0%, #F7FAFE 100%)',
+        plainIconBg: 'linear-gradient(135deg, #EFF5FD 0%, #E5EDF8 100%)',
       }
     : {
         headerBadge: 'linear-gradient(135deg, rgba(248, 233, 220, 0.95) 0%, rgba(245, 213, 223, 0.95) 100%)',
@@ -64,6 +66,8 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
         shadow: '0 18px 34px rgba(211, 176, 177, 0.14)',
         iconBg: 'linear-gradient(135deg, #F7D4DE 0%, #F1C5D2 100%)',
         iconColor: '#8B5364',
+        plainBg: 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F1 100%)',
+        plainIconBg: 'linear-gradient(135deg, #FFF4EE 0%, #FBF1E5 100%)',
       };
 
   const handleClick = (id: string, label: string) => {
@@ -77,12 +81,7 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
 
   return (
     <section className="px-4 mt-6 pb-8" dir="rtl">
-      <div className="flex items-center justify-end mb-3 gap-3">
-        <div className="text-right">
-          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>תמיכה וקהילה</h3>
-          <p style={{ color: '#95837A', fontSize: 13 }}>לשאול, לשתף ולהתחזק בקצב נעים וברור.</p>
-        </div>
-
+      <div className="mb-3 flex items-center justify-end gap-2" dir="ltr">
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
           style={{
@@ -91,6 +90,9 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
           }}
         >
           <Users size={18} strokeWidth={1.9} />
+        </div>
+        <div className="text-right" dir="rtl">
+          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>תמיכה וקהילה</h3>
         </div>
       </div>
 
@@ -102,9 +104,7 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
             className="rounded-[26px] p-4 text-right transition-all active:scale-[0.98]"
             style={{
               minHeight: 116,
-              background: item.accent
-                ? accentSurface.card
-                : 'linear-gradient(145deg, #FFFFFF 0%, #FFF9F2 100%)',
+              background: item.accent ? accentSurface.card : accentSurface.plainBg,
               border: `1px solid ${item.accent ? accentSurface.border : theme.primaryBorder}`,
               boxShadow: item.accent
                 ? accentSurface.shadow
@@ -115,11 +115,7 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
               <div
                 className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
                 style={{
-                  background: item.accent
-                    ? accentSurface.iconBg
-                    : isMale
-                      ? 'linear-gradient(135deg, #F1F6FD 0%, #E8F0FA 100%)'
-                      : 'linear-gradient(135deg, #FFF4EE 0%, #FBF1E5 100%)',
+                  background: item.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
                   color: item.accent ? accentSurface.iconColor : theme.primaryDark,
                 }}
               >

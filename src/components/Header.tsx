@@ -49,7 +49,7 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
         boxShadow: theme.headerShadow,
       }}
     >
-      <div className="max-w-md mx-auto px-4 py-3 grid grid-cols-[108px_1fr_76px] items-center gap-3">
+      <div className="max-w-md mx-auto px-4 py-3 grid grid-cols-[92px_1fr_64px] items-center gap-3">
         <div className="flex items-center gap-2 justify-self-start">
           <HeaderButton onClick={onSettingsClick} label="הגדרות" theme={theme}>
             <Settings size={20} strokeWidth={1.9} />
@@ -72,9 +72,9 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
           </HeaderButton>
         </div>
 
-        <div className="min-w-0 text-center">
+        <div className="min-w-0 text-right">
           <h1
-            className="text-[22px] leading-none truncate"
+            className="text-[21px] leading-none truncate"
             style={{
               color: theme.primaryDark,
               fontWeight: 900,
@@ -83,16 +83,10 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
           >
             הסוכרת שלי
           </h1>
-          <p
-            className="text-[11px] mt-1 truncate"
-            style={{ color: theme.primaryMuted, fontWeight: 700 }}
-          >
-            מרגיש כמו בית, ברור כמו כלי רפואי
-          </p>
         </div>
 
         <div className="justify-self-end">
-          <Logo size={56} />
+          <Logo size={54} />
         </div>
       </div>
     </header>

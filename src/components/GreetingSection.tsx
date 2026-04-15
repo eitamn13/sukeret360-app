@@ -174,9 +174,6 @@ export function GreetingSection({
           >
             {genderedText(userProfile.gender, 'איך את מרגישה היום?', 'איך אתה מרגיש היום?')}
           </h2>
-          <p className="text-sm mt-2" style={{ color: '#907B72', fontWeight: 700, lineHeight: 1.8 }}>
-            הכול מרוכז במקום אחד, ברכות, בשקט ובסדר.
-          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 mt-5">

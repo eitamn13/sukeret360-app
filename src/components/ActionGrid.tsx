@@ -78,12 +78,14 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
 
   const accentSurface = isMale
     ? {
-        headerBadge: 'linear-gradient(135deg, rgba(224,236,252,0.96) 0%, rgba(242,247,255,0.96) 100%)',
+        headerBadge: 'linear-gradient(135deg, rgba(224,236,252,0.96) 0%, rgba(244,248,255,0.98) 100%)',
         card: 'linear-gradient(145deg, #F9FBFF 0%, #EEF4FD 100%)',
         border: '#D9E5F4',
         shadow: '0 18px 34px rgba(138, 169, 214, 0.14)',
         iconBg: 'linear-gradient(135deg, #D6E6FB 0%, #C7DAF4 100%)',
         iconColor: '#4B6586',
+        plainBg: 'linear-gradient(145deg, #FFFFFF 0%, #F7FAFE 100%)',
+        plainIconBg: 'linear-gradient(135deg, #EFF5FD 0%, #E4EDF9 100%)',
       }
     : {
         headerBadge: 'linear-gradient(135deg, rgba(246,223,217,0.95) 0%, rgba(250,239,231,0.95) 100%)',
@@ -92,6 +94,8 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
         shadow: '0 18px 34px rgba(211, 176, 177, 0.15)',
         iconBg: 'linear-gradient(135deg, #F6CFDA 0%, #EFC1CC 100%)',
         iconColor: '#8E4A61',
+        plainBg: 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F1 100%)',
+        plainIconBg: 'linear-gradient(135deg, #FFF4EE 0%, #FAF2E6 100%)',
       };
 
   const handleClick = (id: string, label: string) => {
@@ -110,12 +114,7 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
 
   return (
     <section className="px-4 mt-6" dir="rtl">
-      <div className="flex items-center justify-end mb-3 gap-3">
-        <div className="text-right">
-          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>מה צריך עכשיו</h3>
-          <p style={{ color: '#95837A', fontSize: 13 }}>פעולות פשוטות וברורות, בלי עומס.</p>
-        </div>
-
+      <div className="mb-3 flex items-center justify-end gap-2" dir="ltr">
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
           style={{
@@ -124,6 +123,9 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
           }}
         >
           <Sparkles size={18} strokeWidth={1.9} />
+        </div>
+        <div className="text-right" dir="rtl">
+          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>מה צריך עכשיו</h3>
         </div>
       </div>
 
@@ -135,9 +137,7 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
             className="rounded-[26px] p-4 text-right transition-all active:scale-[0.98]"
             style={{
               minHeight: 118,
-              background: action.accent
-                ? accentSurface.card
-                : 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F1 100%)',
+              background: action.accent ? accentSurface.card : accentSurface.plainBg,
               border: `1px solid ${action.accent ? accentSurface.border : theme.primaryBorder}`,
               boxShadow: action.accent
                 ? accentSurface.shadow
@@ -148,11 +148,7 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
               <div
                 className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
                 style={{
-                  background: action.accent
-                    ? accentSurface.iconBg
-                    : isMale
-                      ? 'linear-gradient(135deg, #F1F6FD 0%, #E8F0FA 100%)'
-                      : 'linear-gradient(135deg, #FFF4EE 0%, #FAF2E6 100%)',
+                  background: action.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
                   color: action.accent ? accentSurface.iconColor : theme.primaryDark,
                 }}
               >
