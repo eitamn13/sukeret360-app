@@ -2,6 +2,7 @@ export interface DetectedFood {
   name: string;
   carbs: number;
   calories: number;
+  confidence?: number;
 }
 
 type VisionResponse = {
@@ -57,6 +58,7 @@ export function normalizeDetectedFoods(input: unknown): DetectedFood[] {
         name,
         carbs: clampNumber((item as { carbs?: unknown }).carbs),
         calories: clampNumber((item as { calories?: unknown }).calories),
+        confidence: clampNumber((item as { confidence?: unknown }).confidence),
       };
     })
     .filter((item): item is DetectedFood => item !== null);

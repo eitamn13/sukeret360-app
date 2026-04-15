@@ -1,6 +1,7 @@
 export interface FoodDatabaseItem {
   id: string;
   name: string;
+  aliases?: string[];
   serving: string;
   carbs: number;
   calories: number;
@@ -230,5 +231,17 @@ export const FOOD_DATABASE: FoodDatabaseItem[] = [
     fiber: 1.7,
     note: 'נשנוש טוב יותר ממאפים או חטיפים מתוקים.',
     icon: '🌰',
+  },
+  {
+    id: 'doritos-grill',
+    name: 'דוריטוס גריל',
+    aliases: ['דוריטוס', 'טורטיה צ׳יפס', 'חטיף תירס', 'דוריטוס בטעם גריל'],
+    serving: 'שקית אישית קטנה',
+    carbs: 15,
+    calories: 140,
+    category: 'חטיפים',
+    fiber: 1,
+    note: 'חטיף מעובד. עדיף בכמות קטנה ובשילוב ארוחה מסודרת ולא לבד.',
+    icon: '🔺',
   },
 ];

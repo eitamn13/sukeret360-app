@@ -18,6 +18,15 @@ type SelectedMealFood = DetectedFood & {
   note?: string;
 };
 
+function normalizeFoodName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/['׳״"”“]/g, '')
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function mealInsight(totalCarbs: number, totalCalories: number) {
   if (totalCarbs <= 0) {
     return {
@@ -59,7 +68,15 @@ function mealInsight(totalCarbs: number, totalCalories: number) {
 }
 
 function findFoodTemplateByName(name: string) {
-  return FOOD_DATABASE.find((item) => item.name.trim().toLowerCase() === name.trim().toLowerCase());
+  const normalizedName = normalizeFoodName(name);
+
+  return FOOD_DATABASE.find((item) => {
+    const candidates = [item.name, ...(item.aliases ?? [])]
+      .map((candidate) => normalizeFoodName(candidate))
+      .filter(Boolean);
+
+    return candidates.some((candidate) => normalizedName === candidate || normalizedName.includes(candidate) || candidate.includes(normalizedName));
+  });
 }
 
 export function SmartMealLogger({ onClose }: { onClose: () => void }) {
@@ -179,15 +196,22 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
       const { foods, previewUrl } = await detectFoodsFromImage(file);
       const detectedFoods = foods
         .filter((food) => food.name !== 'לא זוהה')
+        .filter((food) => {
+          const match = findFoodTemplateByName(food.name);
+          return (food.confidence ?? 1) >= 0.45 || Boolean(match);
+        })
         .map<SelectedMealFood>((food) => {
           const match = findFoodTemplateByName(food.name);
           return {
             ...food,
-            carbs: food.carbs || match?.carbs || 0,
-            calories: food.calories || match?.calories || 0,
+            carbs: match?.carbs ?? food.carbs ?? 0,
+            calories: match?.calories ?? food.calories ?? 0,
             source: 'vision',
-            servingLabel: match?.serving,
-            note: match?.note,
+            servingLabel: match?.serving ?? ((food.confidence ?? 1) < 0.72 ? 'זיהוי ראשוני מתמונה' : undefined),
+            note:
+              (food.confidence ?? 1) < 0.72
+                ? `${match?.note ? `${match.note} ` : ''}מומלץ לבדוק שהכמות והפריט נכונים לפני שמירה.`
+                : match?.note,
           };
         });
 
@@ -268,7 +292,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-3 sm:space-y-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           {errorMessage && (
             <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
               {errorMessage}
@@ -355,23 +379,49 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           )}
 
           {step === 2 && (
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="grid gap-4 lg:grid-cols-[1.06fr_0.94fr]">
-                  <div className="space-y-4">
-                  <div className="rounded-3xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
-                    <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #E2E8F0' }}>
-                      <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: `${MEAL_TYPE_META[mealType].accent}18`, color: MEAL_TYPE_META[mealType].accent, fontWeight: 800 }}>
-                        {MEAL_TYPE_META[mealType].icon} {MEAL_TYPE_META[mealType].label}
-                      </span>
-                      <span style={{ color: '#64748B', fontSize: 13, fontWeight: 700 }}>צילום הארוחה</span>
-                    </div>
-                    {imagePreviewUrl ? (
-                      <img src={imagePreviewUrl} alt="Meal preview" style={{ width: '100%', height: 'clamp(180px, 32vh, 220px)', objectFit: 'cover', objectPosition: 'center center' }} />
-                    ) : (
-                      <div className="p-6 text-center" style={{ color: '#64748B' }}>
-                        לא הועלתה תמונה. אפשר עדיין לבנות ארוחה מדויקת ידנית.
+                  <div className="space-y-3">
+                  <div className="rounded-3xl p-3.5" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
+                    <div className="flex flex-row-reverse items-center gap-3">
+                      <div
+                        className="h-24 w-24 sm:h-28 sm:w-28 overflow-hidden rounded-2xl flex-shrink-0"
+                        style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
+                      >
+                        {imagePreviewUrl ? (
+                          <img src={imagePreviewUrl} alt="Meal preview" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center center' }} />
+                        ) : (
+                          <div className="h-full w-full flex items-center justify-center text-3xl">📷</div>
+                        )}
                       </div>
-                    )}
+
+                      <div className="flex-1 text-right">
+                        <div className="flex flex-wrap justify-end gap-2 mb-2">
+                          <span
+                            className="px-3 py-1 rounded-full text-xs"
+                            style={{ backgroundColor: `${MEAL_TYPE_META[mealType].accent}18`, color: MEAL_TYPE_META[mealType].accent, fontWeight: 800 }}
+                          >
+                            {MEAL_TYPE_META[mealType].icon} {MEAL_TYPE_META[mealType].label}
+                          </span>
+                          <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: '#F8FAFC', color: '#475569', fontWeight: 800 }}>
+                            {selectedFoods.length} פריטים
+                          </span>
+                        </div>
+                        <p style={{ color: '#0F172A', fontWeight: 800, fontSize: 17 }}>התמונה שנשלחה לניתוח</p>
+                        <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.6, fontSize: 13.5 }}>
+                          שמרנו תמונה קטנה וברורה, כדי שהמסך יישאר נוח ולא יתנפח.
+                        </p>
+
+                        <label
+                          className="inline-flex items-center gap-2 mt-3 px-3.5 h-10 rounded-2xl cursor-pointer"
+                          style={{ backgroundColor: '#FFFFFF', color: '#334155', border: '1px solid #CBD5E1', fontWeight: 700 }}
+                        >
+                          <Camera size={15} />
+                          החלף תמונה
+                          <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileInput} />
+                        </label>
+                      </div>
+                    </div>
                   </div>
 
                     <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
@@ -523,7 +573,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               </div>
 
               <div
-                className="sticky bottom-0 flex flex-col gap-3 sm:flex-row pt-3"
+                className="sticky bottom-0 flex flex-col gap-3 sm:flex-row pt-2"
                 style={{
                   background: 'linear-gradient(180deg, rgba(248,250,252,0) 0%, rgba(248,250,252,0.98) 28%, rgba(248,250,252,0.98) 100%)',
                 }}
@@ -626,6 +676,11 @@ function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => v
           <div className="flex-1">
             <p style={{ fontWeight: 800, color: '#0F172A', fontSize: 17 }}>{food.name}</p>
             <div className="mt-1 flex flex-wrap justify-end gap-2">
+              {(food.confidence ?? 1) < 0.72 && (
+                <span className="px-3 py-1.5 rounded-full text-[13px]" style={{ backgroundColor: '#FEF3C7', color: '#B45309', fontWeight: 800 }}>
+                  דורש בדיקה
+                </span>
+              )}
               <span className="px-3 py-1.5 rounded-full text-[13px]" style={{ backgroundColor: '#F5F3FF', color: '#7C3AED', fontWeight: 800 }}>
                 {food.carbs} גרם פחמימות
               </span>

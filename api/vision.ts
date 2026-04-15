@@ -33,6 +33,7 @@ type DetectedFood = {
   name: string;
   carbs: number;
   calories: number;
+  confidence?: number;
 };
 
 function parseRequestBody(body: unknown): VisionRequestBody {
@@ -80,26 +81,40 @@ function clampNumber(value: unknown): number {
   return Math.round(parsed * 10) / 10;
 }
 
+function clampConfidence(value: unknown): number {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.min(1, Math.round(parsed * 100) / 100));
+}
+
 function normalizeFoods(rawText: string): DetectedFood[] {
   if (!rawText.trim()) {
     return [{ name: 'לא זוהה', carbs: 0, calories: 0 }];
   }
 
-  const arrayStart = rawText.indexOf('[');
-  const arrayEnd = rawText.lastIndexOf(']');
-  const candidate =
-    arrayStart >= 0 && arrayEnd > arrayStart
-      ? rawText.slice(arrayStart, arrayEnd + 1)
-      : rawText;
-
   try {
-    const parsed = JSON.parse(candidate) as Array<{
-      name?: unknown;
-      carbs?: unknown;
-      calories?: unknown;
-    }>;
+    const parsed = JSON.parse(rawText) as
+      | {
+          foods?: Array<{
+            name?: unknown;
+            carbs?: unknown;
+            calories?: unknown;
+            confidence?: unknown;
+          }>;
+        }
+      | Array<{
+          name?: unknown;
+          carbs?: unknown;
+          calories?: unknown;
+          confidence?: unknown;
+        }>;
 
-    const foods = parsed
+    const foodsArray = Array.isArray(parsed) ? parsed : parsed.foods ?? [];
+
+    const foods = foodsArray
       .map((item) => {
         const name = typeof item?.name === 'string' ? item.name.trim() : '';
         if (!name) {
@@ -110,13 +125,48 @@ function normalizeFoods(rawText: string): DetectedFood[] {
           name,
           carbs: clampNumber(item?.carbs),
           calories: clampNumber(item?.calories),
+          confidence: clampConfidence(item?.confidence),
         };
       })
       .filter((item): item is DetectedFood => item !== null);
 
     return foods.length > 0 ? foods : [{ name: 'לא זוהה', carbs: 0, calories: 0 }];
   } catch {
-    return [{ name: 'לא זוהה', carbs: 0, calories: 0 }];
+    const arrayStart = rawText.indexOf('[');
+    const arrayEnd = rawText.lastIndexOf(']');
+    const candidate =
+      arrayStart >= 0 && arrayEnd > arrayStart
+        ? rawText.slice(arrayStart, arrayEnd + 1)
+        : rawText;
+
+    try {
+      const parsed = JSON.parse(candidate) as Array<{
+        name?: unknown;
+        carbs?: unknown;
+        calories?: unknown;
+        confidence?: unknown;
+      }>;
+
+      const foods = parsed
+        .map((item) => {
+          const name = typeof item?.name === 'string' ? item.name.trim() : '';
+          if (!name) {
+            return null;
+          }
+
+          return {
+            name,
+            carbs: clampNumber(item?.carbs),
+            calories: clampNumber(item?.calories),
+            confidence: clampConfidence(item?.confidence),
+          };
+        })
+        .filter((item): item is DetectedFood => item !== null);
+
+      return foods.length > 0 ? foods : [{ name: 'לא זוהה', carbs: 0, calories: 0 }];
+    } catch {
+      return [{ name: 'לא זוהה', carbs: 0, calories: 0 }];
+    }
   }
 }
 
@@ -153,26 +203,49 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4.1-mini',
+        model: 'gpt-4.1',
         input: [
+          {
+            role: 'system',
+            content: [
+              {
+                type: 'input_text',
+                text:
+                  'אתה מזהה מזון עבור אפליקציה לחולי סוכרת. החזר JSON בלבד. ' +
+                  'זהה רק מאכלים שנראים בתמונה בביטחון סביר. ' +
+                  'אל תנחש אם אין מספיק מידע. ' +
+                  'הערך את הכמות שנראית בפועל או מנה אישית סבירה, לא את כל האריזה, ' +
+                  'אלא אם ברור שהתמונה מציגה אריזה אישית שלמה. ' +
+                  'במזונות ארוזים או מותגים מוכרים, השתמש ברמזים מהאריזה אם הם נראים. ' +
+                  'החזר לכל פריט גם confidence בין 0 ל-1.',
+              },
+            ],
+          },
           {
             role: 'user',
             content: [
               {
                 type: 'input_text',
                 text:
-                  'זהה את המאכלים שבתמונה והחזר רק JSON במבנה הזה: ' +
-                  '[{"name":"שם המזון","carbs":מספר,"calories":מספר}]. ' +
-                  'אם אי אפשר לזהות מזון, החזר [{"name":"לא זוהה","carbs":0,"calories":0}]. ' +
-                  'הערך calories צריך להיות קילוקלוריות משוערות למנה שנראית בתמונה.',
+                  'זהה את המאכלים שבתמונה והחזר JSON בלבד במבנה הזה: ' +
+                  '{"foods":[{"name":"שם המזון","carbs":מספר,"calories":מספר,"confidence":מספר}]}. ' +
+                  'החזר עד 6 פריטים בלבד. ' +
+                  'אל תחזיר צלחת, שולחן, אריזה או רקע כמאכל. ' +
+                  'אם אי אפשר לזהות מזון בביטחון סביר, החזר {"foods":[{"name":"לא זוהה","carbs":0,"calories":0,"confidence":0}]}.',
               },
               {
                 type: 'input_image',
                 image_url: `data:${safeMimeType};base64,${cleanedBase64}`,
+                detail: 'high',
               },
             ],
           },
         ],
+        text: {
+          format: {
+            type: 'json_object',
+          },
+        },
         max_output_tokens: 350,
       }),
     });
