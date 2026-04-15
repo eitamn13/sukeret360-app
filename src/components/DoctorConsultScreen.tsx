@@ -58,19 +58,19 @@ const QUICK_SUGGESTIONS = [
   'איזו ארוחת ערב טובה לסוכרת?',
 ];
 
-const INITIAL_MESSAGE: Message = {
-  id: 'welcome',
-  from: 'ai',
-  text: 'אני כאן לשאלות על סוכר, תרופות, אוכל והרגשה. כתבו קצר ואענה ברור.',
-  time: nowTime(),
-};
-
 function nowTime() {
   return new Date().toLocaleTimeString('he-IL', {
     hour: '2-digit',
     minute: '2-digit',
   });
 }
+
+const INITIAL_MESSAGE: Message = {
+  id: 'welcome',
+  from: 'ai',
+  text: 'אני כאן בתור "העוזר הרפואי שלי". אפשר לשאול כאן על סוכר, תרופות, אוכל או הרגשה, ואני אענה קצר, רגוע וברור.',
+  time: nowTime(),
+};
 
 function normalizeMessage(message: string) {
   return message.trim().toLowerCase();
@@ -85,11 +85,11 @@ function createLocalFallbackReply(message: string) {
   const normalized = normalizeMessage(message);
 
   if (isGreeting(message)) {
-    return 'אני כאן. אפשר לשאול על סוכר, תרופות, אוכל, תסמינים או מה לעשות עכשיו.';
+    return 'אני כאן בתור "העוזר הרפואי שלי". אפשר לשאול על סוכר, תרופות, אוכל, תסמינים או מה כדאי לעשות עכשיו.';
   }
 
   if (normalized.includes('לפני') && normalized.includes('ארוחה') && normalized.includes('סוכר')) {
-    return 'בדרך כלל יעד מקובל לפני ארוחה הוא בערך 80 עד 130 mg/dL, אבל הכי חשוב לפעול לפי היעד האישי שהרופא הגדיר לך.';
+    return 'בדרך כלל יעד מקובל לפני ארוחה הוא בערך 80 עד 130 mg/dL, אבל הכי חשוב לפעול לפי היעד האישי שהרופא הגדיר.';
   }
 
   if (
@@ -98,7 +98,7 @@ function createLocalFallbackReply(message: string) {
     normalized.includes('סחרחורת') ||
     normalized.includes('חולשה')
   ) {
-    return 'אם יש רעד, חולשה, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם הוא נמוך, נהוג לקחת פחמימה מהירה ולבדוק שוב אחרי כ-15 דקות. אם יש החמרה, בלבול או קושי לדבר, צריך לפנות מיד לעזרה רפואית.';
+    return 'אם יש רעד, חולשה, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם הוא נמוך, נהוג לקחת פחמימה מהירה ולבדוק שוב אחרי כ־15 דקות. אם יש החמרה או בלבול, צריך לפנות מיד לעזרה רפואית.';
   }
 
   if (
@@ -107,7 +107,7 @@ function createLocalFallbackReply(message: string) {
     normalized.includes('מטפורמין') ||
     normalized.includes('אינסולין')
   ) {
-    return 'לגבי תרופות, הכי בטוח להיצמד להנחיה האישית שלך. אם תכתבו לי את שם התרופה והשעה, אעזור להסביר מה מקובל באופן כללי.';
+    return 'לגבי תרופות, הכי בטוח להיצמד להנחיה האישית שלך. אם כותבים לי את שם התרופה והשעה, אוכל להסביר מה מקובל באופן כללי.';
   }
 
   if (
@@ -118,7 +118,7 @@ function createLocalFallbackReply(message: string) {
     return 'בדרך כלל עדיף לבחור ארוחה פשוטה עם חלבון, ירקות ופחמימה מדודה. למשל יוגורט עם אגוזים, חביתה עם סלט, או עוף עם אורז בכמות קטנה.';
   }
 
-  return 'יש כרגע תקלה זמנית בחיבור למענה המלא, אבל אני עדיין כאן. נסו לכתוב שאלה קצרה על סוכר, תרופות, אוכל או הרגשה.';
+  return 'יש כרגע תקלה זמנית בחיבור המלא, אבל "העוזר הרפואי שלי" עדיין כאן. אפשר לכתוב שאלה קצרה על סוכר, תרופות, אוכל או הרגשה.';
 }
 
 export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
@@ -304,7 +304,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
         pushAssistantReply(replyText, messageText);
       } catch (error) {
         console.error('DoctorConsultScreen sendMessage failed:', error);
-        setNotice('יש תקלה זמנית. עברתי למענה גיבוי כדי שלא תיתקע.');
+        setNotice('יש תקלה זמנית. עברתי למענה גיבוי כדי שלא תיתקע השיחה.');
         pushAssistantReply(createLocalFallbackReply(messageText), messageText);
       } finally {
         setIsTyping(false);
@@ -337,11 +337,12 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col overflow-hidden animate-slide-in-right"
+      dir="rtl"
       style={{ background: theme.gradientFull }}
     >
       <OverlayHeader
-        title="צ'אט רפואי"
-        subtitle="שאלות קצרות, תשובה ברורה"
+        title="העוזר הרפואי שלי"
+        subtitle="שאלות קצרות, תשובה רפואית ברורה"
         theme={theme}
         onBack={onClose}
         onClose={onClose}
@@ -371,7 +372,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
           }}
         >
           <div className="flex items-center justify-end gap-2">
-            <p style={{ color: '#0F172A', fontWeight: 900 }}>על מה אפשר לשאול?</p>
+            <p style={{ color: '#0F172A', fontWeight: 900 }}>במה אפשר לעזור עכשיו?</p>
             <div
               className="w-10 h-10 rounded-2xl flex items-center justify-center"
               style={{ background: theme.gradientCard, color: '#FFFFFF' }}
@@ -433,10 +434,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
               >
                 {message.text}
               </div>
-              <p
-                className={`text-xs mt-1.5 ${message.from === 'user' ? 'text-left' : 'text-right'}`}
-                style={{ color: '#94A3B8' }}
-              >
+              <p className="text-xs mt-1.5 text-right" style={{ color: '#94A3B8' }}>
                 {message.time}
               </p>
             </div>
@@ -474,7 +472,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
 
         {notice && (
           <div
-            className="flex items-center gap-3 rounded-2xl px-4 py-3"
+            className="flex flex-row-reverse items-center gap-3 rounded-2xl px-4 py-3"
             style={{
               backgroundColor: '#EFF6FF',
               border: '1px solid #BFDBFE',
@@ -514,7 +512,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
         className="flex-shrink-0 px-4 pt-3 pb-6 bg-white"
         style={{ borderTop: `1px solid ${theme.primaryBorder}` }}
       >
-        <div className="flex items-center gap-3">
+        <div className="flex flex-row-reverse items-center gap-3">
           {speechRecognitionSupported && (
             <button
               onClick={startListening}
@@ -535,7 +533,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="כתבו שאלה קצרה..."
+            placeholder="אפשר לכתוב שאלה קצרה..."
             dir="rtl"
             className="flex-1 h-12 px-4 rounded-2xl text-sm outline-none"
             style={{

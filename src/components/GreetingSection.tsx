@@ -64,8 +64,8 @@ export function GreetingSection({
       onClick: onMedicationsClick,
     },
     {
-      label: 'שאלה ל-AI',
-      note: 'תשובה מהירה',
+      label: 'העוזר הרפואי שלי',
+      note: 'שאלה קצרה וברורה',
       icon: <MessageCircle size={18} strokeWidth={1.9} />,
       onClick: onDoctorClick,
     },
@@ -74,6 +74,7 @@ export function GreetingSection({
   return (
     <section
       className="relative overflow-hidden rounded-[32px] mx-4 mt-4 p-5"
+      dir="rtl"
       style={{
         background: theme.gradientCard,
         boxShadow: `0 24px 54px ${theme.primaryShadow}`,
@@ -89,22 +90,7 @@ export function GreetingSection({
       />
 
       <div className="relative z-10">
-        <div className="flex items-start justify-between gap-3">
-          <button
-            onClick={onSOSClick}
-            className="h-11 px-4 rounded-2xl flex items-center gap-2 transition-all active:scale-95"
-            style={{
-              backgroundColor: 'rgba(255,255,255,0.16)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255,255,255,0.22)',
-              fontWeight: 900,
-            }}
-            aria-label="SOS"
-          >
-            <Siren size={17} strokeWidth={1.9} />
-            <span>SOS</span>
-          </button>
-
+        <div className="flex items-start justify-between gap-4">
           <div className="text-right">
             <p className="text-3xl text-white leading-none" style={{ fontWeight: 900 }}>
               {timeString}
@@ -113,6 +99,21 @@ export function GreetingSection({
               {dateString}
             </p>
           </div>
+
+          <button
+            onClick={onSOSClick}
+            className="h-12 min-w-[98px] px-5 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95"
+            style={{
+              backgroundColor: 'rgba(255,255,255,0.16)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(255,255,255,0.24)',
+              fontWeight: 900,
+            }}
+            aria-label="SOS"
+          >
+            <Siren size={18} strokeWidth={1.9} />
+            <span>SOS</span>
+          </button>
         </div>
 
         <div className="mt-5 text-right">
@@ -123,7 +124,7 @@ export function GreetingSection({
             className="text-[32px] leading-tight mt-2 text-white"
             style={{ fontWeight: 900, letterSpacing: '-0.03em' }}
           >
-            איך אתה מרגיש היום?
+            {genderedText(userProfile.gender, 'איך את מרגישה היום?', 'איך אתה מרגיש היום?')}
           </h2>
           <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.76)', fontWeight: 600 }}>
             בוחרים פעולה אחת וממשיכים.
@@ -141,14 +142,14 @@ export function GreetingSection({
                 border: '1px solid rgba(255,255,255,0.18)',
               }}
             >
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-row-reverse items-center justify-between gap-3">
                 <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
                   style={{ backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFFFFF' }}
                 >
                   {action.icon}
                 </div>
-                <div className="text-right">
+                <div className="text-right flex-1">
                   <p style={{ color: '#FFFFFF', fontWeight: 900 }}>{action.label}</p>
                   <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12, marginTop: 4 }}>
                     {action.note}

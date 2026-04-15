@@ -40,6 +40,7 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
   return (
     <header
       className="sticky top-0 z-50"
+      dir="rtl"
       style={{
         background: theme.headerBg,
         backdropFilter: 'blur(16px)',
@@ -48,39 +49,13 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
         boxShadow: theme.headerShadow,
       }}
     >
-      <div className="max-w-md mx-auto px-4 py-3 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
-          <div
-            className="w-11 h-11 rounded-[18px] flex items-center justify-center flex-shrink-0"
-            style={{
-              background: theme.gradientCard,
-              color: '#FFFFFF',
-              boxShadow: `0 14px 30px ${theme.primaryShadow}`,
-            }}
-          >
-            <Logo size={22} />
-          </div>
+      <div className="max-w-md mx-auto px-4 py-3 grid grid-cols-[96px_1fr_96px] items-center gap-3">
+        <div className="flex items-center gap-2 justify-self-start">
+          <HeaderButton onClick={onSettingsClick} label="הגדרות" theme={theme}>
+            <Settings size={20} strokeWidth={1.9} />
+          </HeaderButton>
 
-          <div className="min-w-0 text-right">
-            <h1
-              className="text-[19px] leading-none truncate"
-              style={{
-                color: theme.primary,
-                fontWeight: 900,
-                letterSpacing: '-0.03em',
-              }}
-            >
-              הסוכרת שלי
-            </h1>
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <HeaderButton
-            onClick={onNotificationsClick}
-            label="התראות"
-            theme={theme}
-          >
+          <HeaderButton onClick={onNotificationsClick} label="התראות" theme={theme}>
             <Bell size={20} strokeWidth={1.9} />
             {notificationBadge && (
               <span
@@ -95,14 +70,32 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
               </span>
             )}
           </HeaderButton>
+        </div>
 
-          <HeaderButton
-            onClick={onSettingsClick}
-            label="הגדרות"
-            theme={theme}
+        <div className="min-w-0 text-center">
+          <h1
+            className="text-[20px] leading-none truncate"
+            style={{
+              color: theme.primary,
+              fontWeight: 900,
+              letterSpacing: '-0.03em',
+            }}
           >
-            <Settings size={20} strokeWidth={1.9} />
-          </HeaderButton>
+            הסוכרת שלי
+          </h1>
+        </div>
+
+        <div className="justify-self-end">
+          <div
+            className="w-12 h-12 rounded-[18px] flex items-center justify-center flex-shrink-0"
+            style={{
+              background: theme.gradientCard,
+              color: '#FFFFFF',
+              boxShadow: `0 14px 30px ${theme.primaryShadow}`,
+            }}
+          >
+            <Logo size={24} />
+          </div>
         </div>
       </div>
     </header>

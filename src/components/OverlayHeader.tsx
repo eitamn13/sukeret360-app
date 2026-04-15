@@ -1,5 +1,5 @@
 import { ChevronRight, X } from 'lucide-react';
-import { type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { Theme } from '../context/AppContext';
 
 interface OverlayHeaderProps {
@@ -24,6 +24,7 @@ export function OverlayHeader({
   return (
     <div
       className="flex-shrink-0 px-5 pt-12 pb-4"
+      dir="rtl"
       style={{
         backgroundColor: theme.headerBg,
         backdropFilter: 'blur(14px)',
@@ -31,25 +32,25 @@ export function OverlayHeader({
         borderBottom: `1px solid ${theme.primaryBorder}`,
       }}
     >
-      <div className="flex items-center justify-between gap-3">
-        <button
-          onClick={onBack}
-          className="min-w-[98px] h-11 px-3 rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-95"
-          style={{
-            border: `1.5px solid ${theme.primaryBorder}`,
-            backgroundColor: '#FFFFFF',
-            color: theme.primary,
-            boxShadow: `0 2px 10px ${theme.primary}12`,
-            fontWeight: 800,
-            fontSize: 14,
-          }}
-          aria-label={backLabel}
-        >
-          <ChevronRight size={17} strokeWidth={2.3} />
-          <span>{backLabel}</span>
-        </button>
+      <div className="grid grid-cols-[108px_1fr_108px] items-center gap-2">
+        <div className="flex items-center gap-2 justify-self-start">
+          <button
+            onClick={onClose}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-95"
+            style={{
+              border: `1.5px solid ${theme.primaryBorder}`,
+              backgroundColor: '#FFFFFF',
+              color: theme.primary,
+              boxShadow: `0 2px 10px ${theme.primary}12`,
+            }}
+            aria-label="סגור"
+          >
+            <X size={19} strokeWidth={2.2} />
+          </button>
+          {rightSlot}
+        </div>
 
-        <div className="text-center min-w-0 flex-1">
+        <div className="text-center min-w-0">
           <h1
             className="text-lg leading-tight"
             style={{ color: '#0F172A', fontWeight: 900, letterSpacing: '-0.02em' }}
@@ -66,22 +67,22 @@ export function OverlayHeader({
           ) : null}
         </div>
 
-        <div className="flex items-center gap-2">
-          {rightSlot}
-          <button
-            onClick={onClose}
-            className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-95"
-            style={{
-              border: `1.5px solid ${theme.primaryBorder}`,
-              backgroundColor: '#FFFFFF',
-              color: theme.primary,
-              boxShadow: `0 2px 10px ${theme.primary}12`,
-            }}
-            aria-label="סגור"
-          >
-            <X size={19} strokeWidth={2.2} />
-          </button>
-        </div>
+        <button
+          onClick={onBack}
+          className="min-w-[104px] h-11 px-3 rounded-2xl flex flex-row-reverse items-center justify-center gap-1.5 justify-self-end transition-all active:scale-95"
+          style={{
+            border: `1.5px solid ${theme.primaryBorder}`,
+            backgroundColor: '#FFFFFF',
+            color: theme.primary,
+            boxShadow: `0 2px 10px ${theme.primary}12`,
+            fontWeight: 800,
+            fontSize: 14,
+          }}
+          aria-label={backLabel}
+        >
+          <ChevronRight size={17} strokeWidth={2.3} />
+          <span>{backLabel}</span>
+        </button>
       </div>
     </div>
   );

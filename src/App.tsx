@@ -98,7 +98,7 @@ function AppInner() {
       className="min-h-screen transition-all duration-500"
       style={{ background: theme.gradientFull }}
     >
-      <div className="max-w-md mx-auto">
+      <div className="max-w-md mx-auto" dir="rtl">
         <Header
           onSettingsClick={() => setShowSettings(true)}
           onNotificationsClick={() => setShowNotifications(true)}

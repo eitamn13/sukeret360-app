@@ -46,7 +46,7 @@ function createQuickReply(message: string): string | null {
   }
 
   if (['ai', 'היי', 'הי', 'שלום', 'hello', 'hey'].includes(normalized)) {
-    return 'אני כאן. אפשר לשאול על סוכר, תרופות, אוכל, תסמינים או מה לעשות עכשיו.';
+    return 'אני כאן בתור "העוזר הרפואי שלי". אפשר לשאול על סוכר, תרופות, אוכל, תסמינים או מה כדאי לעשות עכשיו.';
   }
 
   if (normalized.includes('סוכר') && normalized.includes('לפני') && normalized.includes('ארוחה')) {
@@ -59,7 +59,7 @@ function createQuickReply(message: string): string | null {
     normalized.includes('סחרחורת') ||
     normalized.includes('חולשה')
   ) {
-    return 'אם יש רעד, חולשה, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם הוא נמוך, נהוג לקחת פחמימה מהירה ולבדוק שוב אחרי כ-15 דקות. אם יש החמרה, בלבול או קושי לדבר, צריך לפנות מיד לעזרה רפואית.';
+    return 'אם יש רעד, חולשה, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם הוא נמוך, נהוג לקחת פחמימה מהירה ולבדוק שוב אחרי כ־15 דקות. אם יש החמרה, בלבול או קושי לדבר, צריך לפנות מיד לעזרה רפואית.';
   }
 
   if (normalized.includes('מטפורמין')) {
@@ -191,7 +191,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       body: JSON.stringify({
         model: 'gpt-4.1-mini',
         instructions:
-          'You are the assistant of "הסוכרת שלי", a supportive diabetes companion. ' +
+          'You are "העוזר הרפואי שלי", the medical helper inside the diabetes app "הסוכרת שלי". ' +
           'Reply in warm, simple, professional Hebrew. ' +
           'Keep answers short and easy for older adults to understand. ' +
           'Answer the user directly in the first sentence. ' +

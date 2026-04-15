@@ -68,7 +68,7 @@ function getNotificationEnvironmentMessage() {
   return null;
 }
 
-function downloadMedicationCalendar(schedule: MedicationScheduleItem[]) {
+function buildMedicationCalendarContent(schedule: MedicationScheduleItem[]) {
   const endDate = new Date();
   endDate.setDate(endDate.getDate() + 30);
 
@@ -101,13 +101,30 @@ function downloadMedicationCalendar(schedule: MedicationScheduleItem[]) {
       ].join('\n');
     });
 
-  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MyDiabetes//Medication Calendar//HE', ...events, 'END:VCALENDAR'].join('\n');
+  return ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MyDiabetes//Medication Calendar//HE', ...events, 'END:VCALENDAR'].join('\n');
+}
 
-  const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+function createMedicationCalendarArtifacts(schedule: MedicationScheduleItem[]) {
+  const content = buildMedicationCalendarContent(schedule);
+  const fileName = 'my-diabetes-medications.ics';
+  const type = 'text/calendar;charset=utf-8';
+  const blob = new Blob([content], { type });
+
+  return {
+    blob,
+    fileName,
+    file:
+      typeof File !== 'undefined'
+        ? new File([content], fileName, { type })
+        : null,
+  };
+}
+
+function downloadMedicationCalendarBlob(blob: Blob, fileName: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'my-diabetes-medications.ics';
+  link.download = fileName;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -133,6 +150,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
   const [editingEnabled, setEditingEnabled] = useState(false);
   const [savedSchedule, setSavedSchedule] = useState(false);
   const [notificationFeedback, setNotificationFeedback] = useState('');
+  const [calendarFeedback, setCalendarFeedback] = useState('');
 
   const notificationEnvironmentMessage = useMemo(() => getNotificationEnvironmentMessage(), []);
 
@@ -248,9 +266,50 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
     setNotificationFeedback('נשלחה התראת בדיקה למכשיר.');
   };
 
+  const handleCalendarExport = async () => {
+    const scheduleWithNames = medicationSchedule.filter((item) => item.name.trim());
+
+    if (scheduleWithNames.length === 0) {
+      setCalendarFeedback('אין עדיין תרופות מוכנות לייצוא ליומן.');
+      return;
+    }
+
+    const { blob, fileName, file } = createMedicationCalendarArtifacts(scheduleWithNames);
+    const shareNavigator = navigator as Navigator & {
+      canShare?: (data: ShareData) => boolean;
+    };
+
+    if (file && typeof shareNavigator.share === 'function') {
+      const shareData: ShareData = {
+        files: [file],
+        title: 'לוח התרופות שלי',
+        text: 'אפשר להוסיף את לוח התרופות ליומן מהמכשיר.',
+      };
+
+      if (!shareNavigator.canShare || shareNavigator.canShare(shareData)) {
+        try {
+          await shareNavigator.share(shareData);
+          setCalendarFeedback('חלון השיתוף נפתח. אפשר לבחור יומן או לשמור את הקובץ.');
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === 'AbortError') {
+            setCalendarFeedback('השיתוף בוטל. אפשר לנסות שוב בכל רגע.');
+            return;
+          }
+
+          console.warn('Medication calendar share failed, falling back to download.', error);
+        }
+      }
+    }
+
+    downloadMedicationCalendarBlob(blob, fileName);
+    setCalendarFeedback('קובץ היומן ירד למכשיר. באייפון אפשר לפתוח אותו ולבחור יומן.');
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col animate-slide-in-right"
+      dir="rtl"
       style={{ background: theme.gradientFull }}
     >
       <OverlayHeader
@@ -272,7 +331,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
           className="rounded-2xl p-4"
           style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex flex-row-reverse items-center justify-between mb-2">
             <span className="text-xs" style={{ color: '#6B7280', fontWeight: 700 }}>
               {doneCount}/{medicationSchedule.length} סומנו היום
             </span>
@@ -308,7 +367,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
             color: '#FFFFFF',
           }}
         >
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-row-reverse items-center justify-between gap-3">
             <div
               className="w-11 h-11 rounded-2xl flex items-center justify-center"
               style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}
@@ -380,7 +439,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
             className="rounded-2xl p-4"
             style={{ backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA' }}
           >
-            <div className="flex items-center justify-end gap-2 mb-2">
+            <div className="flex flex-row-reverse items-center justify-end gap-2 mb-2">
               <p style={{ color: '#B91C1C', fontWeight: 900 }}>יש תרופה שלא סומנה בזמן</p>
               <AlertCircle size={18} strokeWidth={1.8} style={{ color: '#B91C1C' }} />
             </div>
@@ -448,7 +507,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                   boxShadow: '0 8px 22px rgba(15, 23, 42, 0.05)',
                 }}
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-row-reverse items-start justify-between gap-3">
                   <div
                     className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl"
                     style={{
@@ -459,7 +518,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                   </div>
 
                   <div className="text-right flex-1">
-                    <div className="flex items-center justify-end gap-2">
+                    <div className="flex flex-row-reverse items-center justify-end gap-2">
                       <p style={{ color: '#0F172A', fontWeight: 900, fontSize: 17 }}>{medication.name}</p>
                       <span
                         className="text-xs px-2 py-0.5 rounded-lg"
@@ -519,8 +578,8 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <button
-            onClick={() => downloadMedicationCalendar(medicationSchedule)}
-            className="h-12 rounded-2xl flex items-center justify-center gap-2"
+            onClick={() => void handleCalendarExport()}
+            className="h-12 rounded-2xl flex flex-row-reverse items-center justify-center gap-2"
             style={{
               backgroundColor: '#FFFFFF',
               border: `1.5px solid ${theme.primaryBorder}`,
@@ -534,7 +593,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
 
           <button
             onClick={() => setEditingEnabled((current) => !current)}
-            className="h-12 rounded-2xl flex items-center justify-center gap-2"
+            className="h-12 rounded-2xl flex flex-row-reverse items-center justify-center gap-2"
             style={{
               backgroundColor: theme.primaryBg,
               border: `1.5px solid ${theme.primaryBorder}`,
@@ -547,15 +606,29 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
           </button>
         </div>
 
+        {calendarFeedback && (
+          <div
+            className="rounded-2xl p-4"
+            style={{
+              backgroundColor: '#FFF7ED',
+              border: '1px solid #FED7AA',
+            }}
+          >
+            <p className="text-right" style={{ color: '#C2410C', fontWeight: 700, lineHeight: 1.7 }}>
+              {calendarFeedback}
+            </p>
+          </div>
+        )}
+
         {editingEnabled && (
           <div
             className="rounded-3xl p-4"
             style={{ backgroundColor: '#FFFFFF', border: `1.5px solid ${theme.primaryBorder}` }}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-row-reverse items-center justify-between mb-4">
               <button
                 onClick={saveSchedule}
-                className="h-10 px-4 rounded-2xl flex items-center justify-center gap-2"
+                className="h-10 px-4 rounded-2xl flex flex-row-reverse items-center justify-center gap-2"
                 style={{
                   backgroundColor: savedSchedule ? '#16A34A' : theme.primary,
                   color: '#FFFFFF',
@@ -575,7 +648,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                   className="rounded-2xl p-4"
                   style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
                 >
-                  <div className="flex items-center justify-between mb-3">
+                  <div className="flex flex-row-reverse items-center justify-between mb-3">
                     <button
                       onClick={() => removeEditableMedication(medication.id)}
                       className="w-9 h-9 rounded-xl flex items-center justify-center"
@@ -640,7 +713,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
 
             <button
               onClick={() => setEditableSchedule((prev) => [...prev, createMedicationDraft()])}
-              className="w-full h-11 rounded-2xl mt-3 flex items-center justify-center gap-2"
+              className="w-full h-11 rounded-2xl mt-3 flex flex-row-reverse items-center justify-center gap-2"
               style={{
                 backgroundColor: theme.primaryBg,
                 color: theme.primary,

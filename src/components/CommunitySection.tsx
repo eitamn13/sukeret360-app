@@ -46,17 +46,17 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
   };
 
   return (
-    <section className="px-4 mt-6 pb-8">
-      <div className="flex items-center justify-between mb-3">
-        <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center"
-          style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
-        >
-          <Users size={18} strokeWidth={1.9} />
-        </div>
+    <section className="px-4 mt-6 pb-8" dir="rtl">
+      <div className="flex items-center justify-between mb-3 gap-3">
         <div className="text-right">
           <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>תמיכה וקהילה</h3>
           <p style={{ color: '#64748B', fontSize: 13 }}>מקום לשאול, לשתף ולהתחזק.</p>
+        </div>
+        <div
+          className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+          style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
+        >
+          <Users size={18} strokeWidth={1.9} />
         </div>
       </div>
 
