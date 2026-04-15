@@ -43,13 +43,13 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
       dir="rtl"
       style={{
         background: theme.headerBg,
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        backdropFilter: 'blur(18px)',
+        WebkitBackdropFilter: 'blur(18px)',
         borderBottom: `1px solid ${theme.headerBorder}`,
         boxShadow: theme.headerShadow,
       }}
     >
-      <div className="max-w-md mx-auto px-4 py-3 grid grid-cols-[96px_1fr_96px] items-center gap-3">
+      <div className="max-w-md mx-auto px-4 py-3 grid grid-cols-[108px_1fr_76px] items-center gap-3">
         <div className="flex items-center gap-2 justify-self-start">
           <HeaderButton onClick={onSettingsClick} label="הגדרות" theme={theme}>
             <Settings size={20} strokeWidth={1.9} />
@@ -61,7 +61,7 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
               <span
                 className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 rounded-full text-[11px] flex items-center justify-center"
                 style={{
-                  backgroundColor: notificationBadge === '!' ? '#F59E0B' : '#EF4444',
+                  backgroundColor: notificationBadge === '!' ? '#D6924C' : theme.primaryDark,
                   color: '#FFFFFF',
                   fontWeight: 800,
                 }}
@@ -74,28 +74,25 @@ export function Header({ onSettingsClick, onNotificationsClick }: HeaderProps) {
 
         <div className="min-w-0 text-center">
           <h1
-            className="text-[20px] leading-none truncate"
+            className="text-[22px] leading-none truncate"
             style={{
-              color: theme.primary,
+              color: theme.primaryDark,
               fontWeight: 900,
               letterSpacing: '-0.03em',
             }}
           >
             הסוכרת שלי
           </h1>
+          <p
+            className="text-[11px] mt-1 truncate"
+            style={{ color: theme.primaryMuted, fontWeight: 700 }}
+          >
+            מרגיש כמו בית, ברור כמו כלי רפואי
+          </p>
         </div>
 
         <div className="justify-self-end">
-          <div
-            className="w-12 h-12 rounded-[18px] flex items-center justify-center flex-shrink-0"
-            style={{
-              background: theme.gradientCard,
-              color: '#FFFFFF',
-              boxShadow: `0 14px 30px ${theme.primaryShadow}`,
-            }}
-          >
-            <Logo size={24} />
-          </div>
+          <Logo size={56} />
         </div>
       </div>
     </header>
@@ -116,12 +113,12 @@ function HeaderButton({
   return (
     <button
       onClick={onClick}
-      className="relative w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-95"
+      className="relative w-11 h-11 rounded-[18px] flex items-center justify-center transition-all active:scale-95"
       style={{
-        color: theme.primary,
-        backgroundColor: '#FFFFFF',
+        color: theme.primaryDark,
+        background: 'linear-gradient(135deg, rgba(255,255,255,0.95) 0%, rgba(255,249,244,0.95) 100%)',
         border: `1px solid ${theme.primaryBorder}`,
-        boxShadow: `0 10px 20px ${theme.primary}12`,
+        boxShadow: '0 10px 22px rgba(160, 134, 122, 0.08)',
       }}
       aria-label={label}
     >

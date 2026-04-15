@@ -1,4 +1,4 @@
-import { Droplets, MessageCircle, Pill, Siren, UtensilsCrossed } from 'lucide-react';
+import { Droplets, Heart, MessageCircle, Pill, Siren, UtensilsCrossed } from 'lucide-react';
 import { useMemo } from 'react';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { genderedText, useAppContext } from '../context/AppContext';
@@ -65,7 +65,7 @@ export function GreetingSection({
     },
     {
       label: 'העוזר הרפואי שלי',
-      note: 'שאלה קצרה וברורה',
+      note: 'שאלה רפואית קצרה',
       icon: <MessageCircle size={18} strokeWidth={1.9} />,
       onClick: onDoctorClick,
     },
@@ -73,40 +73,46 @@ export function GreetingSection({
 
   return (
     <section
-      className="relative overflow-hidden rounded-[32px] mx-4 mt-4 p-5"
+      className="relative overflow-hidden rounded-[34px] mx-4 mt-4 p-5"
       dir="rtl"
       style={{
         background: theme.gradientCard,
-        boxShadow: `0 24px 54px ${theme.primaryShadow}`,
+        border: `1px solid ${theme.primaryBorder}`,
+        boxShadow: `0 26px 54px ${theme.primaryShadow}`,
       }}
     >
       <div
-        className="absolute inset-0 opacity-[0.08]"
+        className="absolute inset-0 opacity-90"
         style={{
-          backgroundImage:
-            'radial-gradient(circle at 18% 18%, rgba(255,255,255,0.8) 0, transparent 18%), linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
-          backgroundSize: 'auto, 26px 26px, 26px 26px',
+          background:
+            'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 32%), radial-gradient(circle at bottom left, rgba(248, 209, 220, 0.45) 0%, rgba(248, 209, 220, 0) 38%)',
         }}
+      />
+
+      <div
+        className="absolute -left-8 bottom-[-18px] w-40 h-40 rounded-full"
+        style={{ background: 'radial-gradient(circle, rgba(242, 196, 210, 0.34) 0%, rgba(242, 196, 210, 0) 70%)' }}
       />
 
       <div className="relative z-10">
         <div className="flex items-start justify-between gap-4">
           <div className="text-right">
-            <p className="text-3xl text-white leading-none" style={{ fontWeight: 900 }}>
+            <p className="text-[30px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
               {timeString}
             </p>
-            <p className="text-sm mt-1" style={{ color: 'rgba(255,255,255,0.72)', fontWeight: 600 }}>
+            <p className="text-sm mt-1" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
               {dateString}
             </p>
           </div>
 
           <button
             onClick={onSOSClick}
-            className="h-12 min-w-[108px] px-5 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95"
+            className="h-12 min-w-[108px] px-5 rounded-[20px] flex items-center justify-center gap-2 transition-all active:scale-95"
             style={{
-              backgroundColor: 'rgba(255,255,255,0.16)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(255,255,255,0.24)',
+              background: 'linear-gradient(135deg, #F8CAD8 0%, #E9A9BE 100%)',
+              color: '#7D3F56',
+              border: '1px solid rgba(206, 147, 169, 0.35)',
+              boxShadow: '0 14px 28px rgba(204, 132, 158, 0.18)',
               fontWeight: 900,
             }}
             aria-label="SOS"
@@ -116,59 +122,85 @@ export function GreetingSection({
           </button>
         </div>
 
-        <div className="mt-5 text-right">
-          <p className="text-lg text-white" style={{ fontWeight: 800 }}>
-            {greeting}, {displayName}
-          </p>
+        <div className="mt-6 text-right">
+          <div className="flex flex-row-reverse items-center justify-end gap-2">
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(246, 211, 221, 0.66)', color: theme.primaryDark }}
+            >
+              <Heart size={16} strokeWidth={2} />
+            </div>
+            <p className="text-base" style={{ color: theme.primaryDark, fontWeight: 800 }}>
+              {greeting}, {displayName}
+            </p>
+          </div>
+
           <h2
-            className="text-[32px] leading-tight mt-2 text-white"
-            style={{ fontWeight: 900, letterSpacing: '-0.03em' }}
+            className="text-[31px] leading-tight mt-3"
+            style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
           >
             {genderedText(userProfile.gender, 'איך את מרגישה היום?', 'איך אתה מרגיש היום?')}
           </h2>
-          <p className="text-sm mt-2" style={{ color: 'rgba(255,255,255,0.76)', fontWeight: 600 }}>
-            בוחרים פעולה אחת וממשיכים.
+          <p className="text-sm mt-2" style={{ color: '#907B72', fontWeight: 700, lineHeight: 1.8 }}>
+            הכול מרוכז במקום אחד, ברכות, בשקט ובסדר.
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 mt-5">
-          {quickActions.map((action) => (
-            <button
-              key={action.label}
-              onClick={action.onClick}
-              className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
-              style={{
-                backgroundColor: 'rgba(255,255,255,0.14)',
-                border: '1px solid rgba(255,255,255,0.18)',
-              }}
-            >
-              <div className="flex flex-col items-end h-full text-right">
-                <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
-                  style={{ backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFFFFF' }}
-                >
-                  {action.icon}
-                </div>
+          {quickActions.map((action, index) => {
+            const accent = index === 1 || index === 3;
 
-                <div className="text-right mt-auto w-full">
-                  <p style={{ color: '#FFFFFF', fontWeight: 900 }}>{action.label}</p>
-                  <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12, marginTop: 4 }}>
-                    {action.note}
-                  </p>
+            return (
+              <button
+                key={action.label}
+                onClick={action.onClick}
+                className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
+                style={{
+                  minHeight: 118,
+                  background: accent
+                    ? 'linear-gradient(145deg, rgba(255,247,244,0.98) 0%, rgba(251,231,236,0.98) 100%)'
+                    : 'rgba(255,255,255,0.82)',
+                  border: `1px solid ${accent ? '#ECD8D9' : theme.primaryBorder}`,
+                  boxShadow: accent
+                    ? '0 18px 34px rgba(210, 174, 169, 0.15)'
+                    : '0 12px 28px rgba(160, 134, 122, 0.08)',
+                }}
+              >
+                <div className="flex flex-col items-end h-full text-right">
+                  <div
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
+                    style={{
+                      background: accent
+                        ? 'linear-gradient(135deg, #F7CAD8 0%, #E6B8C7 100%)'
+                        : theme.primaryBg,
+                      color: accent ? '#83485F' : theme.primaryDark,
+                    }}
+                  >
+                    {action.icon}
+                  </div>
+
+                  <div className="text-right mt-auto w-full">
+                    <p style={{ color: '#5A4740', fontWeight: 900 }}>{action.label}</p>
+                    <p style={{ color: '#947D74', fontSize: 12, marginTop: 4, fontWeight: 700 }}>
+                      {action.note}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </button>
-          ))}
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-2 gap-3 mt-4">
           <CompactStatus
             label="סוכר אחרון"
             value={latestSugar ? `${latestSugar.level} mg/dL` : 'עוד לא נמדד'}
+            theme={theme}
           />
           <CompactStatus
             label="התרופה הבאה"
             value={nextMedication ? `${nextMedication.name} · ${formatClock(nextMedication.time)}` : 'לא הוגדרה'}
+            theme={theme}
           />
         </div>
       </div>
@@ -176,14 +208,26 @@ export function GreetingSection({
   );
 }
 
-function CompactStatus({ label, value }: { label: string; value: string }) {
+function CompactStatus({
+  label,
+  value,
+  theme,
+}: {
+  label: string;
+  value: string;
+  theme: ReturnType<typeof useAppContext>['theme'];
+}) {
   return (
     <div
       className="rounded-[22px] p-4 text-right"
-      style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+      style={{
+        background: 'rgba(255,255,255,0.72)',
+        border: `1px solid ${theme.primaryBorder}`,
+        boxShadow: '0 10px 24px rgba(160, 134, 122, 0.06)',
+      }}
     >
-      <p style={{ color: 'rgba(255,255,255,0.68)', fontSize: 12, fontWeight: 800 }}>{label}</p>
-      <p style={{ color: '#FFFFFF', fontWeight: 900, marginTop: 8, lineHeight: 1.5 }}>{value}</p>
+      <p style={{ color: '#9A8379', fontSize: 12, fontWeight: 800 }}>{label}</p>
+      <p style={{ color: '#5B4740', fontWeight: 900, marginTop: 8, lineHeight: 1.5 }}>{value}</p>
     </div>
   );
 }

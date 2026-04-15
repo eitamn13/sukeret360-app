@@ -12,16 +12,16 @@ import {
 } from '../context/AppContext';
 
 const BRAND = {
-  navy: '#1E3A8A',
-  teal: '#2563EB',
-  tealDark: '#1D4ED8',
-  bg: '#F8FAFC',
-  card: '#FFFFFF',
-  border: '#E2E8F0',
-  muted: '#64748B',
-  text: '#0F172A',
-  soft: '#EFF6FF',
-  alert: '#DC2626',
+  navy: '#6A564C',
+  teal: '#C9859F',
+  tealDark: '#8E5D73',
+  bg: '#FFFDF8',
+  card: '#FFFDF9',
+  border: '#ECDDCD',
+  muted: '#9A8279',
+  text: '#5A4740',
+  soft: '#FFF2F3',
+  alert: '#C67682',
 };
 
 const MED_VISUALS: Array<{
@@ -30,10 +30,10 @@ const MED_VISUALS: Array<{
   symbol: string;
   color: string;
 }> = [
-  { value: 'blue-pill', label: 'כדור כחול', symbol: '🔵', color: '#2563EB' },
-  { value: 'white-pill', label: 'כדור לבן', symbol: '⚪', color: '#CBD5E1' },
-  { value: 'pink-pill', label: 'כדור ורוד', symbol: '🩷', color: '#EC4899' },
-  { value: 'insulin-pen', label: 'עט אינסולין', symbol: '💉', color: '#14B8A6' },
+  { value: 'blue-pill', label: 'כדור כחול', symbol: '🔵', color: '#8EA5CC' },
+  { value: 'white-pill', label: 'כדור לבן', symbol: '⚪', color: '#DED5CB' },
+  { value: 'pink-pill', label: 'כדור ורוד', symbol: '🩷', color: '#D9A0B3' },
+  { value: 'insulin-pen', label: 'עט אינסולין', symbol: '💉', color: '#9AAF85' },
 ];
 
 function createMedicationDraft(): MedicationScheduleItem {
@@ -187,7 +187,7 @@ export function OnboardingScreen() {
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto px-4 py-8"
-      style={{ background: 'linear-gradient(180deg, #F8FBFF 0%, #EFF4FF 55%, #F8FAFC 100%)' }}
+      style={{ background: 'linear-gradient(180deg, #FFFDF8 0%, #FFF8F2 55%, #FFFDF9 100%)' }}
     >
       <div className="w-full max-w-md mx-auto">
         <div className="flex justify-center mb-6">
@@ -202,7 +202,7 @@ export function OnboardingScreen() {
               style={{
                 width: index === step ? 34 : 10,
                 height: 10,
-                backgroundColor: index === step ? BRAND.teal : index < step ? '#93C5FD' : '#D8E7EB',
+                backgroundColor: index === step ? BRAND.teal : index < step ? '#EAC3CF' : '#EEE4DA',
               }}
             />
           ))}
@@ -213,7 +213,7 @@ export function OnboardingScreen() {
           style={{
             backgroundColor: BRAND.card,
             border: `1px solid ${BRAND.border}`,
-            boxShadow: '0 24px 60px rgba(15, 23, 42, 0.08)',
+            boxShadow: '0 24px 60px rgba(156, 126, 111, 0.12)',
           }}
         >
           {step === 0 && (
@@ -244,8 +244,8 @@ export function OnboardingScreen() {
                 ].map(({ value, label, emoji }) => {
                   const selected = gender === value;
                   const accent = value === 'male'
-                    ? { border: '#2563EB', background: '#EFF6FF', text: '#1D4ED8', shadow: 'rgba(37,99,235,0.14)' }
-                    : { border: '#EC4899', background: '#FFF1F7', text: '#BE185D', shadow: 'rgba(236,72,153,0.14)' };
+                    ? { border: '#99AA83', background: '#F5F7EE', text: '#6C7A57', shadow: 'rgba(153,170,131,0.16)' }
+                    : { border: '#D7A2B3', background: '#FFF1F4', text: '#A05D76', shadow: 'rgba(215,162,179,0.18)' };
 
                   return (
                     <button
@@ -253,8 +253,8 @@ export function OnboardingScreen() {
                       onClick={() => setGender(value)}
                       className="rounded-2xl p-4 text-center transition-all duration-200 active:scale-[0.98]"
                       style={{
-                        border: `2px solid ${selected ? accent.border : '#E5EEF1'}`,
-                        backgroundColor: selected ? accent.background : '#FAFCFD',
+                        border: `2px solid ${selected ? accent.border : '#EADFD2'}`,
+                        backgroundColor: selected ? accent.background : '#FFFDF9',
                         boxShadow: selected ? `0 14px 28px ${accent.shadow}` : 'none',
                       }}
                     >
@@ -317,8 +317,8 @@ export function OnboardingScreen() {
                     onClick={() => setDiabetesType(type)}
                     className="rounded-2xl p-4 text-right transition-all active:scale-[0.98]"
                     style={{
-                      border: `2px solid ${diabetesType === type ? BRAND.teal : '#E5EEF1'}`,
-                      backgroundColor: diabetesType === type ? BRAND.soft : '#FAFCFD',
+                      border: `2px solid ${diabetesType === type ? BRAND.teal : '#EADFD2'}`,
+                      backgroundColor: diabetesType === type ? BRAND.soft : '#FFFDF9',
                     }}
                   >
                     <p style={{ color: diabetesType === type ? BRAND.teal : BRAND.text, fontWeight: 900, fontSize: 20 }}>
@@ -344,9 +344,9 @@ export function OnboardingScreen() {
                     onClick={() => setTreatmentType(item.value)}
                     className="rounded-2xl p-3.5 text-center transition-all active:scale-[0.98]"
                     style={{
-                      border: `2px solid ${treatmentType === item.value ? BRAND.teal : '#E5EEF1'}`,
+                      border: `2px solid ${treatmentType === item.value ? BRAND.teal : '#EADFD2'}`,
                       backgroundColor: treatmentType === item.value ? BRAND.soft : '#FAFCFD',
-                      color: treatmentType === item.value ? BRAND.teal : '#334155',
+                      color: treatmentType === item.value ? BRAND.teal : '#6B5B52',
                       fontWeight: 800,
                     }}
                   >
@@ -431,7 +431,7 @@ export function OnboardingScreen() {
                   <div
                     key={medication.id}
                     className="rounded-[28px] p-4"
-                    style={{ backgroundColor: '#FBFDFE', border: `1px solid ${BRAND.border}` }}
+                    style={{ backgroundColor: '#FFFDF9', border: `1px solid ${BRAND.border}` }}
                   >
                     <div className="flex items-center justify-between mb-4">
                       <button
@@ -439,9 +439,9 @@ export function OnboardingScreen() {
                         disabled={medications.length === 1}
                         className="w-10 h-10 rounded-2xl flex items-center justify-center"
                         style={{
-                          backgroundColor: medications.length === 1 ? '#F8FAFC' : '#FFFFFF',
-                          color: medications.length === 1 ? '#CBD5E1' : BRAND.alert,
-                          border: `1px solid ${medications.length === 1 ? '#E2E8F0' : '#FECACA'}`,
+                          backgroundColor: medications.length === 1 ? '#FAF5EF' : '#FFFFFF',
+                          color: medications.length === 1 ? '#D5C9BC' : BRAND.alert,
+                          border: `1px solid ${medications.length === 1 ? '#ECE1D6' : '#F2C8CE'}`,
                         }}
                         aria-label="מחק תרופה"
                       >
@@ -515,9 +515,9 @@ export function OnboardingScreen() {
                             }
                             className="rounded-2xl py-3 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
                             style={{
-                              border: `2px solid ${medication.type === option.value ? BRAND.teal : '#E5EEF1'}`,
+                              border: `2px solid ${medication.type === option.value ? BRAND.teal : '#EADFD2'}`,
                               backgroundColor: medication.type === option.value ? BRAND.soft : '#FFFFFF',
-                              color: medication.type === option.value ? BRAND.teal : '#475569',
+                              color: medication.type === option.value ? BRAND.teal : '#6E5E56',
                               fontWeight: 800,
                             }}
                           >
@@ -543,9 +543,9 @@ export function OnboardingScreen() {
                                 }
                                 className="rounded-2xl p-4 text-center transition-all active:scale-[0.98]"
                                 style={{
-                                  border: `2px solid ${active ? BRAND.teal : '#E5EEF1'}`,
+                                  border: `2px solid ${active ? BRAND.teal : '#EADFD2'}`,
                                   backgroundColor: active ? BRAND.soft : '#FFFFFF',
-                                  boxShadow: active ? '0 10px 18px rgba(37,99,235,0.08)' : 'none',
+                                  boxShadow: active ? '0 10px 18px rgba(201,133,159,0.12)' : 'none',
                                 }}
                               >
                                 <div className="flex flex-col items-center justify-center gap-3">
@@ -637,7 +637,7 @@ export function OnboardingScreen() {
 
               <div
                 className="rounded-3xl p-4"
-                style={{ background: 'linear-gradient(135deg, #EFF6FF, #F8FAFC)', border: `1px solid ${BRAND.border}` }}
+                style={{ background: 'linear-gradient(135deg, #FFF7F2, #FBF2EA)', border: `1px solid ${BRAND.border}` }}
               >
                 <p style={{ color: BRAND.tealDark, fontWeight: 900 }}>סיכום קצר</p>
                 <p style={{ color: BRAND.muted, marginTop: 8, lineHeight: 1.7 }}>
@@ -653,12 +653,12 @@ export function OnboardingScreen() {
             className="w-full h-14 rounded-2xl mt-6 flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98]"
             style={{
               background: canNext
-                ? 'linear-gradient(135deg, #1D4ED8 0%, #1E3A8A 100%)'
+                ? 'linear-gradient(135deg, #D29AB0 0%, #9A6A7C 100%)'
                 : '#E5E7EB',
-              color: canNext ? '#FFFFFF' : '#94A3B8',
+              color: canNext ? '#FFFFFF' : '#B1A296',
               fontWeight: 900,
               fontSize: '1rem',
-              boxShadow: canNext ? '0 18px 34px rgba(37,99,235,0.2)' : 'none',
+              boxShadow: canNext ? '0 18px 34px rgba(162,120,135,0.24)' : 'none',
             }}
           >
             {step === totalSteps - 1 ? (
@@ -730,10 +730,10 @@ function OnboardingLogo() {
       <div
         className="w-24 h-24 rounded-[30px] flex items-center justify-center"
         style={{
-          background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFF 100%)',
+          background: 'linear-gradient(135deg, #FFFDF9 0%, #FFF5EF 100%)',
           border: `1px solid ${BRAND.border}`,
-          boxShadow: '0 18px 36px rgba(18,59,93,0.12)',
-          color: BRAND.teal,
+          boxShadow: '0 18px 36px rgba(156,126,111,0.14)',
+          color: BRAND.tealDark,
         }}
       >
         <Logo size={70} />
@@ -753,8 +753,8 @@ function OnboardingLogo() {
 
 function inputStyle(active: boolean) {
   return {
-    border: `2px solid ${active ? '#BFDBFE' : '#E5EEF1'}`,
-    backgroundColor: active ? '#EFF6FF' : '#FAFCFD',
+    border: `2px solid ${active ? '#E3C0CB' : '#EADFD2'}`,
+    backgroundColor: active ? '#FFF2F3' : '#FFFDF9',
     color: BRAND.text,
     fontWeight: 700,
   };
@@ -762,7 +762,7 @@ function inputStyle(active: boolean) {
 
 function compactInputStyle(active: boolean) {
   return {
-    border: `2px solid ${active ? '#BFDBFE' : '#E5EEF1'}`,
+    border: `2px solid ${active ? '#E3C0CB' : '#EADFD2'}`,
     backgroundColor: '#FFFFFF',
     color: BRAND.text,
     fontWeight: 700,

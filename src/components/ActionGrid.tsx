@@ -94,14 +94,17 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
       <div className="flex flex-row-reverse items-center justify-start mb-3 gap-3">
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-          style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
+          style={{
+            background: 'linear-gradient(135deg, rgba(246,223,217,0.95) 0%, rgba(250,239,231,0.95) 100%)',
+            color: theme.primaryDark,
+          }}
         >
           <Sparkles size={18} strokeWidth={1.9} />
         </div>
 
         <div className="text-right">
-          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>מה צריך עכשיו</h3>
-          <p style={{ color: '#64748B', fontSize: 13 }}>קצר, ברור ומהיר.</p>
+          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>מה צריך עכשיו</h3>
+          <p style={{ color: '#95837A', fontSize: 13 }}>פעולות פשוטות וברורות, בלי עומס.</p>
         </div>
       </div>
 
@@ -110,22 +113,26 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
           <button
             key={action.id}
             onClick={() => handleClick(action.id, action.label)}
-            className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
+            className="rounded-[26px] p-4 text-right transition-all active:scale-[0.98]"
             style={{
               minHeight: 118,
-              background: action.accent ? theme.gradientCard : '#FFFFFF',
-              border: action.accent ? 'none' : `1px solid ${theme.primaryBorder}`,
+              background: action.accent
+                ? 'linear-gradient(145deg, #FFF8F3 0%, #FBEAEC 100%)'
+                : 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F1 100%)',
+              border: `1px solid ${action.accent ? '#EBD7D9' : theme.primaryBorder}`,
               boxShadow: action.accent
-                ? `0 18px 34px ${theme.primaryShadow}`
-                : '0 10px 26px rgba(15, 23, 42, 0.05)',
+                ? '0 18px 34px rgba(211, 176, 177, 0.15)'
+                : '0 12px 28px rgba(160, 134, 122, 0.08)',
             }}
           >
             <div className="flex flex-col items-end h-full text-right">
               <div
                 className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
                 style={{
-                  background: action.accent ? 'rgba(255,255,255,0.16)' : theme.primaryBg,
-                  color: action.accent ? '#FFFFFF' : theme.primary,
+                  background: action.accent
+                    ? 'linear-gradient(135deg, #F6CFDA 0%, #EFC1CC 100%)'
+                    : 'linear-gradient(135deg, #FFF4EE 0%, #FAF2E6 100%)',
+                  color: action.accent ? '#8E4A61' : theme.primaryDark,
                 }}
               >
                 {action.icon}
@@ -134,14 +141,14 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
               <div className="mt-auto w-full text-right">
                 <p
                   className="text-[15px] leading-tight"
-                  style={{ color: action.accent ? '#FFFFFF' : '#0F172A', fontWeight: 900 }}
+                  style={{ color: '#5A4740', fontWeight: 900 }}
                 >
                   {action.label}
                 </p>
                 <p
                   className="text-xs mt-1"
                   style={{
-                    color: action.accent ? 'rgba(255,255,255,0.78)' : '#64748B',
+                    color: '#94817A',
                     fontWeight: 700,
                   }}
                 >
