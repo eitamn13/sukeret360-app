@@ -8,6 +8,7 @@ import {
   Phone,
   Save,
   UserRound,
+  UserX,
 } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
 import { Gender, TreatmentType, UserProfile, useAppContext } from '../context/AppContext';
@@ -32,7 +33,7 @@ const DEFAULT_EMERGENCY_CONTACT: EmergencyContactDraft = {
 
 export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalProps) {
   const { userProfile, saveUserProfile, saveEmergencyContact, theme } = useAppContext();
-  const { authEnabled, signOut } = useAuthContext();
+  const { authEnabled, session, signOut } = useAuthContext();
 
   const [name, setName] = useState(userProfile.name);
   const [age, setAge] = useState(userProfile.age);
@@ -125,6 +126,34 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
       setSaved(false);
       onClose();
     }, 900);
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!session?.access_token) return;
+
+    const confirmed = window.confirm('האם למחוק את החשבון וכל הנתונים השמורים שלו?');
+    if (!confirmed) return;
+
+    try {
+      const response = await fetch('/api/delete-account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('Delete account failed');
+      }
+
+      localStorage.clear();
+      await signOut();
+      window.location.reload();
+    } catch (error) {
+      console.error('Failed to delete account', error);
+      window.alert('לא הצלחנו למחוק את החשבון כרגע. נסה שוב בעוד רגע.');
+    }
   };
 
   if (!isOpen) return null;
@@ -421,19 +450,35 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
           }}
         >
           {authEnabled && (
-            <button
-              onClick={() => void signOut()}
-              className="w-full h-[50px] rounded-2xl flex items-center justify-center gap-2 transition-all mb-3"
-              style={{
-                backgroundColor: '#FFFFFF',
-                border: `1px solid ${theme.primaryBorder}`,
-                color: theme.primaryDark,
-                fontWeight: 900,
-              }}
-            >
-              <LogOut size={17} strokeWidth={2.2} />
-              <span>התנתקות מהחשבון</span>
-            </button>
+            <div className="grid grid-cols-2 gap-3 mb-3">
+              <button
+                onClick={() => void signOut()}
+                className="h-[50px] rounded-2xl flex items-center justify-center gap-2 transition-all"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  border: `1px solid ${theme.primaryBorder}`,
+                  color: theme.primaryDark,
+                  fontWeight: 900,
+                }}
+              >
+                <LogOut size={17} strokeWidth={2.2} />
+                <span>התנתקות</span>
+              </button>
+
+              <button
+                onClick={() => void handleDeleteAccount()}
+                className="h-[50px] rounded-2xl flex items-center justify-center gap-2 transition-all"
+                style={{
+                  backgroundColor: '#FFF3F3',
+                  border: '1px solid #F2C7CD',
+                  color: '#A63A4B',
+                  fontWeight: 900,
+                }}
+              >
+                <UserX size={17} strokeWidth={2.2} />
+                <span>מחיקת חשבון</span>
+              </button>
+            </div>
           )}
           <button
             onClick={handleSave}
