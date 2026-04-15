@@ -45,7 +45,26 @@ const COMMUNITY_ITEMS: CommunityItem[] = [
 ];
 
 export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySectionProps) {
-  const { theme } = useAppContext();
+  const { theme, userProfile } = useAppContext();
+  const isMale = userProfile.gender === 'male';
+
+  const accentSurface = isMale
+    ? {
+        headerBadge: 'linear-gradient(135deg, rgba(226,237,253,0.96) 0%, rgba(244,248,255,0.96) 100%)',
+        card: 'linear-gradient(145deg, #F9FBFF 0%, #EEF4FD 100%)',
+        border: '#DBE6F3',
+        shadow: '0 18px 34px rgba(138, 169, 214, 0.13)',
+        iconBg: 'linear-gradient(135deg, #D8E7FB 0%, #CBDCF5 100%)',
+        iconColor: '#506A87',
+      }
+    : {
+        headerBadge: 'linear-gradient(135deg, rgba(248, 233, 220, 0.95) 0%, rgba(245, 213, 223, 0.95) 100%)',
+        card: 'linear-gradient(145deg, #FFF8F3 0%, #FBECEE 100%)',
+        border: '#EAD6D8',
+        shadow: '0 18px 34px rgba(211, 176, 177, 0.14)',
+        iconBg: 'linear-gradient(135deg, #F7D4DE 0%, #F1C5D2 100%)',
+        iconColor: '#8B5364',
+      };
 
   const handleClick = (id: string, label: string) => {
     if (id === 'community') {
@@ -58,20 +77,20 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
 
   return (
     <section className="px-4 mt-6 pb-8" dir="rtl">
-      <div className="flex flex-row-reverse items-center justify-start mb-3 gap-3">
+      <div className="flex items-center justify-end mb-3 gap-3">
+        <div className="text-right">
+          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>תמיכה וקהילה</h3>
+          <p style={{ color: '#95837A', fontSize: 13 }}>לשאול, לשתף ולהתחזק בקצב נעים וברור.</p>
+        </div>
+
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
           style={{
-            background: 'linear-gradient(135deg, rgba(248, 233, 220, 0.95) 0%, rgba(245, 213, 223, 0.95) 100%)',
+            background: accentSurface.headerBadge,
             color: theme.primaryDark,
           }}
         >
           <Users size={18} strokeWidth={1.9} />
-        </div>
-
-        <div className="text-right">
-          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>תמיכה וקהילה</h3>
-          <p style={{ color: '#95837A', fontSize: 13 }}>לשאול, לשתף ולהתחזק בקצב נעים וברור.</p>
         </div>
       </div>
 
@@ -84,11 +103,11 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
             style={{
               minHeight: 116,
               background: item.accent
-                ? 'linear-gradient(145deg, #FFF8F3 0%, #FBECEE 100%)'
+                ? accentSurface.card
                 : 'linear-gradient(145deg, #FFFFFF 0%, #FFF9F2 100%)',
-              border: `1px solid ${item.accent ? '#EAD6D8' : theme.primaryBorder}`,
+              border: `1px solid ${item.accent ? accentSurface.border : theme.primaryBorder}`,
               boxShadow: item.accent
-                ? '0 18px 34px rgba(211, 176, 177, 0.14)'
+                ? accentSurface.shadow
                 : '0 12px 28px rgba(160, 134, 122, 0.08)',
             }}
           >
@@ -97,9 +116,11 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
                 className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
                 style={{
                   background: item.accent
-                    ? 'linear-gradient(135deg, #F7D4DE 0%, #F1C5D2 100%)'
-                    : 'linear-gradient(135deg, #FFF4EE 0%, #FBF1E5 100%)',
-                  color: item.accent ? '#8B5364' : theme.primaryDark,
+                    ? accentSurface.iconBg
+                    : isMale
+                      ? 'linear-gradient(135deg, #F1F6FD 0%, #E8F0FA 100%)'
+                      : 'linear-gradient(135deg, #FFF4EE 0%, #FBF1E5 100%)',
+                  color: item.accent ? accentSurface.iconColor : theme.primaryDark,
                 }}
               >
                 {item.icon}

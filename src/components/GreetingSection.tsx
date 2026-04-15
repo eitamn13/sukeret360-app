@@ -24,6 +24,7 @@ export function GreetingSection({
 }: GreetingSectionProps) {
   const { timeString, greeting, dateString } = useCurrentTime();
   const { userProfile, theme, sugarLogs, todayMeals, medicationSchedule } = useAppContext();
+  const isMale = userProfile.gender === 'male';
 
   const displayName = userProfile.name || genderedText(userProfile.gender, 'יקרה', 'יקר');
   const latestSugar = sugarLogs[0];
@@ -71,6 +72,42 @@ export function GreetingSection({
     },
   ];
 
+  const heroGlow = isMale
+    ? 'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 32%), radial-gradient(circle at bottom left, rgba(189, 214, 246, 0.46) 0%, rgba(189, 214, 246, 0) 38%)'
+    : 'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 32%), radial-gradient(circle at bottom left, rgba(248, 209, 220, 0.45) 0%, rgba(248, 209, 220, 0) 38%)';
+  const orbGlow = isMale
+    ? 'radial-gradient(circle, rgba(203, 222, 247, 0.36) 0%, rgba(203, 222, 247, 0) 70%)'
+    : 'radial-gradient(circle, rgba(242, 196, 210, 0.34) 0%, rgba(242, 196, 210, 0) 70%)';
+  const sosButton = isMale
+    ? {
+        background: 'linear-gradient(135deg, #D7E5FA 0%, #B9CEF0 100%)',
+        color: '#476183',
+        border: '1px solid rgba(129, 159, 206, 0.36)',
+        boxShadow: '0 14px 28px rgba(118, 150, 201, 0.18)',
+      }
+    : {
+        background: 'linear-gradient(135deg, #F8CAD8 0%, #E9A9BE 100%)',
+        color: '#7D3F56',
+        border: '1px solid rgba(206, 147, 169, 0.35)',
+        boxShadow: '0 14px 28px rgba(204, 132, 158, 0.18)',
+      };
+  const introBadgeBg = isMale ? 'rgba(210, 225, 248, 0.72)' : 'rgba(246, 211, 221, 0.66)';
+  const accentCard = isMale
+    ? {
+        background: 'linear-gradient(145deg, rgba(247,250,255,0.98) 0%, rgba(232,241,253,0.98) 100%)',
+        border: '#D5E2F4',
+        shadow: '0 18px 34px rgba(138, 169, 214, 0.14)',
+        iconBg: 'linear-gradient(135deg, #D5E5FB 0%, #C3D8F4 100%)',
+        iconColor: '#4F6786',
+      }
+    : {
+        background: 'linear-gradient(145deg, rgba(255,247,244,0.98) 0%, rgba(251,231,236,0.98) 100%)',
+        border: '#ECD8D9',
+        shadow: '0 18px 34px rgba(210, 174, 169, 0.15)',
+        iconBg: 'linear-gradient(135deg, #F7CAD8 0%, #E6B8C7 100%)',
+        iconColor: '#83485F',
+      };
+
   return (
     <section
       className="relative overflow-hidden rounded-[34px] mx-4 mt-4 p-5"
@@ -84,14 +121,13 @@ export function GreetingSection({
       <div
         className="absolute inset-0 opacity-90"
         style={{
-          background:
-            'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 32%), radial-gradient(circle at bottom left, rgba(248, 209, 220, 0.45) 0%, rgba(248, 209, 220, 0) 38%)',
+          background: heroGlow,
         }}
       />
 
       <div
         className="absolute -left-8 bottom-[-18px] w-40 h-40 rounded-full"
-        style={{ background: 'radial-gradient(circle, rgba(242, 196, 210, 0.34) 0%, rgba(242, 196, 210, 0) 70%)' }}
+        style={{ background: orbGlow }}
       />
 
       <div className="relative z-10">
@@ -109,10 +145,7 @@ export function GreetingSection({
             onClick={onSOSClick}
             className="h-12 min-w-[108px] px-5 rounded-[20px] flex items-center justify-center gap-2 transition-all active:scale-95"
             style={{
-              background: 'linear-gradient(135deg, #F8CAD8 0%, #E9A9BE 100%)',
-              color: '#7D3F56',
-              border: '1px solid rgba(206, 147, 169, 0.35)',
-              boxShadow: '0 14px 28px rgba(204, 132, 158, 0.18)',
+              ...sosButton,
               fontWeight: 900,
             }}
             aria-label="SOS"
@@ -126,7 +159,7 @@ export function GreetingSection({
           <div className="flex flex-row-reverse items-center justify-end gap-2">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(246, 211, 221, 0.66)', color: theme.primaryDark }}
+              style={{ backgroundColor: introBadgeBg, color: theme.primaryDark }}
             >
               <Heart size={16} strokeWidth={2} />
             </div>
@@ -158,11 +191,11 @@ export function GreetingSection({
                 style={{
                   minHeight: 118,
                   background: accent
-                    ? 'linear-gradient(145deg, rgba(255,247,244,0.98) 0%, rgba(251,231,236,0.98) 100%)'
+                    ? accentCard.background
                     : 'rgba(255,255,255,0.82)',
-                  border: `1px solid ${accent ? '#ECD8D9' : theme.primaryBorder}`,
+                  border: `1px solid ${accent ? accentCard.border : theme.primaryBorder}`,
                   boxShadow: accent
-                    ? '0 18px 34px rgba(210, 174, 169, 0.15)'
+                    ? accentCard.shadow
                     : '0 12px 28px rgba(160, 134, 122, 0.08)',
                 }}
               >
@@ -171,9 +204,9 @@ export function GreetingSection({
                     className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
                     style={{
                       background: accent
-                        ? 'linear-gradient(135deg, #F7CAD8 0%, #E6B8C7 100%)'
+                        ? accentCard.iconBg
                         : theme.primaryBg,
-                      color: accent ? '#83485F' : theme.primaryDark,
+                      color: accent ? accentCard.iconColor : theme.primaryDark,
                     }}
                   >
                     {action.icon}

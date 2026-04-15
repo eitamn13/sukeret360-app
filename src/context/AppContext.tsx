@@ -106,18 +106,18 @@ export const FEMALE_THEME: Theme = {
 };
 
 export const MALE_THEME: Theme = {
-  primary: '#A5B789',
-  primaryDark: '#68554B',
-  primaryLight: '#DEE7CF',
-  primaryBorder: '#E8E0D1',
-  primaryBg: '#FAF7EF',
-  primaryShadow: 'rgba(154, 142, 114, 0.16)',
-  primaryMuted: '#918377',
-  gradientCard: 'linear-gradient(145deg, #FFFDF8 0%, #FBF7ED 44%, #F2EEE0 100%)',
-  gradientFull: 'linear-gradient(180deg, #FFFDF8 0%, #FBF8F1 56%, #FFFDF9 100%)',
-  headerBg: 'rgba(255, 251, 246, 0.96)',
-  headerBorder: '#EEE6DA',
-  headerShadow: '0 10px 28px rgba(135, 122, 102, 0.07)',
+  primary: '#6B97D6',
+  primaryDark: '#4F617F',
+  primaryLight: '#DCEAFD',
+  primaryBorder: '#DDE6F3',
+  primaryBg: '#F4F8FE',
+  primaryShadow: 'rgba(107, 151, 214, 0.18)',
+  primaryMuted: '#7E8DA6',
+  gradientCard: 'linear-gradient(145deg, #FEFFFE 0%, #F7FAFE 44%, #EEF5FF 100%)',
+  gradientFull: 'linear-gradient(180deg, #FCFEFF 0%, #F4F8FE 56%, #FCFEFF 100%)',
+  headerBg: 'rgba(250, 252, 255, 0.96)',
+  headerBorder: '#E4EBF5',
+  headerShadow: '0 10px 28px rgba(115, 143, 185, 0.08)',
 };
 
 const DEFAULT_PROFILE: UserProfile = {
