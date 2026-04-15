@@ -39,65 +39,28 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
           </div>
 
           <div className="text-center">
-            <p style={{ color: '#9A7D73', fontWeight: 900, letterSpacing: '0.12em', fontSize: 12 }}>
-              מיזם אישי עם לב גדול
-            </p>
             <h1
-              className="mt-3 text-[36px] leading-none"
+              className="mt-2 text-[36px] leading-none"
               style={{ color: '#5A4740', fontWeight: 900, letterSpacing: '-0.04em' }}
             >
               הסוכרת שלי
             </h1>
-            <p className="mt-4 text-[15px] leading-8" style={{ color: '#7F6A62', fontWeight: 600 }}>
-              אפליקציה ברורה, רגועה וחכמה לחולי סוכרת,
-              <br />
-              עם מקום לארוחות, תרופות, מעקב ותמיכה יומיומית.
-            </p>
           </div>
 
           <div
-            className="rounded-[28px] p-5 mt-6"
+            className="rounded-[28px] p-5 mt-6 text-center"
             style={{
               background: 'linear-gradient(145deg, rgba(255,248,243,0.98) 0%, rgba(247,251,255,0.98) 100%)',
               border: '1px solid #E8DDD2',
             }}
           >
-            <div className="flex items-center justify-start gap-2 mb-3">
-              <div
-                className="w-10 h-10 rounded-2xl flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #F6D3DD 0%, #CFE5F8 100%)', color: '#7A5764' }}
-              >
-                <Heart size={18} strokeWidth={2} />
-              </div>
-              <p style={{ color: '#5A4740', fontWeight: 900 }}>המיזם מוקדש באהבה לסבתא שלי לאה</p>
+            <div
+              className="mx-auto mb-3 w-10 h-10 rounded-2xl flex items-center justify-center"
+              style={{ background: 'linear-gradient(135deg, #F6D3DD 0%, #CFE5F8 100%)', color: '#7A5764' }}
+            >
+              <Heart size={18} strokeWidth={2} />
             </div>
-            <p className="text-sm leading-7" style={{ color: '#7C6A63', fontWeight: 600 }}>
-              בניתי את האפליקציה הזאת מתוך רצון אמיתי לתת לחולי סוכרת כלי נעים, פשוט ומכבד,
-              כזה שעוזר ביום יום ולא רק מודד מספרים.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-3 gap-3 mt-6">
-            {[
-              { title: 'פשוט', subtitle: 'קל להבין' },
-              { title: 'חכם', subtitle: 'מזהה ועוזר' },
-              { title: 'בטוח', subtitle: 'עם SOS ותזכורות' },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-[24px] px-3 py-4 text-center"
-                style={{
-                  background: '#FFFFFF',
-                  border: '1px solid #E9E0D5',
-                  boxShadow: '0 10px 22px rgba(141, 120, 109, 0.08)',
-                }}
-              >
-                <p style={{ color: '#5A4740', fontWeight: 900 }}>{item.title}</p>
-                <p className="mt-1 text-xs" style={{ color: '#8B776E', fontWeight: 700 }}>
-                  {item.subtitle}
-                </p>
-              </div>
-            ))}
+            <p style={{ color: '#5A4740', fontWeight: 900, fontSize: 20 }}>מוקדש לסבתא שלי לאה</p>
           </div>
 
           <button
