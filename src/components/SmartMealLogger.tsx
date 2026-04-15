@@ -406,7 +406,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 pb-[calc(9.5rem+env(safe-area-inset-bottom,0px))]">
           {errorMessage && (
             <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
               {errorMessage}
@@ -451,7 +451,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
 
               <button
                 onClick={() => setStep(1)}
-                  className="w-full h-[52px] sm:h-14 rounded-2xl text-white text-base transition-all active:scale-[0.99]"
+                className="w-full h-[52px] sm:h-14 rounded-2xl text-white text-base transition-all active:scale-[0.99]"
                 style={{ background: primaryButtonBackground, fontWeight: 800, boxShadow: primaryButtonShadow }}
               >
                 המשך לצילום או להעלאה
@@ -703,9 +703,9 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               </div>
 
               <div
-                className="sticky bottom-0 z-10 mt-4 flex flex-col gap-3 rounded-[26px] border border-white/70 bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row"
+                className="sticky bottom-0 z-10 mt-4 flex flex-col gap-3 rounded-[26px] border border-white/80 bg-[rgba(255,255,255,0.98)] p-3 shadow-[0_-14px_34px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row"
                 style={{
-                  marginBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
+                  marginBottom: 'max(2.4rem, calc(env(safe-area-inset-bottom, 0px) + 0.8rem))',
                 }}
               >
                 <button

@@ -142,7 +142,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
 
       <div
         className="flex-1 overflow-y-auto px-4 py-4 space-y-4 overscroll-contain"
-        style={{ paddingBottom: 'calc(7.5rem + env(safe-area-inset-bottom, 0px))' }}
+        style={{ paddingBottom: 'calc(9.5rem + env(safe-area-inset-bottom, 0px))' }}
       >
         <SectionCard
           title="פרטים"
@@ -403,21 +403,21 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
       <div
         className="flex-shrink-0 px-4 pt-3"
         style={{
-          paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))',
+          paddingBottom: 'max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.4rem))',
           background: 'transparent',
         }}
       >
         <div
-          className="rounded-[28px] bg-white p-3"
+          className="rounded-[28px] bg-white p-3.5"
           style={{
             border: `1px solid ${theme.primaryBorder}`,
-            boxShadow: `0 -8px 28px ${theme.primary}12`,
+            boxShadow: `0 -10px 32px ${theme.primary}18`,
           }}
         >
           <button
             onClick={handleSave}
             disabled={!isValid}
-            className="w-full h-14 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+            className="w-full h-[58px] rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
             style={{
               background: saved
                 ? 'linear-gradient(135deg, #16A34A, #15803D)'
@@ -426,7 +426,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                   : '#E5E7EB',
               color: isValid ? '#FFFFFF' : '#94A3B8',
               fontWeight: 900,
-              boxShadow: isValid ? `0 18px 34px ${theme.primaryShadow}` : 'none',
+              boxShadow: isValid ? `0 20px 38px ${theme.primaryShadow}` : 'none',
             }}
           >
           {saved ? (
