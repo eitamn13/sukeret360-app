@@ -240,7 +240,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
       dir="rtl"
     >
       <div
-        className="w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-[430px] lg:max-w-xl overflow-hidden flex flex-col rounded-none sm:rounded-[28px]"
+        className="relative w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-[430px] lg:max-w-xl overflow-hidden flex flex-col rounded-none sm:rounded-[28px]"
         style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))' }}
       >
         <div
@@ -343,13 +343,6 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                   <input type="file" accept="image/*" capture="environment" className="hidden" onChange={handleFileInput} />
                 </label>
               </div>
-
-              {loading && (
-                <div className="rounded-3xl p-5 text-center" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
-                  <p style={{ color: '#0F172A', fontWeight: 800, fontSize: 18 }}>מנתחים את הארוחה...</p>
-                  <p style={{ color: '#64748B', marginTop: 8 }}>מזהים מזונות, פחמימות וקלוריות.</p>
-                </div>
-              )}
 
               <button
                 onClick={() => setStep(2)}
@@ -553,6 +546,52 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
             </div>
           )}
         </div>
+
+        {loading && (
+          <div
+            className="absolute inset-0 z-30 flex items-center justify-center p-5 sm:p-6"
+            style={{
+              background: 'rgba(241, 245, 249, 0.76)',
+              backdropFilter: 'blur(7px)',
+            }}
+          >
+            <div
+              className="w-full max-w-[320px] rounded-[28px] px-6 py-7 text-center"
+              style={{
+                background: 'rgba(255,255,255,0.96)',
+                border: `1px solid ${theme.primaryBorder}`,
+                boxShadow: `0 26px 60px ${theme.primaryShadow}`,
+              }}
+            >
+              <div
+                className="mx-auto flex h-20 w-20 items-center justify-center rounded-full"
+                style={{
+                  background: `radial-gradient(circle at 30% 30%, ${theme.primaryBg} 0%, rgba(255,255,255,0.95) 72%)`,
+                  border: `1px solid ${theme.primaryBorder}`,
+                }}
+              >
+                <div
+                  className="h-12 w-12 animate-spin rounded-full border-[4px] border-slate-200"
+                  style={{ borderTopColor: theme.primary, borderRightColor: theme.primary }}
+                />
+              </div>
+
+              <p style={{ color: '#0F172A', fontWeight: 900, fontSize: 23, marginTop: 18 }}>מנתחים את התמונה...</p>
+              <p style={{ color: '#475569', marginTop: 10, lineHeight: 1.75, fontSize: 15, fontWeight: 600 }}>
+                מזהים את המזון, מחשבים פחמימות וקלוריות,
+                <br />
+                וזה יכול לקחת כמה שניות.
+              </p>
+
+              <div
+                className="mt-5 rounded-2xl px-4 py-3"
+                style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', color: '#64748B', fontSize: 13, fontWeight: 700 }}
+              >
+                אין צורך ללחוץ שוב. אנחנו כבר בודקים בשבילך.
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
