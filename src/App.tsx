@@ -17,11 +17,16 @@ import { OnboardingScreen } from './components/OnboardingScreen';
 import { MealSuggestionsScreen } from './components/MealSuggestionsScreen';
 import { ProfileSettingsModal } from './components/ProfileSettingsModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
+import { WelcomeIntroScreen } from './components/WelcomeIntroScreen';
 
 type CommunityView = 'community' | 'forum' | 'support' | 'challenges';
 
 function AppInner() {
   const { onboardingDone, theme, logSugar } = useAppContext();
+  const [showWelcomeIntro, setShowWelcomeIntro] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return true;
+    return window.localStorage.getItem('welcomeIntroSeen') !== 'true';
+  });
 
   const [showMealLogger, setShowMealLogger] = useState(false);
   const [showSugarModal, setShowSugarModal] = useState(false);
@@ -65,6 +70,17 @@ function AppInner() {
   }, []);
 
   if (!onboardingDone) {
+    if (showWelcomeIntro) {
+      return (
+        <WelcomeIntroScreen
+          onContinue={() => {
+            window.localStorage.setItem('welcomeIntroSeen', 'true');
+            setShowWelcomeIntro(false);
+          }}
+        />
+      );
+    }
+
     return <OnboardingScreen />;
   }
 

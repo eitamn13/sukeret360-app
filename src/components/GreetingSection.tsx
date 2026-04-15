@@ -73,11 +73,13 @@ export function GreetingSection({
   ];
 
   const heroGlow = isMale
-    ? 'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 32%), radial-gradient(circle at bottom left, rgba(189, 214, 246, 0.46) 0%, rgba(189, 214, 246, 0) 38%)'
-    : 'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 32%), radial-gradient(circle at bottom left, rgba(248, 209, 220, 0.45) 0%, rgba(248, 209, 220, 0) 38%)';
+    ? 'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 34%), radial-gradient(circle at bottom left, rgba(189, 214, 246, 0.46) 0%, rgba(189, 214, 246, 0) 38%)'
+    : 'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 34%), radial-gradient(circle at bottom left, rgba(248, 209, 220, 0.45) 0%, rgba(248, 209, 220, 0) 38%)';
+
   const orbGlow = isMale
     ? 'radial-gradient(circle, rgba(203, 222, 247, 0.36) 0%, rgba(203, 222, 247, 0) 70%)'
     : 'radial-gradient(circle, rgba(242, 196, 210, 0.34) 0%, rgba(242, 196, 210, 0) 70%)';
+
   const sosButton = isMale
     ? {
         background: 'linear-gradient(135deg, #D7E5FA 0%, #B9CEF0 100%)',
@@ -91,7 +93,7 @@ export function GreetingSection({
         border: '1px solid rgba(206, 147, 169, 0.35)',
         boxShadow: '0 14px 28px rgba(204, 132, 158, 0.18)',
       };
-  const introBadgeBg = isMale ? 'rgba(210, 225, 248, 0.72)' : 'rgba(246, 211, 221, 0.66)';
+
   const accentCard = isMale
     ? {
         background: 'linear-gradient(145deg, rgba(247,250,255,0.98) 0%, rgba(232,241,253,0.98) 100%)',
@@ -118,20 +120,21 @@ export function GreetingSection({
         boxShadow: `0 26px 54px ${theme.primaryShadow}`,
       }}
     >
-      <div
-        className="absolute inset-0 opacity-90"
-        style={{
-          background: heroGlow,
-        }}
-      />
-
-      <div
-        className="absolute -left-8 bottom-[-18px] w-40 h-40 rounded-full"
-        style={{ background: orbGlow }}
-      />
+      <div className="absolute inset-0 opacity-90" style={{ background: heroGlow }} />
+      <div className="absolute -left-8 bottom-[-18px] w-40 h-40 rounded-full" style={{ background: orbGlow }} />
 
       <div className="relative z-10">
         <div className="flex items-start justify-between gap-4">
+          <button
+            onClick={onSOSClick}
+            className="h-12 min-w-[108px] px-5 rounded-[20px] flex items-center justify-center gap-2 transition-all active:scale-95"
+            style={{ ...sosButton, fontWeight: 900 }}
+            aria-label="SOS"
+          >
+            <Siren size={18} strokeWidth={1.9} />
+            <span>SOS</span>
+          </button>
+
           <div className="text-right">
             <p className="text-[30px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
               {timeString}
@@ -140,26 +143,13 @@ export function GreetingSection({
               {dateString}
             </p>
           </div>
-
-          <button
-            onClick={onSOSClick}
-            className="h-12 min-w-[108px] px-5 rounded-[20px] flex items-center justify-center gap-2 transition-all active:scale-95"
-            style={{
-              ...sosButton,
-              fontWeight: 900,
-            }}
-            aria-label="SOS"
-          >
-            <Siren size={18} strokeWidth={1.9} />
-            <span>SOS</span>
-          </button>
         </div>
 
         <div className="mt-6 text-right">
-          <div className="flex flex-row-reverse items-center justify-end gap-2">
+          <div className="flex items-center justify-start gap-2">
             <div
               className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: introBadgeBg, color: theme.primaryDark }}
+              style={{ backgroundColor: isMale ? 'rgba(210, 225, 248, 0.72)' : 'rgba(246, 211, 221, 0.66)', color: theme.primaryDark }}
             >
               <Heart size={16} strokeWidth={2} />
             </div>
@@ -169,7 +159,7 @@ export function GreetingSection({
           </div>
 
           <h2
-            className="text-[31px] leading-tight mt-3"
+            className="text-[31px] leading-tight mt-3 text-right"
             style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
           >
             {genderedText(userProfile.gender, 'איך את מרגישה היום?', 'איך אתה מרגיש היום?')}
@@ -187,22 +177,16 @@ export function GreetingSection({
                 className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
                 style={{
                   minHeight: 118,
-                  background: accent
-                    ? accentCard.background
-                    : 'rgba(255,255,255,0.82)',
+                  background: accent ? accentCard.background : 'rgba(255,255,255,0.82)',
                   border: `1px solid ${accent ? accentCard.border : theme.primaryBorder}`,
-                  boxShadow: accent
-                    ? accentCard.shadow
-                    : '0 12px 28px rgba(160, 134, 122, 0.08)',
+                  boxShadow: accent ? accentCard.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
                 }}
               >
-                <div className="flex flex-col items-end h-full text-right">
+                <div className="flex flex-col items-start h-full text-right">
                   <div
-                    className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
+                    className="w-11 h-11 rounded-2xl flex items-center justify-center"
                     style={{
-                      background: accent
-                        ? accentCard.iconBg
-                        : theme.primaryBg,
+                      background: accent ? accentCard.iconBg : theme.primaryBg,
                       color: accent ? accentCard.iconColor : theme.primaryDark,
                     }}
                   >

@@ -41,24 +41,24 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
 
   const accentSurface = isMale
     ? {
-        headerBadge: 'linear-gradient(135deg, rgba(224,236,252,0.96) 0%, rgba(244,248,255,0.98) 100%)',
+        headerBadge: 'linear-gradient(135deg, rgba(223,236,255,0.96) 0%, rgba(246,250,255,0.98) 100%)',
         card: 'linear-gradient(145deg, #F9FBFF 0%, #EEF4FD 100%)',
-        border: '#D9E5F4',
+        border: '#D7E4F6',
         shadow: '0 18px 34px rgba(138, 169, 214, 0.14)',
-        iconBg: 'linear-gradient(135deg, #D6E6FB 0%, #C7DAF4 100%)',
-        iconColor: '#4B6586',
+        iconBg: 'linear-gradient(135deg, #D6E6FB 0%, #C6D9F5 100%)',
+        iconColor: '#4B6686',
         plainBg: 'linear-gradient(145deg, #FFFFFF 0%, #F7FAFE 100%)',
-        plainIconBg: 'linear-gradient(135deg, #EFF5FD 0%, #E4EDF9 100%)',
+        plainIconBg: 'linear-gradient(135deg, #F1F6FE 0%, #E6EEF9 100%)',
       }
     : {
-        headerBadge: 'linear-gradient(135deg, rgba(246,223,217,0.95) 0%, rgba(250,239,231,0.95) 100%)',
-        card: 'linear-gradient(145deg, #FFF8F3 0%, #FBEAEC 100%)',
-        border: '#EBD7D9',
+        headerBadge: 'linear-gradient(135deg, rgba(248,230,235,0.96) 0%, rgba(255,248,245,0.98) 100%)',
+        card: 'linear-gradient(145deg, #FFF9F5 0%, #FBEDEE 100%)',
+        border: '#EAD8DC',
         shadow: '0 18px 34px rgba(211, 176, 177, 0.15)',
-        iconBg: 'linear-gradient(135deg, #F6CFDA 0%, #EFC1CC 100%)',
-        iconColor: '#8E4A61',
-        plainBg: 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F1 100%)',
-        plainIconBg: 'linear-gradient(135deg, #FFF4EE 0%, #FAF2E6 100%)',
+        iconBg: 'linear-gradient(135deg, #F7D2DD 0%, #F0C2D0 100%)',
+        iconColor: '#8D5065',
+        plainBg: 'linear-gradient(145deg, #FFFFFF 0%, #FFF9F4 100%)',
+        plainIconBg: 'linear-gradient(135deg, #FFF5EF 0%, #FBF0E8 100%)',
       };
 
   const handleClick = (id: string, label: string) => {
@@ -69,7 +69,7 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
 
   return (
     <section className="px-4 mt-6" dir="rtl">
-      <div className="mb-3 flex flex-row-reverse items-center justify-start gap-2">
+      <div className="mb-3 flex items-center justify-start gap-2">
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
           style={{ background: accentSurface.headerBadge, color: theme.primaryDark }}
@@ -94,17 +94,15 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
               boxShadow: action.accent ? accentSurface.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
             }}
           >
-            <div className="flex flex-col h-full text-right">
-              <div className="w-full flex flex-row-reverse justify-start">
-                <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center"
-                  style={{
-                    background: action.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
-                    color: action.accent ? accentSurface.iconColor : theme.primaryDark,
-                  }}
-                >
-                  {action.icon}
-                </div>
+            <div className="flex flex-col items-start h-full text-right">
+              <div
+                className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                style={{
+                  background: action.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
+                  color: action.accent ? accentSurface.iconColor : theme.primaryDark,
+                }}
+              >
+                {action.icon}
               </div>
 
               <div className="mt-auto w-full text-right">

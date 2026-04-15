@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
 import { ChevronLeft, Clock3, Pill, Plus, Shield, Sparkles, Trash2 } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import { Logo } from './Logo';
 import {
   Gender,
@@ -10,18 +10,36 @@ import {
   getPeriodFromTime,
   useAppContext,
 } from '../context/AppContext';
+import type { ReactNode } from 'react';
 
-const BRAND = {
-  navy: '#6A564C',
-  teal: '#C9859F',
-  tealDark: '#8E5D73',
-  bg: '#FFFDF8',
-  card: '#FFFDF9',
-  border: '#ECDDCD',
-  muted: '#9A8279',
+const FEMALE_BRAND = {
+  primary: '#C9859F',
+  primaryDark: '#6F4C5A',
+  secondary: '#FCE7EE',
+  accent: '#E8B2C3',
+  border: '#EAD8DC',
   text: '#5A4740',
-  soft: '#FFF2F3',
-  alert: '#C67682',
+  muted: '#8D7A73',
+  background: 'linear-gradient(180deg, #FFFDF8 0%, #FFF7F1 52%, #FFFDF9 100%)',
+  card: 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F4 100%)',
+  strong: 'linear-gradient(135deg, #D89CB3 0%, #A86B83 100%)',
+  soft: 'linear-gradient(135deg, rgba(248,218,226,0.95) 0%, rgba(255,247,244,0.96) 100%)',
+  shadow: 'rgba(174, 133, 148, 0.18)',
+};
+
+const MALE_BRAND = {
+  primary: '#6B97D6',
+  primaryDark: '#4A6587',
+  secondary: '#EAF3FF',
+  accent: '#BFD4F4',
+  border: '#DBE6F4',
+  text: '#41566F',
+  muted: '#73879F',
+  background: 'linear-gradient(180deg, #FCFEFF 0%, #F3F8FF 52%, #FCFEFF 100%)',
+  card: 'linear-gradient(145deg, #FFFFFF 0%, #F6FAFF 100%)',
+  strong: 'linear-gradient(135deg, #7CA8E7 0%, #4E6F9D 100%)',
+  soft: 'linear-gradient(135deg, rgba(220,235,255,0.96) 0%, rgba(247,250,255,0.98) 100%)',
+  shadow: 'rgba(112, 148, 199, 0.18)',
 };
 
 const MED_VISUALS: Array<{
@@ -30,10 +48,10 @@ const MED_VISUALS: Array<{
   symbol: string;
   color: string;
 }> = [
-  { value: 'blue-pill', label: 'כדור כחול', symbol: '🔵', color: '#8EA5CC' },
-  { value: 'white-pill', label: 'כדור לבן', symbol: '⚪', color: '#DED5CB' },
-  { value: 'pink-pill', label: 'כדור ורוד', symbol: '🩷', color: '#D9A0B3' },
-  { value: 'insulin-pen', label: 'עט אינסולין', symbol: '💉', color: '#9AAF85' },
+  { value: 'blue-pill', label: 'כדור כחול', symbol: '💊', color: '#5B8ED8' },
+  { value: 'white-pill', label: 'כדור לבן', symbol: '⚪', color: '#D8D1C8' },
+  { value: 'pink-pill', label: 'כדור ורוד', symbol: '🩷', color: '#D591A9' },
+  { value: 'insulin-pen', label: 'עט אינסולין', symbol: '💉', color: '#6FA56E' },
 ];
 
 function createMedicationDraft(): MedicationScheduleItem {
@@ -81,19 +99,61 @@ export function OnboardingScreen() {
   const [medications, setMedications] = useState<MedicationScheduleItem[]>([createMedicationDraft()]);
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
-  const [emergencyMessage, setEmergencyMessage] = useState('אני צריך עזרה דחופה. זה המיקום שלי:');
+  const [emergencyMessage, setEmergencyMessage] = useState('אני צריך/ה עזרה דחופה. זה המיקום שלי:');
 
   const totalSteps = 5;
+  const brand = gender === 'male' ? MALE_BRAND : FEMALE_BRAND;
 
   const yearOptions = useMemo(() => {
     const currentYear = new Date().getFullYear();
     return Array.from({ length: 35 }, (_, index) => String(currentYear - index));
   }, []);
 
-  const updateMedication = (
-    medicationId: string,
-    patch: Partial<MedicationScheduleItem>
-  ) => {
+  const canNext =
+    step === 0
+      ? name.trim().length > 0 && gender !== ''
+      : step === 1
+        ? age.trim().length > 0 && Number(age) > 0 && Number(age) < 120 && diabetesType !== '' && treatmentType !== ''
+        : step === 2
+          ? Number(targetLow) > 0 && Number(targetHigh) > Number(targetLow) && wakeTime.trim().length > 0 && sleepTime.trim().length > 0
+          : step === 3
+            ? medications.every((medication) => !medication.name.trim() || Boolean(medication.time.trim()))
+            : true;
+
+  const finish = () => {
+    const profile: UserProfile = {
+      name: name.trim() || 'משתמש/ת',
+      age,
+      diabetesType,
+      gender,
+      diagnosisYear,
+      treatmentType,
+      targetLow,
+      targetHigh,
+      wakeTime,
+      sleepTime,
+    };
+
+    saveUserProfile(profile);
+    saveEmergencyContact({
+      name: emergencyName.trim(),
+      phone: emergencyPhone.trim(),
+      message: emergencyMessage.trim() || 'אני צריך/ה עזרה דחופה. זה המיקום שלי:',
+    });
+
+    saveMedicationSchedule(
+      medications
+        .filter((medication) => medication.name.trim())
+        .map((medication) => ({
+          ...medication,
+          period: getPeriodFromTime(medication.time),
+        }))
+    );
+
+    completeOnboarding();
+  };
+
+  const updateMedication = (medicationId: string, patch: Partial<MedicationScheduleItem>) => {
     setMedications((prev) =>
       prev.map((medication) =>
         medication.id === medicationId
@@ -112,86 +172,36 @@ export function OnboardingScreen() {
   };
 
   const removeMedication = (medicationId: string) => {
-    setMedications((prev) => {
-      if (prev.length === 1) {
-        return [createMedicationDraft()];
-      }
-
-      return prev.filter((medication) => medication.id !== medicationId);
-    });
+    setMedications((prev) => (prev.length === 1 ? [createMedicationDraft()] : prev.filter((item) => item.id !== medicationId)));
   };
-
-  const finish = () => {
-    const profile: UserProfile = {
-      name: name.trim() || 'משתמש/ת',
-      age,
-      diabetesType,
-      gender,
-      diagnosisYear,
-      treatmentType,
-      targetLow,
-      targetHigh,
-      wakeTime,
-      sleepTime,
-    };
-
-    saveUserProfile(profile);
-
-    saveEmergencyContact({
-      name: emergencyName.trim(),
-      phone: emergencyPhone.trim(),
-      message: emergencyMessage.trim() || 'אני צריך עזרה דחופה. זה המיקום שלי:',
-    });
-
-    saveMedicationSchedule(
-      medications
-        .filter((medication) => medication.name.trim())
-        .map((medication) => ({
-          ...medication,
-          period: getPeriodFromTime(medication.time),
-        }))
-    );
-
-    completeOnboarding();
-  };
-
-  const goNext = () => {
-    if (step < totalSteps - 1) {
-      setStep((current) => current + 1);
-      return;
-    }
-
-    finish();
-  };
-
-  const canNext =
-    step === 0
-      ? name.trim().length > 0 && gender !== ''
-      : step === 1
-        ? age.trim().length > 0 &&
-          Number(age) > 0 &&
-          Number(age) < 120 &&
-          diabetesType !== '' &&
-          treatmentType !== ''
-        : step === 2
-          ? Number(targetLow) > 0 &&
-            Number(targetHigh) > Number(targetLow) &&
-            wakeTime.trim().length > 0 &&
-            sleepTime.trim().length > 0
-          : step === 3
-            ? medications.every((medication) =>
-                !medication.name.trim() || (medication.name.trim() && medication.time.trim())
-              )
-            : true;
 
   return (
     <div
       className="fixed inset-0 z-50 overflow-y-auto px-4 py-8"
-      style={{ background: 'linear-gradient(180deg, #FFFDF8 0%, #FFF8F2 55%, #FFFDF9 100%)' }}
+      dir="rtl"
+      style={{ background: brand.background }}
     >
       <div className="w-full max-w-md mx-auto">
         <div className="flex justify-center mb-6">
-          <OnboardingLogo />
+          <div
+            className="w-24 h-24 rounded-[32px] flex items-center justify-center"
+            style={{
+              background: brand.card,
+              border: `1px solid ${brand.border}`,
+              boxShadow: `0 18px 38px ${brand.shadow}`,
+            }}
+          >
+            <Logo size={70} />
+          </div>
+        </div>
+
+        <div className="text-center mb-6">
+          <h1 className="text-[30px]" style={{ color: brand.text, fontWeight: 900, letterSpacing: '-0.03em' }}>
+            הסוכרת שלי
+          </h1>
+          <p className="mt-2 text-sm" style={{ color: brand.muted, fontWeight: 700 }}>
+            נגדיר את האפליקציה כך שתתאים בדיוק לך
+          </p>
         </div>
 
         <div className="flex items-center justify-center gap-2 mb-6">
@@ -202,64 +212,58 @@ export function OnboardingScreen() {
               style={{
                 width: index === step ? 34 : 10,
                 height: 10,
-                backgroundColor: index === step ? BRAND.teal : index < step ? '#EAC3CF' : '#EEE4DA',
+                background: index === step ? brand.strong : index < step ? brand.accent : '#E9E3DC',
               }}
             />
           ))}
         </div>
 
         <div
-          className="rounded-[32px] p-6"
+          className="rounded-[34px] p-6"
           style={{
-            backgroundColor: BRAND.card,
-            border: `1px solid ${BRAND.border}`,
-            boxShadow: '0 24px 60px rgba(156, 126, 111, 0.12)',
+            background: brand.card,
+            border: `1px solid ${brand.border}`,
+            boxShadow: `0 24px 60px ${brand.shadow}`,
           }}
         >
           {step === 0 && (
             <div className="space-y-4">
-              <IntroHeader
+              <SectionHeader
+                brand={brand}
                 eyebrow="שלב ראשון"
                 title="כמה פרטים קצרים"
-                subtitle="נתחיל בשם ובמגדר."
+                subtitle="שם ומגדר כדי שהאפליקציה תדבר ותיראה נכון כבר מההתחלה."
               />
 
-              <FieldLabel text="איך קוראים לך?" />
-              <input
-                type="text"
+              <FieldLabel text="איך קוראים לך?" brand={brand} />
+              <TextInput
                 value={name}
-                onChange={(event) => setName(event.target.value)}
+                onChange={setName}
                 placeholder="למשל: רות, דוד, מרים"
-                autoFocus
-                dir="rtl"
-                className="w-full h-14 px-4 rounded-2xl text-right text-lg outline-none transition-all"
-                style={inputStyle(Boolean(name.trim()))}
+                brand={brand}
               />
 
-              <FieldLabel text="מגדר" />
+              <FieldLabel text="מגדר" brand={brand} />
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { value: 'female' as Gender, label: 'אישה', emoji: '👩' },
                   { value: 'male' as Gender, label: 'גבר', emoji: '👨' },
-                ].map(({ value, label, emoji }) => {
-                  const selected = gender === value;
-                  const accent = value === 'male'
-                    ? { border: '#99AA83', background: '#F5F7EE', text: '#6C7A57', shadow: 'rgba(153,170,131,0.16)' }
-                    : { border: '#D7A2B3', background: '#FFF1F4', text: '#A05D76', shadow: 'rgba(215,162,179,0.18)' };
+                ].map((item) => {
+                  const active = gender === item.value;
 
                   return (
                     <button
-                      key={value}
-                      onClick={() => setGender(value)}
-                      className="rounded-2xl p-4 text-center transition-all duration-200 active:scale-[0.98]"
+                      key={item.value}
+                      onClick={() => setGender(item.value)}
+                      className="rounded-[26px] p-4 text-center transition-all active:scale-[0.98]"
                       style={{
-                        border: `2px solid ${selected ? accent.border : '#EADFD2'}`,
-                        backgroundColor: selected ? accent.background : '#FFFDF9',
-                        boxShadow: selected ? `0 14px 28px ${accent.shadow}` : 'none',
+                        border: `2px solid ${active ? brand.primary : '#E7DED3'}`,
+                        background: active ? brand.soft : '#FFFFFF',
+                        boxShadow: active ? `0 16px 30px ${brand.shadow}` : 'none',
                       }}
                     >
-                      <p className="text-3xl mb-2">{emoji}</p>
-                      <p style={{ color: selected ? accent.text : '#334155', fontWeight: 800 }}>{label}</p>
+                      <p className="text-3xl mb-2">{item.emoji}</p>
+                      <p style={{ color: active ? brand.primaryDark : brand.text, fontWeight: 900 }}>{item.label}</p>
                     </button>
                   );
                 })}
@@ -269,69 +273,52 @@ export function OnboardingScreen() {
 
           {step === 1 && (
             <div className="space-y-4">
-              <IntroHeader
+              <SectionHeader
+                brand={brand}
                 eyebrow="שלב שני"
                 title="המצב הרפואי שלך"
-                subtitle="גיל, סוג סוכרת וסוג טיפול."
+                subtitle="רק מה שחשוב כדי לבנות מסך בית ותזכורות שמתאימים לך."
               />
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <FieldLabel text="גיל" />
-                  <input
-                    type="number"
-                    value={age}
-                    onChange={(event) => setAge(event.target.value)}
-                    dir="rtl"
-                    placeholder="62"
-                    min="1"
-                    max="120"
-                    className="w-full h-14 px-4 rounded-2xl text-right text-lg outline-none transition-all"
-                    style={inputStyle(Boolean(age))}
-                  />
+                  <FieldLabel text="גיל" brand={brand} />
+                  <TextInput value={age} onChange={setAge} placeholder="62" type="number" brand={brand} />
                 </div>
-
                 <div>
-                  <FieldLabel text="שנת אבחון" />
-                  <select
-                    value={diagnosisYear}
-                    onChange={(event) => setDiagnosisYear(event.target.value)}
-                    className="w-full h-14 px-4 rounded-2xl text-right text-base outline-none transition-all"
-                    style={inputStyle(Boolean(diagnosisYear))}
-                  >
+                  <FieldLabel text="שנת אבחון" brand={brand} />
+                  <SelectInput value={diagnosisYear} onChange={setDiagnosisYear} brand={brand}>
                     <option value="">לא חובה</option>
                     {yearOptions.map((year) => (
                       <option key={year} value={year}>
                         {year}
                       </option>
                     ))}
-                  </select>
+                  </SelectInput>
                 </div>
               </div>
 
-              <FieldLabel text="סוג סוכרת" />
+              <FieldLabel text="סוג סוכרת" brand={brand} />
               <div className="grid grid-cols-2 gap-3">
                 {(['1', '2'] as const).map((type) => (
                   <button
                     key={type}
                     onClick={() => setDiabetesType(type)}
-                    className="rounded-2xl p-4 text-right transition-all active:scale-[0.98]"
+                    className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
                     style={{
-                      border: `2px solid ${diabetesType === type ? BRAND.teal : '#EADFD2'}`,
-                      backgroundColor: diabetesType === type ? BRAND.soft : '#FFFDF9',
+                      border: `2px solid ${diabetesType === type ? brand.primary : '#E7DED3'}`,
+                      background: diabetesType === type ? brand.soft : '#FFFFFF',
                     }}
                   >
-                    <p style={{ color: diabetesType === type ? BRAND.teal : BRAND.text, fontWeight: 900, fontSize: 20 }}>
-                      סוג {type}
-                    </p>
-                    <p style={{ color: BRAND.muted, fontSize: 13, marginTop: 4, lineHeight: 1.6 }}>
+                    <p style={{ color: brand.text, fontWeight: 900, fontSize: 20 }}>סוג {type}</p>
+                    <p className="mt-2 text-sm" style={{ color: brand.muted, lineHeight: 1.6 }}>
                       {type === '1' ? 'לרוב תלוי באינסולין' : 'לרוב טיפול בכדורים או אורח חיים'}
                     </p>
                   </button>
                 ))}
               </div>
 
-              <FieldLabel text="סוג טיפול עיקרי" />
+              <FieldLabel text="סוג טיפול עיקרי" brand={brand} />
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { value: 'insulin' as TreatmentType, label: 'אינסולין' },
@@ -339,19 +326,13 @@ export function OnboardingScreen() {
                   { value: 'combined' as TreatmentType, label: 'שילוב' },
                   { value: 'lifestyle' as TreatmentType, label: 'אורח חיים' },
                 ].map((item) => (
-                  <button
+                  <ChoiceChip
                     key={item.value}
+                    label={item.label}
+                    active={treatmentType === item.value}
+                    brand={brand}
                     onClick={() => setTreatmentType(item.value)}
-                    className="rounded-2xl p-3.5 text-center transition-all active:scale-[0.98]"
-                    style={{
-                      border: `2px solid ${treatmentType === item.value ? BRAND.teal : '#EADFD2'}`,
-                      backgroundColor: treatmentType === item.value ? BRAND.soft : '#FAFCFD',
-                      color: treatmentType === item.value ? BRAND.teal : '#6B5B52',
-                      fontWeight: 800,
-                    }}
-                  >
-                    {item.label}
-                  </button>
+                  />
                 ))}
               </div>
             </div>
@@ -359,76 +340,53 @@ export function OnboardingScreen() {
 
           {step === 2 && (
             <div className="space-y-4">
-              <IntroHeader
+              <SectionHeader
+                brand={brand}
                 eyebrow="שלב שלישי"
-                title="יעדים ושעות"
-                subtitle="רק מה שצריך לתזכורות ולמדדים."
+                title="יעדים ושגרה"
+                subtitle="יעדי סוכר ושעות היום שלך כדי שהתזכורות יהיו פשוטות וברורות."
               />
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <FieldLabel text="יעד נמוך" />
-                  <input
-                    type="number"
-                    value={targetLow}
-                    onChange={(event) => setTargetLow(event.target.value)}
-                    dir="rtl"
-                    className="w-full h-14 px-4 rounded-2xl text-right text-lg outline-none"
-                    style={inputStyle(Boolean(targetLow))}
-                  />
+                  <FieldLabel text="יעד נמוך" brand={brand} />
+                  <TextInput value={targetLow} onChange={setTargetLow} type="number" brand={brand} />
                 </div>
-
                 <div>
-                  <FieldLabel text="יעד גבוה" />
-                  <input
-                    type="number"
-                    value={targetHigh}
-                    onChange={(event) => setTargetHigh(event.target.value)}
-                    dir="rtl"
-                    className="w-full h-14 px-4 rounded-2xl text-right text-lg outline-none"
-                    style={inputStyle(Boolean(targetHigh))}
-                  />
+                  <FieldLabel text="יעד גבוה" brand={brand} />
+                  <TextInput value={targetHigh} onChange={setTargetHigh} type="number" brand={brand} />
                 </div>
               </div>
 
               <div
                 className="rounded-[28px] p-4"
                 style={{
-                  backgroundColor: '#FFFDF9',
-                  border: `1px solid ${BRAND.border}`,
-                  boxShadow: '0 10px 26px rgba(156,126,111,0.08)',
+                  background: brand.soft,
+                  border: `1px solid ${brand.border}`,
                 }}
               >
                 <div className="text-right mb-3">
-                  <p style={{ color: BRAND.text, fontWeight: 900 }}>השגרה שלך</p>
-                  <p style={{ color: BRAND.muted, fontSize: 13, marginTop: 4 }}>
-                    השעות האלה ישמשו את התזכורות לאורך היום.
+                  <p style={{ color: brand.text, fontWeight: 900 }}>השגרה שלך</p>
+                  <p className="mt-1 text-sm" style={{ color: brand.muted, lineHeight: 1.7 }}>
+                    נשתמש בשעות האלה לתזכורות ולסדר היום באפליקציה.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <TimeFieldCard
-                    label="שעת קימה"
-                    value={wakeTime}
-                    onChange={setWakeTime}
-                  />
-                  <TimeFieldCard
-                    label="שעת שינה"
-                    value={sleepTime}
-                    onChange={setSleepTime}
-                  />
+                  <TimeFieldCard label="שעת קימה" value={wakeTime} onChange={setWakeTime} brand={brand} />
+                  <TimeFieldCard label="שעת שינה" value={sleepTime} onChange={setSleepTime} brand={brand} />
                 </div>
               </div>
-
             </div>
           )}
 
           {step === 3 && (
             <div className="space-y-4">
-              <IntroHeader
+              <SectionHeader
+                brand={brand}
                 eyebrow="שלב רביעי"
                 title="התרופות שלך"
-                subtitle="שם, שעה, סוג ומראה."
+                subtitle="שם, שעה ומראה, כדי שיהיה קל לזהות ולסמן לקיחה."
               />
 
               <div className="space-y-3">
@@ -436,7 +394,7 @@ export function OnboardingScreen() {
                   <div
                     key={medication.id}
                     className="rounded-[28px] p-4"
-                    style={{ backgroundColor: '#FFFDF9', border: `1px solid ${BRAND.border}` }}
+                    style={{ backgroundColor: '#FFFFFF', border: `1px solid ${brand.border}` }}
                   >
                     <div className="flex items-center justify-between mb-4">
                       <button
@@ -444,9 +402,9 @@ export function OnboardingScreen() {
                         disabled={medications.length === 1}
                         className="w-10 h-10 rounded-2xl flex items-center justify-center"
                         style={{
-                          backgroundColor: medications.length === 1 ? '#FAF5EF' : '#FFFFFF',
-                          color: medications.length === 1 ? '#D5C9BC' : BRAND.alert,
-                          border: `1px solid ${medications.length === 1 ? '#ECE1D6' : '#F2C8CE'}`,
+                          backgroundColor: '#FFFFFF',
+                          color: medications.length === 1 ? '#D6CBBF' : '#CC6677',
+                          border: `1px solid ${medications.length === 1 ? '#EEE5DB' : '#F2C8CE'}`,
                         }}
                         aria-label="מחק תרופה"
                       >
@@ -454,118 +412,72 @@ export function OnboardingScreen() {
                       </button>
 
                       <div className="text-right">
-                        <p style={{ color: BRAND.text, fontWeight: 900 }}>תרופה {index + 1}</p>
-                        <p style={{ color: BRAND.muted, fontSize: 13 }}>{medication.period}</p>
+                        <p style={{ color: brand.text, fontWeight: 900 }}>תרופה {index + 1}</p>
+                        <p className="text-sm" style={{ color: brand.muted }}>{medication.period}</p>
                       </div>
                     </div>
 
                     <div className="space-y-3">
-                      <input
-                        type="text"
+                      <TextInput
                         value={medication.name}
-                        onChange={(event) => updateMedication(medication.id, { name: event.target.value })}
+                        onChange={(value) => updateMedication(medication.id, { name: value })}
                         placeholder="שם התרופה"
-                        dir="rtl"
-                        className="w-full h-13 px-4 rounded-2xl text-right outline-none"
-                        style={compactInputStyle(Boolean(medication.name))}
+                        brand={brand}
                       />
 
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="relative">
-                          <Clock3
-                            size={16}
-                            strokeWidth={1.8}
-                            style={{
-                              position: 'absolute',
-                              left: 12,
-                              top: '50%',
-                              transform: 'translateY(-50%)',
-                              color: BRAND.muted,
-                            }}
-                          />
-                          <input
-                            type="time"
-                            value={medication.time}
-                            onChange={(event) => updateMedication(medication.id, { time: event.target.value })}
-                            className="w-full h-13 px-4 rounded-2xl text-right outline-none"
-                            style={compactInputStyle(Boolean(medication.time))}
-                          />
-                        </div>
-
-                        <input
-                          type="text"
+                        <TimeFieldCompact
+                          value={medication.time}
+                          onChange={(value) => updateMedication(medication.id, { time: value })}
+                          brand={brand}
+                        />
+                        <TextInput
                           value={medication.dosage}
-                          onChange={(event) => updateMedication(medication.id, { dosage: event.target.value })}
+                          onChange={(value) => updateMedication(medication.id, { dosage: value })}
                           placeholder="מינון"
-                          dir="rtl"
-                          className="w-full h-13 px-4 rounded-2xl text-right outline-none"
-                          style={compactInputStyle(Boolean(medication.dosage))}
+                          brand={brand}
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
-                        {[
-                          { value: 'pill' as const, label: 'כדור', icon: <Pill size={16} /> },
-                          { value: 'injection' as const, label: 'זריקה', icon: <Shield size={16} /> },
-                        ].map((option) => (
-                          <button
-                            key={option.value}
-                            onClick={() =>
-                              updateMedication(medication.id, {
-                                type: option.value,
-                                image: option.value === 'injection' ? '💉' : medication.image,
-                                appearanceLabel:
-                                  option.value === 'injection' ? 'עט אינסולין' : medication.appearanceLabel,
-                              })
-                            }
-                            className="rounded-2xl py-3 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-                            style={{
-                              border: `2px solid ${medication.type === option.value ? BRAND.teal : '#EADFD2'}`,
-                              backgroundColor: medication.type === option.value ? BRAND.soft : '#FFFFFF',
-                              color: medication.type === option.value ? BRAND.teal : '#6E5E56',
-                              fontWeight: 800,
-                            }}
-                          >
-                            {option.icon}
-                            <span>{option.label}</span>
-                          </button>
-                        ))}
+                        <ChoiceChip
+                          label="כדור"
+                          active={medication.type === 'pill'}
+                          brand={brand}
+                          icon={<Pill size={16} />}
+                          onClick={() => updateMedication(medication.id, { type: 'pill' })}
+                        />
+                        <ChoiceChip
+                          label="זריקה"
+                          active={medication.type === 'injection'}
+                          brand={brand}
+                          icon={<Shield size={16} />}
+                          onClick={() => updateMedication(medication.id, { type: 'injection', image: '💉', appearanceLabel: 'עט אינסולין' })}
+                        />
                       </div>
 
-                      <div>
-                        <FieldLabel text="מראה התרופה" />
-                        <div className="grid grid-cols-2 gap-3">
-                          {MED_VISUALS.map((visual) => {
-                            const active = medication.appearanceLabel === visual.label;
-                            return (
-                              <button
-                                key={visual.value}
-                                onClick={() =>
-                                  updateMedication(medication.id, {
-                                    image: visual.symbol,
-                                    appearanceLabel: visual.label,
-                                  })
-                                }
-                                className="rounded-2xl p-4 text-center transition-all active:scale-[0.98]"
-                                style={{
-                                  border: `2px solid ${active ? BRAND.teal : '#EADFD2'}`,
-                                  backgroundColor: active ? BRAND.soft : '#FFFFFF',
-                                  boxShadow: active ? '0 10px 18px rgba(201,133,159,0.12)' : 'none',
-                                }}
+                      <div className="grid grid-cols-2 gap-3">
+                        {MED_VISUALS.map((visual) => (
+                          <button
+                            key={visual.value}
+                            onClick={() => updateMedication(medication.id, { image: visual.symbol, appearanceLabel: visual.label })}
+                            className="rounded-[24px] p-3 text-right transition-all active:scale-[0.98]"
+                            style={{
+                              border: `2px solid ${medication.appearanceLabel === visual.label ? brand.primary : '#E7DED3'}`,
+                              background: medication.appearanceLabel === visual.label ? brand.soft : '#FFFFFF',
+                            }}
+                          >
+                            <div className="flex items-center justify-start gap-3">
+                              <div
+                                className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                                style={{ backgroundColor: `${visual.color}18`, color: visual.color }}
                               >
-                                <div className="flex flex-col items-center justify-center gap-3">
-                                  <div
-                                    className="w-12 h-12 rounded-full flex items-center justify-center"
-                                    style={{ backgroundColor: `${visual.color}18`, color: visual.color }}
-                                  >
-                                    <span style={{ fontSize: 22 }}>{visual.symbol}</span>
-                                  </div>
-                                  <p style={{ fontWeight: 800, color: BRAND.text }}>{visual.label}</p>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
+                                <span style={{ fontSize: 20 }}>{visual.symbol}</span>
+                              </div>
+                              <p style={{ color: brand.text, fontWeight: 800 }}>{visual.label}</p>
+                            </div>
+                          </button>
+                        ))}
                       </div>
 
                       <textarea
@@ -573,11 +485,13 @@ export function OnboardingScreen() {
                         onChange={(event) => updateMedication(medication.id, { notes: event.target.value })}
                         placeholder="הערה קצרה, למשל: לקחת עם אוכל"
                         dir="rtl"
-                        className="w-full px-4 py-3 rounded-2xl text-right outline-none"
+                        className="w-full px-4 py-3 rounded-[22px] text-right outline-none"
                         style={{
-                          ...compactInputStyle(Boolean(medication.notes)),
-                          minHeight: 88,
+                          minHeight: 90,
                           resize: 'none',
+                          backgroundColor: '#FFFFFF',
+                          border: `1px solid ${brand.border}`,
+                          color: brand.text,
                         }}
                       />
                     </div>
@@ -587,83 +501,90 @@ export function OnboardingScreen() {
 
               <button
                 onClick={addMedication}
-                className="w-full h-12 rounded-2xl flex items-center justify-center gap-2"
+                className="w-full h-12 rounded-[22px] flex items-center justify-center gap-2"
                 style={{
-                  backgroundColor: BRAND.soft,
-                  color: BRAND.teal,
-                  border: `1px solid ${BRAND.border}`,
+                  background: brand.soft,
+                  color: brand.primaryDark,
+                  border: `1px solid ${brand.border}`,
                   fontWeight: 800,
                 }}
               >
                 <Plus size={18} />
-                הוספת תרופה נוספת
+                <span>הוסף תרופה נוספת</span>
               </button>
             </div>
           )}
 
           {step === 4 && (
             <div className="space-y-4">
-              <IntroHeader
+              <SectionHeader
+                brand={brand}
                 eyebrow="שלב חמישי"
                 title="איש קשר לחירום"
-                subtitle="למקרה שצריך עזרה."
+                subtitle="כדי שנוכל לעזור מהר יותר במצב דחוף."
               />
 
-              <FieldLabel text="שם איש קשר" />
-              <input
-                type="text"
+              <FieldLabel text="שם איש קשר" brand={brand} />
+              <TextInput
                 value={emergencyName}
-                onChange={(event) => setEmergencyName(event.target.value)}
+                onChange={setEmergencyName}
                 placeholder="אמא, בן זוג, נכד/ה..."
-                dir="rtl"
-                className="w-full h-14 px-4 rounded-2xl text-right text-lg outline-none"
-                style={inputStyle(Boolean(emergencyName))}
+                brand={brand}
               />
 
-              <FieldLabel text="טלפון איש קשר" />
-              <input
-                type="tel"
+              <FieldLabel text="טלפון איש קשר" brand={brand} />
+              <TextInput
                 value={emergencyPhone}
-                onChange={(event) => setEmergencyPhone(event.target.value)}
+                onChange={setEmergencyPhone}
                 placeholder="0501234567"
-                dir="rtl"
-                className="w-full h-14 px-4 rounded-2xl text-right text-lg outline-none"
-                style={inputStyle(Boolean(emergencyPhone))}
+                type="tel"
+                brand={brand}
               />
 
-              <FieldLabel text="הודעת בסיס לחירום" />
+              <FieldLabel text="הודעת בסיס לחירום" brand={brand} />
               <textarea
                 value={emergencyMessage}
                 onChange={(event) => setEmergencyMessage(event.target.value)}
                 dir="rtl"
-                className="w-full px-4 py-3 rounded-2xl text-right text-base outline-none"
-                style={{ ...inputStyle(Boolean(emergencyMessage)), minHeight: 100, resize: 'none' }}
+                className="w-full px-4 py-3 rounded-[24px] text-right outline-none"
+                style={{
+                  minHeight: 108,
+                  resize: 'none',
+                  backgroundColor: '#FFFFFF',
+                  border: `1px solid ${brand.border}`,
+                  color: brand.text,
+                  fontWeight: 700,
+                }}
               />
 
               <div
-                className="rounded-3xl p-4"
-                style={{ background: 'linear-gradient(135deg, #FFF7F2, #FBF2EA)', border: `1px solid ${BRAND.border}` }}
+                className="rounded-[28px] p-4"
+                style={{ background: brand.soft, border: `1px solid ${brand.border}` }}
               >
-                <p style={{ color: BRAND.tealDark, fontWeight: 900 }}>סיכום קצר</p>
-                <p style={{ color: BRAND.muted, marginTop: 8, lineHeight: 1.7 }}>
-                  {diabetesType ? `סוכרת סוג ${diabetesType}` : 'סוכרת'} · {getTreatmentLabel(treatmentType)} · יעד {targetLow}-{targetHigh}
+                <p style={{ color: brand.primaryDark, fontWeight: 900 }}>סיכום קצר</p>
+                <p className="mt-2 text-sm leading-7" style={{ color: brand.muted }}>
+                  סוכרת סוג {diabetesType || '—'} · {getTreatmentLabel(treatmentType)} · יעד {targetLow}-{targetHigh}
                 </p>
               </div>
             </div>
           )}
 
           <button
-            onClick={goNext}
+            onClick={() => {
+              if (step === totalSteps - 1) {
+                finish();
+                return;
+              }
+              setStep((current) => current + 1);
+            }}
             disabled={!canNext}
-            className="w-full h-14 rounded-2xl mt-6 flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98]"
+            className="w-full h-14 rounded-[24px] mt-6 flex items-center justify-center gap-2 transition-all duration-300 active:scale-[0.98] disabled:opacity-60"
             style={{
-              background: canNext
-                ? 'linear-gradient(135deg, #D29AB0 0%, #9A6A7C 100%)'
-                : '#E5E7EB',
-              color: canNext ? '#FFFFFF' : '#B1A296',
+              background: brand.strong,
+              color: '#FFFFFF',
               fontWeight: 900,
               fontSize: '1rem',
-              boxShadow: canNext ? '0 18px 34px rgba(162,120,135,0.24)' : 'none',
+              boxShadow: canNext ? `0 18px 36px ${brand.shadow}` : 'none',
             }}
           >
             {step === totalSteps - 1 ? (
@@ -683,7 +604,7 @@ export function OnboardingScreen() {
             <button
               onClick={() => setStep((current) => current - 1)}
               className="w-full mt-3 h-10 text-sm transition-colors"
-              style={{ color: BRAND.muted, fontWeight: 800 }}
+              style={{ color: brand.muted, fontWeight: 800 }}
             >
               חזרה לשלב הקודם
             </button>
@@ -694,119 +615,185 @@ export function OnboardingScreen() {
   );
 }
 
-function FieldLabel({ text }: { text: string }) {
-  return (
-    <label className="block text-sm text-right mb-2" style={{ color: BRAND.muted, fontWeight: 800 }}>
-      {text}
-    </label>
-  );
-}
-
-function IntroHeader({
+function SectionHeader({
   eyebrow,
   title,
   subtitle,
+  brand,
 }: {
   eyebrow: string;
   title: string;
   subtitle: string;
+  brand: typeof FEMALE_BRAND;
 }) {
   return (
     <div className="text-center">
-      <p style={{ color: BRAND.teal, fontWeight: 900, fontSize: 13, letterSpacing: '0.08em' }}>
-        {eyebrow}
-      </p>
-      <h2
-        className="text-[30px] leading-tight mt-2"
-        style={{ color: BRAND.text, fontWeight: 900, letterSpacing: '-0.03em' }}
-      >
+      <p style={{ color: brand.primary, fontWeight: 900, fontSize: 13, letterSpacing: '0.08em' }}>{eyebrow}</p>
+      <h2 className="text-[30px] leading-tight mt-2" style={{ color: brand.text, fontWeight: 900, letterSpacing: '-0.03em' }}>
         {title}
       </h2>
-      <p className="text-sm mt-2" style={{ color: BRAND.muted, lineHeight: 1.8 }}>
+      <p className="text-sm mt-2" style={{ color: brand.muted, lineHeight: 1.8 }}>
         {subtitle}
       </p>
     </div>
   );
 }
 
-function OnboardingLogo() {
+function FieldLabel({ text, brand }: { text: string; brand: typeof FEMALE_BRAND }) {
   return (
-    <div className="flex flex-col items-center gap-3">
-      <div
-        className="w-24 h-24 rounded-[30px] flex items-center justify-center"
-        style={{
-          background: 'linear-gradient(135deg, #FFFDF9 0%, #FFF5EF 100%)',
-          border: `1px solid ${BRAND.border}`,
-          boxShadow: '0 18px 36px rgba(156,126,111,0.14)',
-          color: BRAND.tealDark,
-        }}
-      >
-        <Logo size={70} />
-      </div>
-
-      <div className="text-center">
-        <h1 className="text-[30px]" style={{ color: BRAND.text, fontWeight: 900, letterSpacing: '-0.03em' }}>
-          הסוכרת שלי
-        </h1>
-        <p className="text-sm mt-1" style={{ color: BRAND.muted, fontWeight: 700 }}>
-          ניהול סוכרת פשוט וברור
-        </p>
-      </div>
-    </div>
+    <label className="block text-sm text-right mb-2" style={{ color: brand.muted, fontWeight: 800 }}>
+      {text}
+    </label>
   );
 }
 
-function inputStyle(active: boolean) {
-  return {
-    border: `2px solid ${active ? '#E3C0CB' : '#EADFD2'}`,
-    backgroundColor: active ? '#FFF2F3' : '#FFFDF9',
-    color: BRAND.text,
-    fontWeight: 700,
-  };
+function TextInput({
+  value,
+  onChange,
+  placeholder,
+  brand,
+  type = 'text',
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  brand: typeof FEMALE_BRAND;
+  type?: string;
+}) {
+  return (
+    <input
+      type={type}
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      dir="rtl"
+      className="w-full h-14 px-4 rounded-[22px] text-right outline-none transition-all"
+      style={{
+        border: `1.5px solid ${value ? brand.primary : brand.border}`,
+        backgroundColor: '#FFFFFF',
+        color: brand.text,
+        fontWeight: 700,
+      }}
+    />
+  );
 }
 
-function compactInputStyle(active: boolean) {
-  return {
-    border: `2px solid ${active ? '#E3C0CB' : '#EADFD2'}`,
-    backgroundColor: '#FFFFFF',
-    color: BRAND.text,
-    fontWeight: 700,
-  };
+function SelectInput({
+  value,
+  onChange,
+  brand,
+  children,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  brand: typeof FEMALE_BRAND;
+  children: ReactNode;
+}) {
+  return (
+    <select
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      className="w-full h-14 px-4 rounded-[22px] text-right outline-none transition-all"
+      style={{
+        border: `1.5px solid ${value ? brand.primary : brand.border}`,
+        backgroundColor: '#FFFFFF',
+        color: brand.text,
+        fontWeight: 700,
+      }}
+    >
+      {children}
+    </select>
+  );
+}
+
+function ChoiceChip({
+  label,
+  active,
+  onClick,
+  brand,
+  icon,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+  brand: typeof FEMALE_BRAND;
+  icon?: ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className="rounded-[22px] px-4 py-3 flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+      style={{
+        border: `1.5px solid ${active ? brand.primary : '#E7DED3'}`,
+        background: active ? brand.soft : '#FFFFFF',
+        color: active ? brand.primaryDark : brand.text,
+        fontWeight: 800,
+      }}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
 }
 
 function TimeFieldCard({
   label,
   value,
   onChange,
+  brand,
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  brand: typeof FEMALE_BRAND;
 }) {
   return (
     <div
-      className="rounded-3xl p-3"
-      style={{
-        backgroundColor: '#FFFFFF',
-        border: `1px solid ${BRAND.border}`,
-      }}
+      className="rounded-[26px] p-3"
+      style={{ backgroundColor: '#FFFFFF', border: `1px solid ${brand.border}` }}
     >
-      <div className="flex flex-row-reverse items-center justify-between mb-2">
-        <span style={{ color: BRAND.muted, fontSize: 13, fontWeight: 800 }}>{label}</span>
-        <span style={{ color: BRAND.muted }}>🕒</span>
+      <div className="flex items-center justify-between mb-2">
+        <Clock3 size={16} strokeWidth={1.9} style={{ color: brand.muted }} />
+        <span style={{ color: brand.muted, fontSize: 13, fontWeight: 800 }}>{label}</span>
       </div>
       <input
         type="time"
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="w-full h-12 rounded-2xl text-center text-lg outline-none"
+        className="w-full h-12 rounded-[18px] text-center text-lg outline-none"
         style={{
-          border: '1px solid #EADFD2',
-          backgroundColor: '#FAFCFD',
-          color: BRAND.text,
+          border: `1px solid ${brand.border}`,
+          backgroundColor: brand.secondary,
+          color: brand.text,
           fontWeight: 800,
           direction: 'ltr',
         }}
+      />
+    </div>
+  );
+}
+
+function TimeFieldCompact({
+  value,
+  onChange,
+  brand,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  brand: typeof FEMALE_BRAND;
+}) {
+  return (
+    <div
+      className="rounded-[22px] px-4 h-14 flex items-center justify-between"
+      style={{ border: `1px solid ${brand.border}`, backgroundColor: '#FFFFFF' }}
+    >
+      <Clock3 size={16} strokeWidth={1.9} style={{ color: brand.muted }} />
+      <input
+        type="time"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="bg-transparent outline-none text-lg text-center"
+        style={{ color: brand.text, fontWeight: 800, direction: 'ltr' }}
       />
     </div>
   );
