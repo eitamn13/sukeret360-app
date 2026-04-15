@@ -91,33 +91,33 @@ export interface Theme {
 }
 
 export const FEMALE_THEME: Theme = {
-  primary: '#E11D48',
-  primaryDark: '#BE123C',
-  primaryLight: '#9F1239',
-  primaryBorder: '#FECDD3',
-  primaryBg: '#FFF1F2',
-  primaryShadow: 'rgba(225,29,72,0.35)',
-  primaryMuted: '#FDA4AF',
-  gradientCard: 'linear-gradient(135deg, #E11D48 0%, #BE123C 55%, #9F1239 100%)',
-  gradientFull: 'linear-gradient(160deg, #FFF1F2 0%, #FFE4E6 60%, #FECDD3 100%)',
-  headerBg: 'rgba(255,241,242,0.94)',
-  headerBorder: '#FECDD3',
-  headerShadow: '0 2px 16px rgba(225,29,72,0.08)',
+  primary: '#0F766E',
+  primaryDark: '#115E59',
+  primaryLight: '#155E75',
+  primaryBorder: '#D5E8E4',
+  primaryBg: '#F3FBFA',
+  primaryShadow: 'rgba(15,118,110,0.18)',
+  primaryMuted: '#6A8F89',
+  gradientCard: 'linear-gradient(135deg, #0F766E 0%, #155E75 52%, #1E3A5F 100%)',
+  gradientFull: 'linear-gradient(180deg, #F7FBFD 0%, #EEF7F7 55%, #F7FBFA 100%)',
+  headerBg: 'rgba(247,251,253,0.92)',
+  headerBorder: '#DCEBE8',
+  headerShadow: '0 8px 24px rgba(15,23,42,0.05)',
 };
 
 export const MALE_THEME: Theme = {
-  primary: '#1D4ED8',
-  primaryDark: '#1E40AF',
-  primaryLight: '#1E3A8A',
-  primaryBorder: '#BFDBFE',
-  primaryBg: '#EFF6FF',
-  primaryShadow: 'rgba(29,78,216,0.35)',
-  primaryMuted: '#93C5FD',
-  gradientCard: 'linear-gradient(135deg, #1D4ED8 0%, #1E40AF 55%, #1E3A8A 100%)',
-  gradientFull: 'linear-gradient(160deg, #EFF6FF 0%, #DBEAFE 60%, #BFDBFE 100%)',
-  headerBg: 'rgba(239,246,255,0.94)',
-  headerBorder: '#BFDBFE',
-  headerShadow: '0 2px 16px rgba(29,78,216,0.08)',
+  primary: '#155E75',
+  primaryDark: '#164E63',
+  primaryLight: '#1D4ED8',
+  primaryBorder: '#D7E7EE',
+  primaryBg: '#F4FAFD',
+  primaryShadow: 'rgba(21,94,117,0.2)',
+  primaryMuted: '#688399',
+  gradientCard: 'linear-gradient(135deg, #155E75 0%, #1D4ED8 52%, #1E3A8A 100%)',
+  gradientFull: 'linear-gradient(180deg, #F7FBFD 0%, #EEF5FB 55%, #F5FAFD 100%)',
+  headerBg: 'rgba(247,251,253,0.92)',
+  headerBorder: '#DCE8F2',
+  headerShadow: '0 8px 24px rgba(15,23,42,0.05)',
 };
 
 const DEFAULT_PROFILE: UserProfile = {
@@ -136,7 +136,7 @@ const DEFAULT_PROFILE: UserProfile = {
 const DEFAULT_CONTACT: EmergencyContact = {
   name: '',
   phone: '',
-  message: 'אני צריכ/ה עזרה דחופה. זה המיקום שלי:',
+  message: 'אני צריך/ה עזרה דחופה. זה המיקום שלי:',
 };
 
 const DEFAULT_MEDS: MedicationScheduleItem[] = [
