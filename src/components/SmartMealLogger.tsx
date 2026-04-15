@@ -18,6 +18,15 @@ type SelectedMealFood = DetectedFood & {
   note?: string;
 };
 
+type SuitabilitySummary = {
+  label: string;
+  title: string;
+  body: string;
+  tone: string;
+  bg: string;
+  border: string;
+};
+
 function normalizeFoodName(value: string) {
   return value
     .toLowerCase()
@@ -67,6 +76,107 @@ function mealInsight(totalCarbs: number, totalCalories: number) {
   };
 }
 
+function getFoodSuitability(food: Pick<SelectedMealFood, 'carbs' | 'calories' | 'name'>, match?: FoodDatabaseItem): SuitabilitySummary {
+  const category = match?.category ?? '';
+  const normalizedName = normalizeFoodName(food.name);
+  const isProcessedSnack =
+    category === 'חטיפים' ||
+    normalizedName.includes('דוריטוס') ||
+    normalizedName.includes('חטיף') ||
+    normalizedName.includes('צ יפס') ||
+    normalizedName.includes('צ׳יפס') ||
+    normalizedName.includes('שוקולד');
+
+  const isVeryFriendly =
+    category === 'ירקות' ||
+    category === 'חלבון' ||
+    category === 'שומנים טובים' ||
+    (food.carbs <= 8 && food.calories <= 180);
+
+  if (isProcessedSnack || food.carbs >= 28 || food.calories >= 320) {
+    return {
+      label: 'פחות מתאים',
+      title: 'פחות מתאים לחולי סוכרת',
+      body: 'כנראה שיש כאן עומס פחמימות או מזון מעובד, ולכן עדיף לאכול מעט או לבחור חלופה טובה יותר.',
+      tone: '#B91C1C',
+      bg: '#FEF2F2',
+      border: '#FECACA',
+    };
+  }
+
+  if (isVeryFriendly) {
+    return {
+      label: 'מתאים יחסית',
+      title: 'מתאים יחסית לחולי סוכרת',
+      body: 'נראה שמדובר בפריט נוח יותר לאיזון, במיוחד אם הכמות אכן דומה למה שמופיע במסך.',
+      tone: '#15803D',
+      bg: '#F0FDF4',
+      border: '#BBF7D0',
+    };
+  }
+
+  return {
+    label: 'בכמות מדודה',
+    title: 'אפשרי, אבל בכמות מדודה',
+    body: 'אפשר לשלב את הפריט הזה, אבל כדאי לשים לב לכמות ולשלב חלבון, ירקות או סיבים.',
+    tone: '#B45309',
+    bg: '#FFFBEB',
+    border: '#FDE68A',
+  };
+}
+
+function getMealSuitability(selectedFoods: SelectedMealFood[], totalCarbs: number, totalCalories: number): SuitabilitySummary {
+  if (!selectedFoods.length) {
+    return {
+      label: 'ממתין לניתוח',
+      title: 'עדיין אין מספיק מידע',
+      body: 'אחרי שנזהה או נוסיף מזון, נראה כאן האם הארוחה מתאימה יותר לחולי סוכרת.',
+      tone: '#475569',
+      bg: '#F8FAFC',
+      border: '#E2E8F0',
+    };
+  }
+
+  const foodScores = selectedFoods.map((food) => {
+    const match = findFoodTemplateByName(food.name);
+    return getFoodSuitability(food, match);
+  });
+
+  const lessSuitableCount = foodScores.filter((item) => item.label === 'פחות מתאים').length;
+  const cautiousCount = foodScores.filter((item) => item.label === 'בכמות מדודה').length;
+
+  if (lessSuitableCount > 0 || totalCarbs >= 50 || totalCalories >= 650) {
+    return {
+      label: 'דורש זהירות',
+      title: 'הארוחה פחות מתאימה כרגע',
+      body: 'יש כאן עומס יחסית גבוה. עדיף להקטין כמות, להפחית חטיפים או להוסיף מרכיב משביע כמו חלבון וירקות.',
+      tone: '#B91C1C',
+      bg: '#FEF2F2',
+      border: '#FECACA',
+    };
+  }
+
+  if (cautiousCount > 0 || totalCarbs > 20) {
+    return {
+      label: 'כדאי לשים לב',
+      title: 'הארוחה סבירה, אבל בכמות מדודה',
+      body: 'הארוחה יכולה להתאים, אבל מומלץ לעקוב אחרי הכמות ולשלב רכיבים שממתנים עלייה בסוכר.',
+      tone: '#B45309',
+      bg: '#FFFBEB',
+      border: '#FDE68A',
+    };
+  }
+
+  return {
+    label: 'נראית מאוזנת',
+    title: 'הארוחה נראית מתאימה יחסית',
+    body: 'לפי הזיהוי והכמות המשוערת, הארוחה נראית מאוזנת יותר לחולי סוכרת.',
+    tone: '#15803D',
+    bg: '#F0FDF4',
+    border: '#BBF7D0',
+  };
+}
+
 function findFoodTemplateByName(name: string) {
   const normalizedName = normalizeFoodName(name);
 
@@ -110,6 +220,10 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
     [selectedFoods]
   );
   const insight = useMemo(() => mealInsight(totalCarbs, totalCalories), [totalCarbs, totalCalories]);
+  const mealSuitability = useMemo(
+    () => getMealSuitability(selectedFoods, totalCarbs, totalCalories),
+    [selectedFoods, totalCarbs, totalCalories]
+  );
 
   const databaseResults = useMemo(() => {
     const query = foodSearch.trim().toLowerCase();
@@ -273,7 +387,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
         >
           <OverlayHeader
             title="רישום ארוחה"
-            subtitle="צילום, מאגר מזון וסיכום של פחמימות וקלוריות"
+            subtitle={step === 2 ? 'צילום קטן, ניתוח ברור והתאמה לחולי סוכרת' : 'צילום, מאגר מזון וסיכום של פחמימות וקלוריות'}
             theme={theme}
             onBack={() => (step > 0 ? setStep(step - 1) : onClose())}
             onClose={onClose}
@@ -443,13 +557,29 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-3xl p-4" style={{ backgroundColor: insight.bg, border: `1px solid ${insight.border}` }}>
-                    <p style={{ color: insight.tone, fontWeight: 900, fontSize: 19 }}>{insight.title}</p>
-                    <p style={{ color: insight.tone, opacity: 0.92, marginTop: 8, lineHeight: 1.6 }}>{insight.body}</p>
+                    <div className="rounded-3xl p-4" style={{ backgroundColor: mealSuitability.bg, border: `1px solid ${mealSuitability.border}` }}>
+                    <div className="flex items-center justify-between gap-3">
+                      <span
+                        className="px-3 py-1 rounded-full text-xs"
+                        style={{ backgroundColor: '#FFFFFF', color: mealSuitability.tone, fontWeight: 900, border: `1px solid ${mealSuitability.border}` }}
+                      >
+                        {mealSuitability.label}
+                      </span>
+                      <p style={{ color: mealSuitability.tone, fontWeight: 900, fontSize: 13 }}>התאמה לחולי סוכרת</p>
+                    </div>
+                    <p style={{ color: mealSuitability.tone, fontWeight: 900, fontSize: 20, marginTop: 10 }}>{mealSuitability.title}</p>
+                    <p style={{ color: mealSuitability.tone, opacity: 0.94, marginTop: 8, lineHeight: 1.75 }}>{mealSuitability.body}</p>
+                    <div
+                      className="mt-3 rounded-2xl px-3.5 py-3"
+                      style={{ backgroundColor: '#FFFFFF', border: `1px solid ${mealSuitability.border}` }}
+                    >
+                      <p style={{ color: insight.tone, fontWeight: 800, fontSize: 15 }}>{insight.title}</p>
+                      <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.65, fontSize: 13.5 }}>{insight.body}</p>
+                    </div>
                     <div className="grid grid-cols-3 gap-3 mt-4">
-                      <MetricCard label="פחמימות" value={`${totalCarbs}`} color={insight.tone} border={insight.border} />
-                      <MetricCard label="קלוריות" value={`${totalCalories}`} color={insight.tone} border={insight.border} />
-                      <MetricCard label="פריטים" value={`${selectedFoods.length}`} color={insight.tone} border={insight.border} />
+                      <MetricCard label="פחמימות" value={`${totalCarbs}`} color={mealSuitability.tone} border={mealSuitability.border} />
+                      <MetricCard label="קלוריות" value={`${totalCalories}`} color={mealSuitability.tone} border={mealSuitability.border} />
+                      <MetricCard label="פריטים" value={`${selectedFoods.length}`} color={mealSuitability.tone} border={mealSuitability.border} />
                     </div>
                   </div>
 
@@ -657,6 +787,9 @@ function MetricCard({ label, value, color, border }: { label: string; value: str
 }
 
 function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => void }) {
+  const match = findFoodTemplateByName(food.name);
+  const suitability = getFoodSuitability(food, match);
+
   return (
     <div className="rounded-2xl p-3 flex items-start gap-3" style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
       <button
@@ -676,6 +809,12 @@ function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => v
           <div className="flex-1">
             <p style={{ fontWeight: 800, color: '#0F172A', fontSize: 17 }}>{food.name}</p>
             <div className="mt-1 flex flex-wrap justify-end gap-2">
+              <span
+                className="px-3 py-1.5 rounded-full text-[13px]"
+                style={{ backgroundColor: suitability.bg, color: suitability.tone, fontWeight: 800, border: `1px solid ${suitability.border}` }}
+              >
+                {suitability.label}
+              </span>
               {(food.confidence ?? 1) < 0.72 && (
                 <span className="px-3 py-1.5 rounded-full text-[13px]" style={{ backgroundColor: '#FEF3C7', color: '#B45309', fontWeight: 800 }}>
                   דורש בדיקה
@@ -697,6 +836,12 @@ function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => v
             {food.note && <div>{food.note}</div>}
           </div>
         )}
+
+        {!food.note && (
+          <div className="mt-2 text-sm text-right" style={{ color: '#64748B', lineHeight: 1.6 }}>
+            {suitability.body}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -713,6 +858,15 @@ function FoodDatabaseRow({
   themeColor: string;
   themeBg: string;
 }) {
+  const suitability = getFoodSuitability(
+    {
+      name: item.name,
+      carbs: item.carbs,
+      calories: item.calories,
+    },
+    item
+  );
+
   return (
     <button
       onClick={onAdd}
@@ -726,6 +880,12 @@ function FoodDatabaseRow({
 
         <div className="flex-1">
           <div className="flex flex-wrap justify-end gap-2 mb-2">
+            <span
+              className="px-2 py-1 rounded-full text-xs"
+              style={{ backgroundColor: suitability.bg, color: suitability.tone, fontWeight: 700, border: `1px solid ${suitability.border}` }}
+            >
+              {suitability.label}
+            </span>
             <span className="px-2 py-1 rounded-full text-xs" style={{ backgroundColor: '#FFF7ED', color: '#C2410C', fontWeight: 700 }}>
               {item.calories} קל׳
             </span>
