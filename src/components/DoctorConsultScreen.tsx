@@ -371,29 +371,31 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
             boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
           }}
         >
-          <div className="flex items-center justify-end gap-2">
-            <p style={{ color: '#0F172A', fontWeight: 900 }}>במה אפשר לעזור עכשיו?</p>
-            <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
-              style={{ background: theme.gradientCard, color: '#FFFFFF' }}
-            >
-              <Sparkles size={17} strokeWidth={1.8} />
-            </div>
-          </div>
-          <div className="mt-3 flex flex-row-reverse flex-wrap justify-start gap-2">
-            {['סוכר', 'תרופות', 'אוכל', 'תסמינים'].map((item) => (
-              <span
-                key={item}
-                className="px-3 py-1.5 rounded-full text-sm"
-                style={{
-                  backgroundColor: theme.primaryBg,
-                  color: theme.primary,
-                  fontWeight: 800,
-                }}
+          <div className="flex w-full flex-col items-end text-right">
+            <div className="flex flex-row-reverse items-center gap-2">
+              <div
+                className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ background: theme.gradientCard, color: '#FFFFFF' }}
               >
-                {item}
-              </span>
-            ))}
+                <Sparkles size={17} strokeWidth={1.8} />
+              </div>
+              <p style={{ color: '#0F172A', fontWeight: 900 }}>במה אפשר לעזור עכשיו?</p>
+            </div>
+            <div className="mt-3 flex w-full flex-wrap justify-end gap-2">
+              {['סוכר', 'תרופות', 'אוכל', 'תסמינים'].map((item) => (
+                <span
+                  key={item}
+                  className="px-3 py-1.5 rounded-full text-sm"
+                  style={{
+                    backgroundColor: theme.primaryBg,
+                    color: theme.primary,
+                    fontWeight: 800,
+                  }}
+                >
+                  {item}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 

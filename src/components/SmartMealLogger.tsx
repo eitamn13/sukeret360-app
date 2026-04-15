@@ -406,7 +406,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-3 sm:space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]">
+        <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-3 sm:space-y-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
           {errorMessage && (
             <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
               {errorMessage}
@@ -556,7 +556,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                   </div>
                 </div>
 
-                <div className="space-y-3 pb-24">
+                <div className="space-y-3">
                     <div className="rounded-[26px] p-3.5" style={{ backgroundColor: mealSuitability.bg, border: `1px solid ${mealSuitability.border}` }}>
                     <div className="flex items-center justify-between gap-3">
                       <span
@@ -703,10 +703,10 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               </div>
 
               <div
-                className="sticky bottom-0 flex flex-col gap-3 sm:flex-row pt-2"
+                className="flex flex-col gap-3 sm:flex-row pt-3 pb-1"
                 style={{
-                  background: 'linear-gradient(180deg, rgba(248,250,252,0) 0%, rgba(248,250,252,0.98) 28%, rgba(248,250,252,0.98) 100%)',
-                  paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))',
+                  marginTop: '0.5rem',
+                  paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
                 }}
               >
                 <button
