@@ -7,10 +7,11 @@ import {
   useState,
 } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { isSupabaseConfigured, supabase } from '../lib/supabase';
+import { isSupabaseConfigured, supabase, syncAuthenticatedUser } from '../lib/supabase';
 
 interface AuthContextValue {
   authEnabled: boolean;
+  isAdmin: boolean;
   loading: boolean;
   user: User | null;
   session: Session | null;
@@ -28,6 +29,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(isSupabaseConfigured);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const adminEmails = useMemo(
+    () =>
+      (import.meta.env.VITE_ADMIN_EMAILS ?? '')
+        .split(',')
+        .map((value: string) => value.trim().toLowerCase())
+        .filter(Boolean),
+    []
+  );
 
   useEffect(() => {
     if (!supabase) {
@@ -42,6 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
       setLoading(false);
+
+      if (data.session?.user) {
+        void syncAuthenticatedUser(data.session.user);
+      }
     });
 
     const {
@@ -50,6 +63,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       setLoading(false);
+
+      if (nextSession?.user) {
+        void syncAuthenticatedUser(nextSession.user);
+      }
     });
 
     return () => {
@@ -104,6 +121,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       authEnabled: isSupabaseConfigured,
+      isAdmin: Boolean(user?.email && adminEmails.includes(user.email.toLowerCase())),
       loading,
       user,
       session,
@@ -111,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signUp,
       signOut,
     }),
-    [loading, user, session]
+    [adminEmails, loading, user, session]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

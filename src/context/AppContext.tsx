@@ -266,6 +266,22 @@ function buildMedicationAlertMessage(
   return `${displayName} עדיין לא ${markedWord} שלקח/ה את ${medication.name}${appearance} של ${medication.period}, שנקבעה לשעה ${medication.time}.`;
 }
 
+function buildLocationSuffix(savedLocation: SavedLocation | null) {
+  if (!savedLocation) return '';
+  return ` מיקום אחרון: https://maps.google.com/?q=${savedLocation.lat},${savedLocation.lng}`;
+}
+
+function buildCriticalSugarAlertMessage(
+  patientName: string,
+  gender: Gender,
+  entry: SugarLogEntry,
+  savedLocation: SavedLocation | null
+) {
+  const displayName = patientName.trim() || genderedText(gender, 'המטופלת', 'המטופל');
+  const severity = entry.level < 55 ? 'נמוכה מאוד' : 'גבוהה מאוד';
+  return `${displayName} מדד/ה סוכר ${severity}: ${entry.level} mg/dL (${entry.contextLabel}). כדאי לבדוק מיד וליצור קשר.${buildLocationSuffix(savedLocation)}`;
+}
+
 function getThemeForProfile(profile: UserProfile): Theme {
   return profile.gender === 'male' ? MALE_THEME : FEMALE_THEME;
 }
@@ -390,6 +406,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       entry.startsWith(todayKey)
     );
   });
+  const [sentSugarEmergencyAlerts, setSentSugarEmergencyAlerts] = useState<string[]>(() =>
+    readJson<string[]>('sugar_emergency_alert_log', [])
+  );
   const emergencyAlertInFlight = useRef<Set<string>>(new Set());
   const remoteHydrating = useRef(false);
   const lastRemoteSnapshot = useRef('');
@@ -556,6 +575,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       sentMedicationNotifications.filter((entry) => entry.startsWith(todayKey))
     );
   }, [sentMedicationNotifications]);
+
+  useEffect(() => {
+    writeJson('sugar_emergency_alert_log', sentSugarEmergencyAlerts);
+  }, [sentSugarEmergencyAlerts]);
 
   const isMedicationTakenToday = useCallback(
     (medicationId: string) => {
@@ -852,6 +875,85 @@ export function AppProvider({ children }: { children: ReactNode }) {
     medicationSchedule,
     notificationPermission,
     sentMedicationNotifications,
+    userProfile.gender,
+    userProfile.name,
+  ]);
+
+  useEffect(() => {
+    const latestSugar = sugarLogs[0];
+
+    if (!latestSugar || latestSugar.dateKey !== getTodayKey() || !emergencyContact.phone.trim()) {
+      return;
+    }
+
+    const isCriticalSugar = latestSugar.level < 55 || latestSugar.level > 320;
+    if (!isCriticalSugar) return;
+
+    const alertKey = `sugar:${latestSugar.id}`;
+    if (sentSugarEmergencyAlerts.includes(alertKey) || emergencyAlertInFlight.current.has(alertKey)) {
+      return;
+    }
+
+    emergencyAlertInFlight.current.add(alertKey);
+
+    void fetch('/api/medication-alert', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        patientName: userProfile.name,
+        patientGender: userProfile.gender,
+        contactName: emergencyContact.name,
+        contactPhone: emergencyContact.phone,
+        medicationName: 'קריאת סוכר חריגה',
+        medicationAppearance: latestSugar.level < 55 ? 'סוכר נמוך מאוד' : 'סוכר גבוה מאוד',
+        medicationPeriod: latestSugar.contextLabel,
+        medicationTime: new Date(latestSugar.loggedAt).toLocaleTimeString('he-IL', {
+          hour: '2-digit',
+          minute: '2-digit',
+        }),
+        message: buildCriticalSugarAlertMessage(
+          userProfile.name,
+          userProfile.gender,
+          latestSugar,
+          savedLocation
+        ),
+      }),
+    })
+      .then(async (response) => {
+        const payload = (await response.json().catch(() => null)) as
+          | { delivered?: boolean; reason?: string }
+          | null;
+
+        if (!response.ok) {
+          throw new Error(payload?.reason || 'Failed to send sugar emergency alert');
+        }
+
+        setSentSugarEmergencyAlerts((prev) => Array.from(new Set([...prev, alertKey])));
+
+        if (payload?.delivered && typeof Notification !== 'undefined' && notificationPermission === 'granted') {
+          new Notification('SOS אוטומטי הופעל', {
+            body: emergencyContact.name
+              ? `נשלחה הודעה אוטומטית אל ${emergencyContact.name} בגלל קריאת סוכר חריגה.`
+              : 'נשלחה הודעה אוטומטית בגלל קריאת סוכר חריגה.',
+            tag: alertKey,
+          });
+        }
+      })
+      .catch((error) => {
+        console.error('Automatic sugar emergency alert failed:', error);
+      })
+      .finally(() => {
+        emergencyAlertInFlight.current.delete(alertKey);
+      });
+  }, [
+    emergencyContact.name,
+    emergencyContact.phone,
+    notificationPermission,
+    savedLocation,
+    sentSugarEmergencyAlerts,
+    sugarLogs,
     userProfile.gender,
     userProfile.name,
   ]);

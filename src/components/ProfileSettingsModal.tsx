@@ -7,6 +7,7 @@ import {
   LogOut,
   Phone,
   Save,
+  ShieldCheck,
   UserRound,
   UserX,
 } from 'lucide-react';
@@ -17,6 +18,7 @@ import { OverlayHeader } from './OverlayHeader';
 interface ProfileSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onOpenAdminUsers?: () => void;
 }
 
 type EmergencyContactDraft = {
@@ -31,9 +33,9 @@ const DEFAULT_EMERGENCY_CONTACT: EmergencyContactDraft = {
   message: 'אני צריך/ה עזרה דחופה. זה המיקום שלי:',
 };
 
-export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalProps) {
+export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: ProfileSettingsModalProps) {
   const { userProfile, saveUserProfile, saveEmergencyContact, theme } = useAppContext();
-  const { authEnabled, session, signOut } = useAuthContext();
+  const { authEnabled, isAdmin, session, signOut } = useAuthContext();
 
   const [name, setName] = useState(userProfile.name);
   const [age, setAge] = useState(userProfile.age);
@@ -449,6 +451,25 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
             boxShadow: `0 -14px 38px ${theme.primary}22`,
           }}
         >
+          {authEnabled && isAdmin && (
+            <button
+              onClick={() => {
+                onClose();
+                onOpenAdminUsers?.();
+              }}
+              className="mb-3 h-[50px] w-full rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+              style={{
+                background: theme.gradientCard,
+                border: `1px solid ${theme.primaryBorder}`,
+                color: theme.primaryDark,
+                fontWeight: 900,
+              }}
+            >
+              <ShieldCheck size={17} strokeWidth={2.2} />
+              <span>ניהול משתמשים</span>
+            </button>
+          )}
+
           {authEnabled && (
             <div className="grid grid-cols-2 gap-3 mb-3">
               <button

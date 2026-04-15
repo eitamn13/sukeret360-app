@@ -20,6 +20,7 @@ import { ProfileSettingsModal } from './components/ProfileSettingsModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { WelcomeIntroScreen } from './components/WelcomeIntroScreen';
 import { AuthScreen } from './components/AuthScreen';
+import { AdminUsersScreen } from './components/AdminUsersScreen';
 
 type CommunityView = 'community' | 'forum' | 'support' | 'challenges';
 
@@ -41,6 +42,7 @@ function AppInner() {
   const [showSettings, setShowSettings] = useState(false);
   const [showSOS, setShowSOS] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [showAdminUsers, setShowAdminUsers] = useState(false);
   const [communityTab, setCommunityTab] = useState<CommunityView>('community');
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
@@ -240,6 +242,10 @@ function AppInner() {
       <ProfileSettingsModal
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
+        onOpenAdminUsers={() => {
+          setShowSettings(false);
+          setShowAdminUsers(true);
+        }}
       />
 
       <NotificationCenterModal
@@ -260,6 +266,11 @@ function AppInner() {
       <SOSModal
         isOpen={showSOS}
         onClose={() => setShowSOS(false)}
+      />
+
+      <AdminUsersScreen
+        isOpen={showAdminUsers}
+        onClose={() => setShowAdminUsers(false)}
       />
     </div>
   );

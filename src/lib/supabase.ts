@@ -36,6 +36,14 @@ export interface RemoteAppSnapshot {
   sugarLogs: SugarLogEntry[];
 }
 
+export interface AppUserRecord {
+  user_id: string;
+  email: string;
+  full_name: string;
+  created_at: string;
+  last_seen_at: string;
+}
+
 export async function fetchRemoteAppSnapshot(userId: string): Promise<RemoteAppSnapshot | null> {
   if (!supabase) return null;
 
@@ -67,5 +75,27 @@ export async function saveRemoteAppSnapshot(userId: string, snapshot: RemoteAppS
 
   if (error) {
     console.warn('Failed to save remote app snapshot', error);
+  }
+}
+
+export async function syncAuthenticatedUser(user: {
+  id: string;
+  email?: string | null;
+  user_metadata?: { full_name?: string | null };
+}) {
+  if (!supabase || !user.email?.trim()) return;
+
+  const { error } = await supabase.from('app_users').upsert(
+    {
+      user_id: user.id,
+      email: user.email.trim().toLowerCase(),
+      full_name: user.user_metadata?.full_name?.trim() || '',
+      last_seen_at: new Date().toISOString(),
+    },
+    { onConflict: 'user_id' }
+  );
+
+  if (error) {
+    console.warn('Failed to sync authenticated user', error);
   }
 }

@@ -97,6 +97,11 @@ function buildMedicationCalendarContent(schedule: MedicationScheduleItem[]) {
         `RRULE:FREQ=DAILY;UNTIL=${formatDate(endDate)}`,
         `SUMMARY:תזכורת תרופה - ${item.name}`,
         `DESCRIPTION:${item.dosage} | ${item.notes || 'תזכורת יומית מהאפליקציה'}`,
+        'BEGIN:VALARM',
+        'ACTION:DISPLAY',
+        'TRIGGER:-PT10M',
+        `DESCRIPTION:תזכורת לקחת ${item.name}`,
+        'END:VALARM',
         'END:VEVENT',
       ].join('\n');
     });
@@ -289,7 +294,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
       if (!shareNavigator.canShare || shareNavigator.canShare(shareData)) {
         try {
           await shareNavigator.share(shareData);
-          setCalendarFeedback('חלון השיתוף נפתח. אפשר לבחור יומן או לשמור את הקובץ.');
+          setCalendarFeedback('חלון השיתוף נפתח. אפשר לבחור יומן ולהוסיף תזכורת אוטומטית.');
           return;
         } catch (error) {
           if (error instanceof DOMException && error.name === 'AbortError') {
@@ -303,7 +308,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
     }
 
     downloadMedicationCalendarBlob(blob, fileName);
-    setCalendarFeedback('קובץ היומן ירד למכשיר. באייפון אפשר לפתוח אותו ולבחור יומן.');
+    setCalendarFeedback('קובץ היומן ירד למכשיר. באייפון אפשר לפתוח אותו, לבחור יומן ולקבל תזכורת יומית.');
   };
 
   return (
