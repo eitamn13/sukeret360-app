@@ -220,7 +220,7 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
     {
       id: 'call',
       title: isCounting ? `מחייגים למד"א בעוד ${countdown}` : 'חייג למד"א',
-      subtitle: isCounting ? 'אפשר לבטל לפני שהחיוג יוצא.' : 'מתחיל ספירה לאחור של 3 שניות לביטול.',
+      subtitle: isCounting ? 'אפשר לבטל.' : 'חיוג מהיר עם טיימר.',
       onClick: isCounting ? cancelEmergency : startEmergencyCall,
       color: isCounting ? '#991B1B' : '#B91C1C',
       tint: '#FEF2F2',
@@ -229,7 +229,7 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
     {
       id: 'location',
       title: loadingLocation ? 'מאתרים מיקום...' : 'שתף מיקום',
-      subtitle: 'מעדכן או משתף את המיקום האחרון שלך.',
+      subtitle: 'שיתוף או העתקה.',
       onClick: shareLocation,
       color: '#1D4ED8',
       tint: '#EFF6FF',
@@ -237,8 +237,8 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
     },
     {
       id: 'sms',
-      title: 'שלח SMS',
-      subtitle: hasContact ? 'שולח הודעת חירום למספר השמור.' : 'צריך קודם לשמור איש קשר בהגדרות.',
+      title: 'SMS',
+      subtitle: hasContact ? 'הודעה למספר השמור.' : 'צריך לשמור איש קשר.',
       onClick: sendSmsToContact,
       color: '#0F766E',
       tint: '#ECFDF5',
@@ -246,8 +246,8 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
     },
     {
       id: 'whatsapp',
-      title: 'שלח WhatsApp',
-      subtitle: hasContact ? 'פותח הודעת WhatsApp מוכנה עם המיקום.' : 'צריך קודם לשמור איש קשר בהגדרות.',
+      title: 'WhatsApp',
+      subtitle: hasContact ? 'הודעה מוכנה עם מיקום.' : 'צריך לשמור איש קשר.',
       onClick: sendWhatsAppToContact,
       color: '#15803D',
       tint: '#F0FDF4',
@@ -282,9 +282,9 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
             </button>
 
             <div className="text-right flex-1">
-              <h2 style={{ color: '#0F172A', fontWeight: 900, fontSize: 20 }}>מרכז חירום</h2>
+              <h2 style={{ color: '#0F172A', fontWeight: 900, fontSize: 20 }}>חירום</h2>
               <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.7, fontSize: 13 }}>
-                פעולות מהירות וברורות לשיחה, שיתוף מיקום והודעה למשפחה.
+                חיוג, מיקום או הודעה.
               </p>
             </div>
 
@@ -315,10 +315,10 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
 
               <div className="text-right flex-1">
                 <p style={{ fontWeight: 900, fontSize: 18 }}>
-                  {userProfile.name ? `${userProfile.name}, אנחנו איתך.` : 'אנחנו איתך.'}
+                  {userProfile.name ? `${userProfile.name}, בחר פעולה.` : 'בחר פעולה.'}
                 </p>
                 <p style={{ opacity: 0.8, marginTop: 8, lineHeight: 1.7 }}>
-                  אם צריך עזרה עכשיו, בחר פעולה אחת ברורה. לא צריך למלא שום דבר מחדש.
+                  כל הכפתורים כבר מוכנים לשימוש.
                 </p>
               </div>
             </div>
@@ -366,19 +366,19 @@ export default function SOSModal({ isOpen, onClose }: SOSModalProps) {
 
           <div className="grid grid-cols-1 gap-3">
             <InfoCard
-              title="איש קשר לחירום"
+              title="איש קשר"
               subtitle={emergencyContact.name || 'עדיין לא הוגדר איש קשר'}
               detail={emergencyContact.phone || 'אפשר להגדיר מתוך מסך ההגדרות'}
-              actionLabel="העתק מיקום"
+              actionLabel="העתק"
               onAction={copyLocation}
               actionIcon={<Copy size={15} />}
             />
 
             <InfoCard
-              title="מיקום נוכחי"
+              title="מיקום"
               subtitle={locationText || 'עדיין אין מיקום זמין'}
-              detail={loadingLocation ? 'מאתרים עכשיו...' : 'אפשר לעדכן או לשתף בלחיצה אחת'}
-              actionLabel="רענן מיקום"
+              detail={loadingLocation ? 'מאתרים עכשיו...' : 'אפשר לעדכן בלחיצה אחת'}
+              actionLabel="רענן"
               onAction={() => getLocation()}
               actionIcon={<MapPinned size={15} />}
             />

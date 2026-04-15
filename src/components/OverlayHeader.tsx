@@ -4,7 +4,7 @@ import type { Theme } from '../context/AppContext';
 
 interface OverlayHeaderProps {
   title: string;
-  subtitle: string;
+  subtitle?: string;
   theme: Theme;
   onBack: () => void;
   onClose: () => void;
@@ -56,12 +56,14 @@ export function OverlayHeader({
           >
             {title}
           </h1>
-          <p
-            className="text-xs mt-1"
-            style={{ color: theme.primaryMuted, fontWeight: 600, lineHeight: 1.6 }}
-          >
-            {subtitle}
-          </p>
+          {subtitle ? (
+            <p
+              className="text-xs mt-1"
+              style={{ color: theme.primaryMuted, fontWeight: 600, lineHeight: 1.6 }}
+            >
+              {subtitle}
+            </p>
+          ) : null}
         </div>
 
         <div className="flex items-center gap-2">

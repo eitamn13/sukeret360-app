@@ -1,19 +1,17 @@
-import { X, Pill, Syringe, Clock, CheckCircle2, AlertCircle, Bell, CalendarPlus, Plus, Trash2, Save } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
 import {
-  MedicationScheduleItem,
-  getPeriodFromTime,
-  useAppContext,
-} from '../context/AppContext';
+  AlertCircle,
+  Bell,
+  CalendarPlus,
+  Plus,
+  Save,
+  Trash2,
+} from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { MedicationScheduleItem, getPeriodFromTime, useAppContext } from '../context/AppContext';
+import { OverlayHeader } from './OverlayHeader';
 
 interface MedicationsScreenProps {
   onClose: () => void;
-}
-
-function isPast(timeStr: string): boolean {
-  const [hours, minutes] = timeStr.split(':').map(Number);
-  const now = new Date();
-  return now.getHours() > hours || (now.getHours() === hours && now.getMinutes() >= minutes);
 }
 
 function getMinutesLate(timeStr: string): number {
@@ -34,7 +32,7 @@ function createMedicationDraft(): MedicationScheduleItem {
     type: 'pill',
     notes: '',
     image: '💊',
-    appearanceLabel: 'כדור לבן',
+    appearanceLabel: 'כדור',
     notifyEmergencyAfterMinutes: 45,
   };
 }
@@ -47,28 +45,16 @@ function normalizePhoneForWhatsApp(phone: string): string {
   return digits;
 }
 
-function buildMedicationAlertMessage(
-  patientName: string,
-  medication: MedicationScheduleItem
-) {
-  const displayName = patientName.trim() || 'המשתמש/ת';
+function buildMedicationAlertMessage(patientName: string, medication: MedicationScheduleItem) {
+  const displayName = patientName.trim() || 'המטופל/ת';
   const appearance = medication.appearanceLabel ? ` (${medication.appearanceLabel})` : '';
-
   return `${displayName} עדיין לא סימנ/ה שלקח/ה את ${medication.name}${appearance} של ${medication.period}, שנקבעה לשעה ${medication.time}.`;
 }
 
 function getNotificationEnvironmentMessage() {
-  if (typeof window === 'undefined') {
-    return null;
-  }
-
-  if (typeof Notification === 'undefined') {
-    return '׳”׳“׳₪׳“׳₪׳ ׳”׳ ׳•׳›׳—׳™ ׳׳ ׳×׳•׳׳ ׳‘׳”׳×׳¨׳׳•׳× ׳“׳₪׳“׳₪׳.';
-  }
-
-  if (!window.isSecureContext) {
-    return '׳›׳“׳™ ׳׳”׳₪׳¢׳™׳ ׳”׳×׳¨׳׳•׳×, ׳¦׳¨׳™׳ ׳׳₪׳×׳•׳— ׳׳× ׳”׳׳ª׳¨ ׳‘׳—׳™׳‘׳•׳¨ ׳׳׳•׳‘׳˜׳—.';
-  }
+  if (typeof window === 'undefined') return null;
+  if (typeof Notification === 'undefined') return 'הדפדפן הזה לא תומך בהתראות.';
+  if (!window.isSecureContext) return 'כדי לאפשר התראות, צריך לפתוח את האתר בחיבור מאובטח.';
 
   const nav = navigator as Navigator & { standalone?: boolean };
   const isIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
@@ -76,7 +62,7 @@ function getNotificationEnvironmentMessage() {
     window.matchMedia?.('(display-mode: standalone)')?.matches || nav.standalone === true;
 
   if (isIOS && !isStandalone) {
-    return '׳‘׳׳™׳™׳₪׳•׳ ׳›׳“׳׳™ ׳׳”׳•׳¡׳™׳£ ׳׳× ׳”׳׳₪׳׳™׳§׳¦׳™׳” ׳׳׳¡׳ ׳”׳‘׳™׳×, ׳׳׳– ׳׳₪׳©׳¨ ׳׳§׳‘׳ ׳”׳×׳¨׳׳•׳×.';
+    return 'באייפון צריך להוסיף את האתר למסך הבית ורק אז לאשר התראות.';
   }
 
   return null;
@@ -104,7 +90,7 @@ function downloadMedicationCalendar(schedule: MedicationScheduleItem[]) {
 
       return [
         'BEGIN:VEVENT',
-        `UID:${item.id}@sukeret360.app`,
+        `UID:${item.id}@my-diabetes.app`,
         `DTSTAMP:${formatDate(new Date())}`,
         `DTSTART:${formatDate(eventStart)}`,
         `DTEND:${formatDate(eventEnd)}`,
@@ -115,13 +101,13 @@ function downloadMedicationCalendar(schedule: MedicationScheduleItem[]) {
       ].join('\n');
     });
 
-  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sukeret360//Medication Calendar//HE', ...events, 'END:VCALENDAR'].join('\n');
+  const ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//MyDiabetes//Medication Calendar//HE', ...events, 'END:VCALENDAR'].join('\n');
 
   const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'sukeret360-medications.ics';
+  link.download = 'my-diabetes-medications.ics';
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -147,6 +133,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
   const [editingEnabled, setEditingEnabled] = useState(false);
   const [savedSchedule, setSavedSchedule] = useState(false);
   const [notificationFeedback, setNotificationFeedback] = useState('');
+
   const notificationEnvironmentMessage = useMemo(() => getNotificationEnvironmentMessage(), []);
 
   useEffect(() => {
@@ -174,6 +161,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
   };
 
   const doneCount = medicationSchedule.filter((medication) => isMedicationTakenToday(medication.id)).length;
+  const pendingCount = Math.max(medicationSchedule.length - doneCount, 0);
   const progress = medicationSchedule.length > 0
     ? Math.round((doneCount / medicationSchedule.length) * 100)
     : 0;
@@ -190,9 +178,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
 
   const sendAlertToEmergency = (channel: 'whatsapp' | 'sms') => {
     const medication = overdueMedications[0];
-    if (!medication || !emergencyContact.phone.trim()) {
-      return;
-    }
+    if (!medication || !emergencyContact.phone.trim()) return;
 
     const text = buildMedicationAlertMessage(userProfile.name, medication);
 
@@ -205,18 +191,14 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
     window.location.href = `sms:${emergencyContact.phone}?body=${encodeURIComponent(text)}`;
   };
 
-  const updateEditableMedication = (
-    medicationId: string,
-    patch: Partial<MedicationScheduleItem>
-  ) => {
+  const updateEditableMedication = (medicationId: string, patch: Partial<MedicationScheduleItem>) => {
     setEditableSchedule((prev) =>
       prev.map((medication) =>
         medication.id === medicationId
           ? {
               ...medication,
               ...patch,
-              period:
-                patch.time !== undefined ? getPeriodFromTime(patch.time) : medication.period,
+              period: patch.time !== undefined ? getPeriodFromTime(patch.time) : medication.period,
             }
           : medication
       )
@@ -243,19 +225,27 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
     const permission = await requestBrowserNotificationPermission();
 
     if (permission === 'granted' && typeof Notification !== 'undefined') {
-      new Notification('׳”׳×׳¨׳׳•׳× ׳₪׳¢׳™׳׳•׳×', {
-        body: '׳׳¢׳•׳׳”. ׳׳¢׳›׳©׳™׳• ׳ ׳©׳׳— ׳×׳–׳›׳•׳¨׳•׳× ׳×׳¨׳•׳₪׳•׳× ׳‘׳–׳׳.',
+      new Notification('התראות פעילות', {
+        body: 'מעולה. מעכשיו תקבלו תזכורות לתרופות.',
       });
-      setNotificationFeedback('׳׳×׳¨׳׳•׳× ׳׳•׳₪׳¢׳׳• ׳‘׳”׳¦׳׳—׳”.');
+      setNotificationFeedback('ההתראות הופעלו בהצלחה.');
       return;
     }
 
     if (permission === 'denied') {
-      setNotificationFeedback('׳”׳“׳₪׳“׳₪׳ ׳—׳¡׳ ׳׳× ׳”׳×׳¨׳׳•׳×. ׳׳₪׳©׳¨ ׳׳©׳ ׳•׳× ׳–׳׳× ׳‘׳”׳’׳“׳¨׳•׳× ׳”׳“׳₪׳“׳₪׳.');
+      setNotificationFeedback('ההתראות חסומות כרגע. אפשר לפתוח אותן דרך הגדרות הדפדפן.');
       return;
     }
 
-    setNotificationFeedback('׳׳ ׳ ׳™׳×׳ ׳׳™׳ ׳׳׳©׳׳™׳ ׳׳× ׳׳₪׳¢׳׳× ׳׳×׳¨׳׳•׳× ׳›׳¨׳’׳¢.');
+    setNotificationFeedback('לא התקבלה הרשאה כרגע. נסו שוב בעוד רגע.');
+  };
+
+  const sendTestNotification = () => {
+    if (typeof Notification === 'undefined') return;
+    new Notification('בדיקת התראה', {
+      body: 'אם ראית את ההודעה הזאת, ההתראות עובדות כמו שצריך.',
+    });
+    setNotificationFeedback('נשלחה התראת בדיקה למכשיר.');
   };
 
   return (
@@ -263,68 +253,34 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
       className="fixed inset-0 z-50 flex flex-col animate-slide-in-right"
       style={{ background: theme.gradientFull }}
     >
-      <div
-        className="flex-shrink-0 px-5 pt-12 pb-4"
-        style={{
-          backgroundColor: theme.headerBg,
-          backdropFilter: 'blur(14px)',
-          WebkitBackdropFilter: 'blur(14px)',
-          borderBottom: `1px solid ${theme.primaryBorder}`,
-        }}
-      >
-        <div className="flex items-center justify-between mb-4">
-          <button
-            onClick={onClose}
-            className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95"
-            style={{
-              border: `1.5px solid ${theme.primaryBorder}`,
-              backgroundColor: 'white',
-            }}
-            aria-label="סגור"
-          >
-            <X size={20} strokeWidth={2} style={{ color: theme.primary }} />
-          </button>
+      <OverlayHeader
+        title="תרופות"
+        subtitle="סימון, תזכורות ועריכה"
+        theme={theme}
+        onBack={onClose}
+        onClose={onClose}
+      />
 
-          <div className="text-center">
-            <h1
-              className="text-lg leading-tight"
-              style={{
-                color: '#1F2937',
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
-              }}
-            >
-              תרופות ותזכורות
-            </h1>
-            <p className="text-xs mt-0.5" style={{ color: theme.primaryMuted, fontWeight: 500 }}>
-              לפי לוח הזמנים שהוגדר לך
-            </p>
-          </div>
-
-          <div
-            className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{
-              backgroundColor: theme.primaryBg,
-              border: `1.5px solid ${theme.primaryBorder}`,
-            }}
-          >
-            <Pill size={18} strokeWidth={1.5} style={{ color: theme.primary }} />
-          </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        <div className="grid grid-cols-3 gap-3">
+          <TopStat label="נלקחו" value={String(doneCount)} tone="success" />
+          <TopStat label="ממתינות" value={String(pendingCount)} tone="primary" />
+          <TopStat label="באיחור" value={String(overdueMedications.length)} tone="danger" />
         </div>
 
         <div
           className="rounded-2xl p-4"
-          style={{ backgroundColor: '#F9FAFB', border: '1px solid #F3F4F6' }}
+          style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}
         >
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs" style={{ color: '#6B7280', fontWeight: 600 }}>
+            <span className="text-xs" style={{ color: '#6B7280', fontWeight: 700 }}>
               {doneCount}/{medicationSchedule.length} סומנו היום
             </span>
             <span
               className="text-xs"
               style={{
                 color: progress === 100 ? '#16A34A' : theme.primary,
-                fontWeight: 700,
+                fontWeight: 800,
               }}
             >
               {progress}%
@@ -341,76 +297,81 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
             />
           </div>
         </div>
-      </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-5 space-y-4">
-        {notificationPermission !== 'granted' && (
-          <div
-            className="rounded-2xl p-4"
-            style={{ backgroundColor: '#EFF6FF', border: '1.5px solid #BFDBFE' }}
-          >
-            <div className="flex items-center justify-end gap-2 mb-2">
-              <p style={{ color: '#1E40AF', fontWeight: 800 }}>הפעלת התראות בטלפון</p>
-              <Bell size={18} strokeWidth={1.8} style={{ color: '#1E40AF' }} />
-            </div>
-            <p style={{ color: '#1D4ED8', lineHeight: 1.7 }}>
-              כדי לקבל תזכורות בזמן אמת מהאפליקציה, צריך לאשר התראות בדפדפן של הטלפון.
-            </p>
-            <button
-              onClick={requestNotifications}
-              className="mt-3 h-11 px-4 rounded-2xl"
-              style={{ backgroundColor: '#1D4ED8', color: 'white', fontWeight: 700 }}
+        <div
+          className="rounded-2xl p-4"
+          style={{
+            background:
+              notificationPermission === 'granted'
+                ? 'linear-gradient(135deg, #16A34A, #15803D)'
+                : theme.gradientCard,
+            color: '#FFFFFF',
+          }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div
+              className="w-11 h-11 rounded-2xl flex items-center justify-center"
+              style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}
             >
-              אפשר התראות עכשיו
+              <Bell size={18} />
+            </div>
+
+            <div className="text-right flex-1">
+              <p style={{ fontWeight: 900, fontSize: 18 }}>
+                {notificationPermission === 'granted' ? 'התראות פעילות' : 'אפשר התראות'}
+              </p>
+              <p style={{ marginTop: 6, opacity: 0.9, lineHeight: 1.7 }}>
+                {notificationPermission === 'granted'
+                  ? 'אפשר לקבל תזכורות ישירות למכשיר.'
+                  : 'כדי לא לפספס תרופות, צריך לאשר התראות.'}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <button
+              onClick={notificationPermission === 'granted' ? sendTestNotification : requestNotifications}
+              className="h-11 rounded-2xl"
+              style={{
+                backgroundColor: '#FFFFFF',
+                color: notificationPermission === 'granted' ? '#15803D' : theme.primary,
+                fontWeight: 800,
+              }}
+            >
+              {notificationPermission === 'granted' ? 'בדיקת התראה' : 'אפשר עכשיו'}
+            </button>
+            <button
+              onClick={() => setEditingEnabled((current) => !current)}
+              className="h-11 rounded-2xl"
+              style={{
+                backgroundColor: 'rgba(255,255,255,0.18)',
+                color: '#FFFFFF',
+                border: '1px solid rgba(255,255,255,0.28)',
+                fontWeight: 800,
+              }}
+            >
+              {editingEnabled ? 'סגור עריכה' : 'עריכת תרופות'}
             </button>
           </div>
-        )}
+        </div>
 
-        {notificationPermission !== 'granted' && (notificationEnvironmentMessage || notificationFeedback) && (
+        {(notificationFeedback || notificationEnvironmentMessage) && (
           <div
             className="rounded-2xl p-4"
-            style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #BFDBFE' }}
+            style={{
+              backgroundColor: notificationPermission === 'granted' ? '#F0FDF4' : '#EFF6FF',
+              border: `1px solid ${notificationPermission === 'granted' ? '#BBF7D0' : '#BFDBFE'}`,
+            }}
           >
-            <p style={{ color: '#1D4ED8', lineHeight: 1.7, fontWeight: 700 }}>
+            <p
+              style={{
+                color: notificationPermission === 'granted' ? '#166534' : '#1D4ED8',
+                lineHeight: 1.7,
+                fontWeight: 700,
+              }}
+            >
               {notificationFeedback || notificationEnvironmentMessage}
             </p>
-          </div>
-        )}
-
-        {notificationPermission === 'granted' && (
-          <div
-            className="rounded-2xl p-4"
-            style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #BBF7D0' }}
-          >
-            <div className="flex items-center justify-end gap-2 mb-2">
-              <p style={{ color: '#15803D', fontWeight: 800 }}>׳”׳×׳¨׳׳•׳× ׳₪׳¢׳™׳׳•׳×</p>
-              <Bell size={18} strokeWidth={1.8} style={{ color: '#15803D' }} />
-            </div>
-            <p style={{ color: '#166534', lineHeight: 1.7 }}>
-              ׳׳¢׳•׳׳”. ׳׳׳₪׳׳™׳§׳¦׳™׳” ׳׳›׳•׳׳ה ׳׳”׳¦׳™׳’ ׳ת׳–׳›׳•׳¨׳•׳ª ׳×׳¨׳•׳₪׳•׳× ׳‘׳“׳₪׳“׳₪׳.
-            </p>
-            <button
-              onClick={() => {
-                if (typeof Notification === 'undefined') return;
-                new Notification('׳׳×׳¨׳׳ת ׳‘׳“׳™׳§׳ה', {
-                  body: '׳׳›׳ ׳¢׳•׳‘׳“. ׳׳©׳ª׳”׳™׳ה ׳ת׳–׳›׳•׳¨׳ת ׳×׳¨׳•׳₪׳ה ׳¢׳ª׳™׳“׳™׳ת, ׳ ׳¨׳׳ה ׳׳ג׳ ׳׳•׳ת׳ה.',
-                });
-                setNotificationFeedback('׳ ׳©׳׳—׳ה ׳׳×׳¨׳׳ת ׳‘׳“׳™׳§׳ה ׳׳“׳₪׳“׳₪׳.');
-              }}
-              className="mt-3 h-11 px-4 rounded-2xl"
-              style={{ backgroundColor: '#16A34A', color: 'white', fontWeight: 700 }}
-            >
-              ׳©׳׳—׳• ׳׳×׳¨׳׳ת ׳‘׳“׳™׳§׳ה
-            </button>
-
-            {notificationFeedback && (
-              <div
-                className="rounded-2xl p-3 mt-3 text-sm"
-                style={{ backgroundColor: '#FFFFFF', color: '#166534', border: '1px solid #BBF7D0', lineHeight: 1.6 }}
-              >
-                {notificationFeedback}
-              </div>
-            )}
           </div>
         )}
 
@@ -423,6 +384,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
               <p style={{ color: '#B91C1C', fontWeight: 900 }}>יש תרופה שלא סומנה בזמן</p>
               <AlertCircle size={18} strokeWidth={1.8} style={{ color: '#B91C1C' }} />
             </div>
+
             <p style={{ color: '#991B1B', lineHeight: 1.7 }}>
               {buildMedicationAlertMessage(userProfile.name, overdueMedications[0])}
             </p>
@@ -432,171 +394,124 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                 <button
                   onClick={() => sendAlertToEmergency('sms')}
                   className="h-11 rounded-2xl"
-                  style={{ backgroundColor: '#FFFFFF', color: '#0F766E', border: '1.5px solid #99F6E4', fontWeight: 800 }}
+                  style={{
+                    backgroundColor: '#FFFFFF',
+                    color: '#0F766E',
+                    border: '1.5px solid #99F6E4',
+                    fontWeight: 800,
+                  }}
                 >
-                  SMS למשפחה
+                  SMS
                 </button>
                 <button
                   onClick={() => sendAlertToEmergency('whatsapp')}
                   className="h-11 rounded-2xl"
                   style={{ backgroundColor: '#16A34A', color: '#FFFFFF', fontWeight: 800 }}
                 >
-                  WhatsApp למשפחה
+                  WhatsApp
                 </button>
               </div>
             ) : (
               <p style={{ color: '#991B1B', marginTop: 12, fontWeight: 700 }}>
-                כדי לשלוח הודעה, צריך להוסיף איש קשר לחירום במסך ההגדרות.
+                כדי לשלוח הודעה, צריך להוסיף איש קשר במסך ההגדרות.
               </p>
             )}
           </div>
         )}
 
         <div className="space-y-4">
-          {medicationSchedule.length === 0 && (
+          {medicationSchedule.length === 0 ? (
             <div
               className="rounded-2xl p-5 text-center"
               style={{ backgroundColor: '#FFFFFF', border: `1.5px solid ${theme.primaryBorder}` }}
             >
               <p style={{ color: '#1F2937', fontWeight: 800, fontSize: 18 }}>עדיין לא הוגדרו תרופות</p>
               <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.7 }}>
-                הוסיפו תרופה ראשונה כדי לקבל תזכורות, יומן סימון וייצוא ליומן הטלפון.
+                הוסיפו תרופה ראשונה כדי לקבל תזכורות ולסמן לקיחה.
               </p>
             </div>
-          )}
+          ) : null}
 
           {medicationSchedule.map((medication) => {
             const isDone = isMedicationTakenToday(medication.id);
             const isJust = justMarked === medication.id;
-            const past = isPast(medication.time);
             const minutesLate = getMinutesLate(medication.time);
             const isOverdue = !isDone && minutesLate >= (medication.notifyEmergencyAfterMinutes ?? 45);
 
             return (
-              <div key={medication.id} className="flex items-start gap-4">
-                <div className="relative z-10 flex-shrink-0 mt-5">
+              <div
+                key={medication.id}
+                className={`rounded-2xl p-5 transition-all duration-300 ${isJust ? 'scale-[1.01]' : ''}`}
+                style={{
+                  backgroundColor: isDone ? '#F0FDF4' : '#FFFFFF',
+                  border: `1.5px solid ${isDone ? '#BBF7D0' : isOverdue ? '#FECACA' : theme.primaryBorder}`,
+                  boxShadow: '0 8px 22px rgba(15, 23, 42, 0.05)',
+                }}
+              >
+                <div className="flex items-start justify-between gap-3">
                   <div
-                    className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-400"
+                    className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl"
                     style={{
-                      backgroundColor: isDone ? '#16A34A' : past ? theme.primaryBg : '#F3F4F6',
-                      border: `2px solid ${isDone ? '#16A34A' : past ? theme.primary : '#E5E7EB'}`,
+                      backgroundColor: isDone ? '#DCFCE7' : theme.primaryBg,
                     }}
                   >
-                    {isDone ? (
-                      <CheckCircle2 size={14} color="white" strokeWidth={2.5} />
-                    ) : past ? (
-                      <AlertCircle size={14} strokeWidth={2} style={{ color: isOverdue ? '#DC2626' : '#E11D48' }} />
-                    ) : (
-                      <Clock size={13} strokeWidth={2} style={{ color: '#9CA3AF' }} />
-                    )}
+                    {medication.image || (medication.type === 'injection' ? '💉' : '💊')}
                   </div>
-                </div>
 
-                <div
-                  className={`flex-1 rounded-2xl p-5 transition-all duration-300 ${isJust ? 'scale-[1.01]' : ''}`}
-                  style={{
-                    backgroundColor: isDone ? '#F0FDF4' : '#FFFFFF',
-                    border: `1.5px solid ${isDone ? '#BBF7D0' : isOverdue ? '#FECACA' : '#F3F4F6'}`,
-                    boxShadow: isDone
-                      ? '0 2px 12px rgba(22, 163, 74, 0.08)'
-                      : isOverdue
-                      ? '0 2px 12px rgba(220, 38, 38, 0.1)'
-                      : '0 2px 8px rgba(0,0,0,0.05)',
-                  }}
-                >
-                  <div className="flex items-start justify-between gap-3 mb-4">
-                    <div
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 text-xl"
-                      style={{
-                        backgroundColor: isDone ? '#DCFCE7' : theme.primaryBg,
-                        color: isDone ? '#16A34A' : theme.primary,
-                      }}
-                    >
-                      {medication.image || (medication.type === 'injection' ? '💉' : '💊')}
-                    </div>
-
-                    <div className="flex-1 text-right">
-                      <div className="flex items-center justify-end gap-2 mb-0.5">
-                        <h3
-                          className="text-base leading-tight"
-                          style={{
-                            color: isDone ? '#15803D' : '#1F2937',
-                            fontWeight: 800,
-                            letterSpacing: '-0.01em',
-                          }}
-                        >
-                          {medication.name}
-                        </h3>
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-lg"
-                          style={{
-                            backgroundColor: isDone ? '#DCFCE7' : theme.primaryBg,
-                            color: isDone ? '#15803D' : theme.primary,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {medication.period}
-                        </span>
-                      </div>
-
-                      <p
-                        className="text-sm"
+                  <div className="text-right flex-1">
+                    <div className="flex items-center justify-end gap-2">
+                      <p style={{ color: '#0F172A', fontWeight: 900, fontSize: 17 }}>{medication.name}</p>
+                      <span
+                        className="text-xs px-2 py-0.5 rounded-lg"
                         style={{
-                          color: isDone ? '#16A34A' : '#6B7280',
-                          fontWeight: 600,
+                          backgroundColor: isDone ? '#DCFCE7' : theme.primaryBg,
+                          color: isDone ? '#15803D' : theme.primary,
+                          fontWeight: 700,
                         }}
                       >
-                        {medication.dosage || medication.appearanceLabel}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div
-                    className="flex items-center justify-between mb-4 pb-4"
-                    style={{
-                      borderBottom: `1px solid ${isDone ? '#BBF7D0' : '#F3F4F6'}`,
-                    }}
-                  >
-                    <p className="text-xs" style={{ color: '#64748B', fontWeight: 500 }}>
-                      {medication.notes || medication.appearanceLabel || 'ללא הערה'}
-                    </p>
-
-                    <div className="flex items-center gap-1.5">
-                      {medication.type === 'injection' ? (
-                        <Syringe size={13} strokeWidth={2} style={{ color: '#9CA3AF' }} />
-                      ) : (
-                        <Pill size={13} strokeWidth={2} style={{ color: '#9CA3AF' }} />
-                      )}
-                      <span className="text-sm" style={{ color: '#374151', fontWeight: 700 }}>
-                        {medication.time}
+                        {medication.period}
                       </span>
                     </div>
+
+                    <p style={{ color: '#64748B', marginTop: 6, fontWeight: 700 }}>
+                      {medication.dosage || medication.appearanceLabel || 'ללא מינון'}
+                    </p>
+                    <p style={{ color: '#334155', marginTop: 4, fontWeight: 800 }}>{medication.time}</p>
                   </div>
-
-                  {isOverdue && (
-                    <div
-                      className="rounded-2xl px-3 py-2 mb-3 text-sm"
-                      style={{ backgroundColor: '#FEF2F2', color: '#B91C1C', fontWeight: 700 }}
-                    >
-                      עברו {minutesLate} דקות מאז שעת התזכורת והתרופה עדיין לא סומנה.
-                    </div>
-                  )}
-
-                  <button
-                    onClick={() => toggle(medication.id)}
-                    className="w-full h-12 rounded-xl text-base transition-all duration-300 active:scale-[0.97]"
-                    style={{
-                      backgroundColor: isDone ? '#16A34A' : theme.primary,
-                      color: '#ffffff',
-                      fontWeight: 700,
-                      boxShadow: isDone
-                        ? '0 4px 16px rgba(22, 163, 74, 0.3)'
-                        : `0 4px 16px ${theme.primaryShadow}`,
-                    }}
-                  >
-                    {isDone ? 'סומן כלקוח' : 'סמן/י כלקוח/ה'}
-                  </button>
                 </div>
+
+                {(medication.notes || medication.appearanceLabel) && (
+                  <div
+                    className="rounded-2xl px-3 py-2 mt-4 text-sm text-right"
+                    style={{ backgroundColor: '#F8FAFC', color: '#475569', lineHeight: 1.6 }}
+                  >
+                    {medication.notes || medication.appearanceLabel}
+                  </div>
+                )}
+
+                {isOverdue && (
+                  <div
+                    className="rounded-2xl px-3 py-2 mt-3 text-sm text-right"
+                    style={{ backgroundColor: '#FEF2F2', color: '#B91C1C', fontWeight: 700 }}
+                  >
+                    עברו {minutesLate} דקות מאז התזכורת והתרופה עדיין לא סומנה.
+                  </div>
+                )}
+
+                <button
+                  onClick={() => toggle(medication.id)}
+                  className="w-full h-12 rounded-2xl mt-4 transition-all duration-300 active:scale-[0.97]"
+                  style={{
+                    backgroundColor: isDone ? '#16A34A' : theme.primary,
+                    color: '#FFFFFF',
+                    fontWeight: 800,
+                    boxShadow: isDone
+                      ? '0 4px 16px rgba(22, 163, 74, 0.3)'
+                      : `0 4px 16px ${theme.primaryShadow}`,
+                  }}
+                >
+                  {isDone ? 'סומן כנלקח' : 'סמן כנלקח'}
+                </button>
               </div>
             );
           })}
@@ -606,19 +521,29 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
           <button
             onClick={() => downloadMedicationCalendar(medicationSchedule)}
             className="h-12 rounded-2xl flex items-center justify-center gap-2"
-            style={{ backgroundColor: '#FFFFFF', border: `1.5px solid ${theme.primaryBorder}`, color: theme.primary, fontWeight: 800 }}
+            style={{
+              backgroundColor: '#FFFFFF',
+              border: `1.5px solid ${theme.primaryBorder}`,
+              color: theme.primary,
+              fontWeight: 800,
+            }}
           >
             <CalendarPlus size={18} />
-            ייצוא ליומן הטלפון
+            ייצוא ליומן
           </button>
 
           <button
             onClick={() => setEditingEnabled((current) => !current)}
             className="h-12 rounded-2xl flex items-center justify-center gap-2"
-            style={{ backgroundColor: theme.primaryBg, border: `1.5px solid ${theme.primaryBorder}`, color: theme.primary, fontWeight: 800 }}
+            style={{
+              backgroundColor: theme.primaryBg,
+              border: `1.5px solid ${theme.primaryBorder}`,
+              color: theme.primary,
+              fontWeight: 800,
+            }}
           >
             <Plus size={18} />
-            {editingEnabled ? 'סגור ניהול תרופות' : 'ניהול והוספת תרופות'}
+            {editingEnabled ? 'סגור עריכה' : 'עריכת לוח תרופות'}
           </button>
         </div>
 
@@ -631,12 +556,16 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
               <button
                 onClick={saveSchedule}
                 className="h-10 px-4 rounded-2xl flex items-center justify-center gap-2"
-                style={{ backgroundColor: savedSchedule ? '#16A34A' : theme.primary, color: '#FFFFFF', fontWeight: 800 }}
+                style={{
+                  backgroundColor: savedSchedule ? '#16A34A' : theme.primary,
+                  color: '#FFFFFF',
+                  fontWeight: 800,
+                }}
               >
                 <Save size={16} />
-                {savedSchedule ? 'נשמר' : 'שמור לוח תרופות'}
+                {savedSchedule ? 'נשמר' : 'שמור'}
               </button>
-              <p style={{ color: '#1F2937', fontWeight: 800 }}>ניהול תזכורות ותרופות</p>
+              <p style={{ color: '#1F2937', fontWeight: 800 }}>עריכת תרופות</p>
             </div>
 
             <div className="space-y-3">
@@ -650,7 +579,11 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                     <button
                       onClick={() => removeEditableMedication(medication.id)}
                       className="w-9 h-9 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: '#FFFFFF', color: '#EF4444', border: '1px solid #FECACA' }}
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        color: '#EF4444',
+                        border: '1px solid #FECACA',
+                      }}
                     >
                       <Trash2 size={15} />
                     </button>
@@ -690,10 +623,15 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                     <textarea
                       value={medication.notes || ''}
                       onChange={(event) => updateEditableMedication(medication.id, { notes: event.target.value })}
-                      placeholder="הערה או הנחיה"
+                      placeholder="הערה קצרה"
                       dir="rtl"
                       className="w-full rounded-2xl px-4 py-3 outline-none"
-                      style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', resize: 'none', minHeight: 82 }}
+                      style={{
+                        backgroundColor: '#FFFFFF',
+                        border: '1px solid #E2E8F0',
+                        resize: 'none',
+                        minHeight: 82,
+                      }}
                     />
                   </div>
                 </div>
@@ -703,10 +641,15 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
             <button
               onClick={() => setEditableSchedule((prev) => [...prev, createMedicationDraft()])}
               className="w-full h-11 rounded-2xl mt-3 flex items-center justify-center gap-2"
-              style={{ backgroundColor: theme.primaryBg, color: theme.primary, fontWeight: 800, border: `1px solid ${theme.primaryBorder}` }}
+              style={{
+                backgroundColor: theme.primaryBg,
+                color: theme.primary,
+                fontWeight: 800,
+                border: `1px solid ${theme.primaryBorder}`,
+              }}
             >
               <Plus size={18} />
-              הוסף תרופה חדשה
+              הוסף תרופה
             </button>
           </div>
         )}
@@ -720,13 +663,40 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
               כל התרופות סומנו היום
             </p>
             <p className="text-sm mt-1" style={{ color: '#16A34A', fontWeight: 500 }}>
-              עבודה מצוינת. ההיצמדות לטיפול נראית מעולה היום.
+              כל הכבוד. הלוח היומי הושלם.
             </p>
           </div>
         )}
 
         <div className="h-6" />
       </div>
+    </div>
+  );
+}
+
+function TopStat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone: 'primary' | 'success' | 'danger';
+}) {
+  const palette =
+    tone === 'success'
+      ? { bg: '#F0FDF4', border: '#BBF7D0', text: '#15803D' }
+      : tone === 'danger'
+        ? { bg: '#FEF2F2', border: '#FECACA', text: '#B91C1C' }
+        : { bg: '#EFF6FF', border: '#BFDBFE', text: '#1D4ED8' };
+
+  return (
+    <div
+      className="rounded-2xl p-3 text-right"
+      style={{ backgroundColor: palette.bg, border: `1px solid ${palette.border}` }}
+    >
+      <p style={{ color: '#64748B', fontWeight: 700, fontSize: 12 }}>{label}</p>
+      <p style={{ color: palette.text, fontWeight: 900, fontSize: 24, marginTop: 6 }}>{value}</p>
     </div>
   );
 }

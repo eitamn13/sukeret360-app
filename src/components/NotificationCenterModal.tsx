@@ -157,7 +157,7 @@ export function NotificationCenterModal({
 
   const handleSendTestNotification = () => {
     if (typeof Notification === 'undefined') return;
-    new Notification('בדיקת התראה מסוכרת360', {
+    new Notification('בדיקת התראה', {
       body: 'אם ראית את ההודעה הזאת, ההתראות עובדות כמו שצריך.',
     });
     setFeedback('נשלחה התראת בדיקה למכשיר.');
@@ -189,9 +189,9 @@ export function NotificationCenterModal({
           </button>
 
           <div className="text-center">
-            <h2 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>מרכז ההתראות</h2>
+            <h2 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>התראות</h2>
             <p style={{ color: '#64748B', fontSize: 13, fontWeight: 600 }}>
-              {dueCount > 0 ? `${dueCount} תזכורות מחכות לך עכשיו` : 'אין כרגע תזכורות דחופות'}
+              {dueCount > 0 ? `${dueCount} ממתינות עכשיו` : 'אין כרגע תזכורות'}
             </p>
           </div>
 
@@ -224,12 +224,12 @@ export function NotificationCenterModal({
               <p style={{ fontWeight: 900, fontSize: 18 }}>
                 {notificationPermission === 'granted'
                   ? 'ההתראות שלך פעילות'
-                  : 'אפשר התראות עכשיו'}
+                  : 'אפשר התראות'}
               </p>
               <p style={{ marginTop: 6, opacity: 0.9, lineHeight: 1.7 }}>
                 {notificationPermission === 'granted'
-                  ? 'נשלח תזכורות לתרופות ונוכל גם לשלוח בדיקת התראה מיידית.'
-                  : 'כדי שלא תפספס תרופות, צריך לאשר התראות מהטלפון או מהדפדפן.'}
+                  ? 'אפשר לשלוח בדיקת התראה מיידית.'
+                  : 'כדי לא לפספס תרופות, צריך לאשר התראות.'}
               </p>
             </div>
           </div>
@@ -244,7 +244,7 @@ export function NotificationCenterModal({
                 fontWeight: 800,
               }}
             >
-              {notificationPermission === 'granted' ? 'שלח בדיקת התראה' : 'אפשר התראות עכשיו'}
+              {notificationPermission === 'granted' ? 'בדיקת התראה' : 'אפשר עכשיו'}
             </button>
             <button
               onClick={onOpenMedications}
@@ -256,7 +256,7 @@ export function NotificationCenterModal({
                 fontWeight: 800,
               }}
             >
-              פתח מסך תרופות
+              מסך תרופות
             </button>
           </div>
         </div>
@@ -289,10 +289,10 @@ export function NotificationCenterModal({
             >
               <CheckCircle2 size={26} style={{ color: '#16A34A', margin: '0 auto 10px' }} />
               <p style={{ color: '#0F172A', fontWeight: 800, fontSize: 17 }}>
-                הכול שקט ומסודר כרגע
+                אין התראות כרגע
               </p>
               <p style={{ color: '#64748B', marginTop: 8, lineHeight: 1.7 }}>
-                אין כרגע תרופות דחופות, ובמסך התרופות אפשר לראות את כל הלוח היומי.
+                במסך התרופות אפשר לראות את כל הלוח היומי.
               </p>
             </div>
           )}
@@ -341,7 +341,7 @@ export function NotificationCenterModal({
           }}
         >
           <Pill size={18} />
-          עבור למסך התרופות
+          פתח תרופות
         </button>
       </div>
     </div>

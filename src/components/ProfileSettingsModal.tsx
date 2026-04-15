@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useMemo, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 import {
   BellRing,
   Check,
@@ -6,7 +6,6 @@ import {
   HeartHandshake,
   Phone,
   Save,
-  ShieldCheck,
   UserRound,
 } from 'lucide-react';
 import { Gender, TreatmentType, UserProfile, useAppContext } from '../context/AppContext';
@@ -91,25 +90,11 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
     }
   }, [isOpen, userProfile]);
 
-  const treatmentLabel = useMemo(() => {
-    if (treatmentType === 'insulin') return 'אינסולין';
-    if (treatmentType === 'pills') return 'כדורים';
-    if (treatmentType === 'combined') return 'טיפול משולב';
-    if (treatmentType === 'lifestyle') return 'אורח חיים';
-    return 'טרם הוגדר';
-  }, [treatmentType]);
-
   const isValid =
     name.trim().length > 0 &&
     Number(age) > 0 &&
     Number(targetLow) > 0 &&
     Number(targetHigh) > Number(targetLow);
-
-  const summaryChips = [
-    diabetesType ? `סוכרת סוג ${diabetesType}` : 'סוג סוכרת',
-    treatmentLabel,
-    `יעד ${targetLow || '--'}-${targetHigh || '--'}`,
-  ];
 
   const handleSave = () => {
     const updated: UserProfile = {
@@ -148,7 +133,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
     >
       <OverlayHeader
         title="הגדרות ופרופיל"
-        subtitle="מסך מסודר לעריכת פרטים, יעדים וקשר חירום"
+        subtitle="פרטים, יעדים וקשר חירום"
         theme={theme}
         onBack={onClose}
         onClose={onClose}
@@ -156,50 +141,9 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
       />
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        <div
-          className="rounded-[30px] p-5"
-          style={{
-            background: theme.gradientCard,
-            color: '#FFFFFF',
-            boxShadow: `0 20px 44px ${theme.primaryShadow}`,
-          }}
-        >
-          <div className="flex items-start justify-between gap-3">
-            <div
-              className="w-14 h-14 rounded-[20px] flex items-center justify-center"
-              style={{ backgroundColor: 'rgba(255,255,255,0.18)' }}
-            >
-              <ShieldCheck size={22} />
-            </div>
-
-            <div className="text-right flex-1">
-              <p style={{ fontWeight: 900, fontSize: 24 }}>{name || 'הפרופיל שלי'}</p>
-              <p style={{ opacity: 0.84, marginTop: 8, lineHeight: 1.8 }}>
-                כאן אפשר לעדכן את כל מה שמרכיב את הליווי החכם שלך: נתונים אישיים, יעדי איזון ואיש קשר לחירום.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex flex-wrap justify-end gap-2 mt-4">
-            {summaryChips.map((chip) => (
-              <span
-                key={chip}
-                className="px-3 py-1.5 rounded-full text-xs"
-                style={{
-                  backgroundColor: 'rgba(255,255,255,0.16)',
-                  color: '#FFFFFF',
-                  fontWeight: 800,
-                }}
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
-        </div>
-
         <SectionCard
-          title="פרטים אישיים"
-          subtitle="נתונים בסיסיים להצגת מסכים מותאמים ונוחים יותר"
+          title="פרטים"
+          subtitle="שם, גיל ומגדר"
           icon={<UserRound size={18} />}
           theme={theme}
         >
@@ -248,31 +192,49 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                 {[
                   { value: 'female' as Gender, label: 'אישה', emoji: '👩' },
                   { value: 'male' as Gender, label: 'גבר', emoji: '👨' },
-                ].map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setGender(option.value)}
-                    className="rounded-2xl p-4 text-center transition-all active:scale-[0.98]"
-                    style={{
-                      border: `2px solid ${gender === option.value ? theme.primary : '#E2E8F0'}`,
-                      backgroundColor: gender === option.value ? theme.primaryBg : '#FFFFFF',
-                      boxShadow: gender === option.value ? `0 10px 22px ${theme.primaryShadow}` : 'none',
-                    }}
-                  >
-                    <p className="text-2xl mb-2">{option.emoji}</p>
-                    <p style={{ color: gender === option.value ? theme.primary : '#334155', fontWeight: 800 }}>
-                      {option.label}
-                    </p>
-                  </button>
-                ))}
+                ].map((option) => {
+                  const selected = gender === option.value;
+                  const accent =
+                    option.value === 'male'
+                      ? {
+                          border: '#2563EB',
+                          background: '#EFF6FF',
+                          text: '#1D4ED8',
+                          shadow: 'rgba(37,99,235,0.14)',
+                        }
+                      : {
+                          border: '#EC4899',
+                          background: '#FFF1F7',
+                          text: '#BE185D',
+                          shadow: 'rgba(236,72,153,0.14)',
+                        };
+
+                  return (
+                    <button
+                      key={option.value}
+                      onClick={() => setGender(option.value)}
+                      className="rounded-2xl p-4 text-center transition-all active:scale-[0.98]"
+                      style={{
+                        border: `2px solid ${selected ? accent.border : '#E2E8F0'}`,
+                        backgroundColor: selected ? accent.background : '#FFFFFF',
+                        boxShadow: selected ? `0 10px 22px ${accent.shadow}` : 'none',
+                      }}
+                    >
+                      <p className="text-2xl mb-2">{option.emoji}</p>
+                      <p style={{ color: selected ? accent.text : '#334155', fontWeight: 800 }}>
+                        {option.label}
+                      </p>
+                    </button>
+                  );
+                })}
               </div>
             </LabeledField>
           </div>
         </SectionCard>
 
         <SectionCard
-          title="תוכנית האיזון שלך"
-          subtitle="היעדים והשגרה שעל פיהם האפליקציה תכוון אותך"
+          title="יעדים"
+          subtitle="סוג סוכרת, טיפול ושעות"
           icon={<BellRing size={18} />}
           theme={theme}
         >
@@ -396,8 +358,8 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
         </SectionCard>
 
         <SectionCard
-          title="איש קשר לחירום"
-          subtitle="מי יקבל הודעה כשצריך לעזור או לבדוק שהכול בסדר"
+          title="חירום"
+          subtitle="איש קשר להודעה מהירה"
           icon={<HeartHandshake size={18} />}
           theme={theme}
         >
