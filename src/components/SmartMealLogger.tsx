@@ -379,7 +379,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
     >
       <div
         className="relative w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-[430px] lg:max-w-xl overflow-hidden flex flex-col rounded-none sm:rounded-[28px]"
-        style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))' }}
+        style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))', height: '100dvh', maxHeight: '100dvh' }}
       >
         <div
           className="flex-shrink-0 sm:rounded-t-[28px] overflow-hidden"
@@ -406,7 +406,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 pb-[calc(9.5rem+env(safe-area-inset-bottom,0px))]">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 pb-[calc(3rem+env(safe-area-inset-bottom,0px))]">
           {errorMessage && (
             <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
               {errorMessage}
@@ -494,12 +494,12 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
 
           {step === 2 && (
               <div className="space-y-3">
-                <div className="grid gap-3 lg:grid-cols-[1.06fr_0.94fr]">
+                <div className="space-y-3 lg:grid lg:grid-cols-[1.06fr_0.94fr] lg:gap-3 lg:space-y-0">
                   <div className="space-y-3">
                   <div className="rounded-[26px] p-3" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
-                    <div className="flex flex-row-reverse items-center gap-3">
+                    <div className="flex items-center gap-3">
                       <div
-                        className="h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl flex-shrink-0"
+                        className="h-14 w-14 sm:h-16 sm:w-16 overflow-hidden rounded-2xl flex-shrink-0"
                         style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
                       >
                         {imagePreviewUrl ? (
@@ -703,21 +703,21 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               </div>
 
               <div
-                className="sticky bottom-0 z-10 mt-4 flex flex-col gap-3 rounded-[26px] border border-white/80 bg-[rgba(255,255,255,0.98)] p-3 shadow-[0_-14px_34px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row"
+                className="mt-4 grid gap-3 rounded-[26px] border border-white/80 bg-[rgba(255,255,255,0.98)] p-3 shadow-[0_12px_34px_rgba(15,23,42,0.08)] sm:grid-cols-2"
                 style={{
-                  marginBottom: 'max(2.4rem, calc(env(safe-area-inset-bottom, 0px) + 0.8rem))',
+                  marginBottom: 'max(1.4rem, calc(env(safe-area-inset-bottom, 0px) + 0.8rem))',
                 }}
               >
                 <button
                   onClick={() => setStep(1)}
-                  className="flex-1 h-12 rounded-2xl"
+                  className="h-12 rounded-2xl"
                   style={{ backgroundColor: '#FFFFFF', color: '#334155', border: '1px solid #CBD5E1', fontWeight: 700 }}
                 >
                   חזרה לצילום
                 </button>
                 <button
                   onClick={saveMeals}
-                  className="flex-1 h-12 rounded-2xl text-white"
+                  className="h-12 rounded-2xl text-white"
                   style={{ background: primaryButtonBackground, fontWeight: 800, boxShadow: primaryButtonShadow }}
                 >
                   שמירת הארוחה ליומן
@@ -802,7 +802,7 @@ function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => v
       </button>
 
       <div className="flex-1 text-right">
-        <div className="flex flex-row-reverse items-start gap-3">
+        <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
             {food.source === 'vision' ? '📷' : food.source === 'database' ? '🗂️' : '🍽️'}
           </div>
@@ -873,7 +873,7 @@ function FoodDatabaseRow({
       className="w-full rounded-2xl p-2.5 text-right transition-all active:scale-[0.99]"
       style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
     >
-      <div className="flex flex-row-reverse items-start gap-3">
+      <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
           <span style={{ fontSize: 20 }}>{item.icon}</span>
         </div>

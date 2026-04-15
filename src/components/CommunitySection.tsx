@@ -55,7 +55,7 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
 
   return (
     <section className="px-4 mt-6 pb-2" dir="rtl">
-      <div className="mb-3 flex flex-row-reverse items-center justify-end gap-2">
+      <div className="mb-3 flex items-center justify-start gap-2">
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
           style={{ background: accentSurface.headerBadge, color: theme.primaryDark }}
@@ -80,7 +80,7 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
               boxShadow: item.accent ? accentSurface.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
             }}
           >
-            <div className="flex h-full flex-col items-end text-right">
+            <div className="flex h-full flex-col items-start text-right">
               <div
                 className="w-11 h-11 rounded-2xl flex items-center justify-center"
                 style={{

@@ -129,7 +129,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
   return (
     <div
       className="fixed inset-0 z-[80] flex flex-col animate-slide-in-right overflow-hidden"
-      style={{ background: theme.gradientFull, height: '100svh', minHeight: '100svh' }}
+      style={{ background: theme.gradientFull, height: '100dvh', minHeight: '100dvh' }}
     >
       <OverlayHeader
         title="הגדרות ופרופיל"
@@ -142,7 +142,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
 
       <div
         className="flex-1 overflow-y-auto px-4 py-4 space-y-4 overscroll-contain"
-        style={{ paddingBottom: 'calc(9.5rem + env(safe-area-inset-bottom, 0px))' }}
+        style={{ paddingBottom: 'calc(12rem + env(safe-area-inset-bottom, 0px))' }}
       >
         <SectionCard
           title="פרטים"
@@ -403,15 +403,18 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
       <div
         className="flex-shrink-0 px-4 pt-3"
         style={{
-          paddingBottom: 'max(3.5rem, calc(env(safe-area-inset-bottom, 0px) + 1.4rem))',
-          background: 'transparent',
+          paddingBottom: 'max(5rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))',
+          background: 'rgba(255,255,255,0.96)',
+          backdropFilter: 'blur(14px)',
+          WebkitBackdropFilter: 'blur(14px)',
+          borderTop: `1px solid ${theme.primaryBorder}`,
         }}
       >
         <div
           className="rounded-[28px] bg-white p-3.5"
           style={{
             border: `1px solid ${theme.primaryBorder}`,
-            boxShadow: `0 -10px 32px ${theme.primary}18`,
+            boxShadow: `0 -14px 38px ${theme.primary}22`,
           }}
         >
           <button
@@ -422,11 +425,12 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
               background: saved
                 ? 'linear-gradient(135deg, #16A34A, #15803D)'
                 : isValid
-                  ? theme.gradientCard
-                  : '#E5E7EB',
-              color: isValid ? '#FFFFFF' : '#94A3B8',
+                  ? `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`
+                  : 'linear-gradient(135deg, #A8B6CB 0%, #7B8AA3 100%)',
+              color: '#FFFFFF',
               fontWeight: 900,
-              boxShadow: isValid ? `0 20px 38px ${theme.primaryShadow}` : 'none',
+              boxShadow: isValid ? `0 20px 38px ${theme.primaryShadow}` : '0 14px 28px rgba(100, 116, 139, 0.22)',
+              opacity: 1,
             }}
           >
           {saved ? (
