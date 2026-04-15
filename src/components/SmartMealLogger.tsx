@@ -406,7 +406,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-3 sm:space-y-4 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))]">
+        <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4 pb-[calc(7.5rem+env(safe-area-inset-bottom,0px))]">
           {errorMessage && (
             <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
               {errorMessage}
@@ -499,7 +499,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                   <div className="rounded-[26px] p-3" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
                     <div className="flex flex-row-reverse items-center gap-3">
                       <div
-                        className="h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-2xl flex-shrink-0"
+                        className="h-16 w-16 sm:h-20 sm:w-20 overflow-hidden rounded-2xl flex-shrink-0"
                         style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
                       >
                         {imagePreviewUrl ? (
@@ -522,7 +522,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                           </span>
                         </div>
                         <p style={{ color: '#0F172A', fontWeight: 800, fontSize: 16 }}>התמונה שנשלחה לניתוח</p>
-                        <p style={{ color: '#475569', marginTop: 6, lineHeight: 1.55, fontSize: 13, fontWeight: 600 }}>
+                        <p style={{ color: '#334155', marginTop: 6, lineHeight: 1.55, fontSize: 12.5, fontWeight: 700 }}>
                           שמרנו תצוגה קטנה כדי שהמסך יישאר נוח וקריא.
                         </p>
 
@@ -703,10 +703,9 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               </div>
 
               <div
-                className="flex flex-col gap-3 sm:flex-row pt-3 pb-1"
+                className="sticky bottom-0 z-10 mt-4 flex flex-col gap-3 rounded-[26px] border border-white/70 bg-[rgba(255,255,255,0.96)] p-3 shadow-[0_-12px_30px_rgba(15,23,42,0.08)] backdrop-blur sm:flex-row"
                 style={{
-                  marginTop: '0.5rem',
-                  paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
+                  marginBottom: 'calc(0.75rem + env(safe-area-inset-bottom, 0px))',
                 }}
               >
                 <button

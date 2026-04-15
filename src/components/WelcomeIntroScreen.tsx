@@ -60,7 +60,9 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
             >
               <Heart size={18} strokeWidth={2} />
             </div>
-            <p style={{ color: '#5A4740', fontWeight: 900, fontSize: 20 }}>מוקדש לסבתא שלי לאה</p>
+            <p style={{ color: '#5A4740', fontWeight: 900, fontSize: 20 }}>
+              מוקדש לסבתא שלי לאה ולחולי הסוכרת
+            </p>
           </div>
 
           <button
