@@ -148,9 +148,9 @@ function AppInner() {
         />
 
         <main
-          className="pb-28"
+          className="pb-10"
           style={{
-            paddingBottom: 'max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem))',
+            paddingBottom: 'max(1.75rem, calc(env(safe-area-inset-bottom, 0px) + 1rem))',
           }}
         >
           <GreetingSection

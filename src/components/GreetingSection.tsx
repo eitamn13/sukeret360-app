@@ -176,13 +176,13 @@ export function GreetingSection({
                 onClick={action.onClick}
                 className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
                 style={{
-                  minHeight: 108,
+                  minHeight: 104,
                   background: accent ? accentCard.background : 'rgba(255,255,255,0.82)',
                   border: `1px solid ${accent ? accentCard.border : theme.primaryBorder}`,
                   boxShadow: accent ? accentCard.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
                 }}
               >
-                <div className="flex flex-col items-start h-full text-right">
+                <div className="flex flex-col items-end h-full text-right">
                   <div
                     className="w-11 h-11 rounded-2xl flex items-center justify-center"
                     style={{

@@ -128,8 +128,8 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
 
   return (
     <div
-      className="fixed inset-0 z-[80] flex flex-col animate-slide-in-right"
-      style={{ background: theme.gradientFull }}
+      className="fixed inset-0 z-[80] flex flex-col animate-slide-in-right overflow-hidden"
+      style={{ background: theme.gradientFull, height: '100dvh' }}
     >
       <OverlayHeader
         title="הגדרות ופרופיל"
@@ -140,7 +140,10 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
         backLabel="חזרה"
       />
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div
+        className="flex-1 overflow-y-auto px-4 py-4 space-y-4 overscroll-contain"
+        style={{ paddingBottom: 'calc(1rem + env(safe-area-inset-bottom, 0px))' }}
+      >
         <SectionCard
           title="פרטים"
           subtitle="שם, גיל ומגדר"
@@ -159,7 +162,7 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
               />
             </LabeledField>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 items-end">
               <LabeledField label="גיל">
                 <input
                   type="number"
@@ -312,46 +315,20 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
 
             <div className="grid grid-cols-2 gap-3">
               <LabeledField label="שעת קימה">
-                <div className="relative">
-                  <Clock3
-                    size={16}
-                    style={{
-                      position: 'absolute',
-                      left: 14,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#64748B',
-                    }}
-                  />
-                  <input
-                    type="time"
-                    value={wakeTime}
-                    onChange={(event) => setWakeTime(event.target.value)}
-                    className="w-full h-14 px-4 rounded-2xl text-right outline-none"
-                    style={fieldStyle(Boolean(wakeTime), theme.primaryBorder)}
-                  />
-                </div>
+                <TimeField
+                  value={wakeTime}
+                  onChange={setWakeTime}
+                  active={Boolean(wakeTime)}
+                  borderColor={theme.primaryBorder}
+                />
               </LabeledField>
               <LabeledField label="שעת שינה">
-                <div className="relative">
-                  <Clock3
-                    size={16}
-                    style={{
-                      position: 'absolute',
-                      left: 14,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      color: '#64748B',
-                    }}
-                  />
-                  <input
-                    type="time"
-                    value={sleepTime}
-                    onChange={(event) => setSleepTime(event.target.value)}
-                    className="w-full h-14 px-4 rounded-2xl text-right outline-none"
-                    style={fieldStyle(Boolean(sleepTime), theme.primaryBorder)}
-                  />
-                </div>
+                <TimeField
+                  value={sleepTime}
+                  onChange={setSleepTime}
+                  active={Boolean(sleepTime)}
+                  borderColor={theme.primaryBorder}
+                />
               </LabeledField>
             </div>
           </div>
@@ -382,10 +359,11 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                   size={16}
                   style={{
                     position: 'absolute',
-                    left: 14,
+                    right: 14,
                     top: '50%',
                     transform: 'translateY(-50%)',
                     color: '#64748B',
+                    pointerEvents: 'none',
                   }}
                 />
                 <input
@@ -394,8 +372,12 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
                   onChange={(event) => setEmergencyPhone(event.target.value)}
                   placeholder="0501234567"
                   dir="rtl"
-                  className="w-full h-14 px-4 rounded-2xl text-right outline-none"
-                  style={fieldStyle(Boolean(emergencyPhone.trim()), theme.primaryBorder)}
+                  className="w-full h-14 rounded-2xl text-right outline-none"
+                  style={{
+                    ...fieldStyle(Boolean(emergencyPhone.trim()), theme.primaryBorder),
+                    paddingRight: '2.85rem',
+                    paddingLeft: '1rem',
+                  }}
                 />
               </div>
             </LabeledField>
@@ -416,12 +398,15 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
           </div>
         </SectionCard>
 
-        <div className="h-24" />
       </div>
 
       <div
-        className="flex-shrink-0 px-4 pt-3 pb-6 bg-white"
-        style={{ borderTop: `1px solid ${theme.primaryBorder}`, boxShadow: `0 -8px 28px ${theme.primary}12` }}
+        className="flex-shrink-0 px-4 pt-3 bg-white"
+        style={{
+          borderTop: `1px solid ${theme.primaryBorder}`,
+          boxShadow: `0 -8px 28px ${theme.primary}12`,
+          paddingBottom: 'calc(2.4rem + env(safe-area-inset-bottom, 0px))',
+        }}
       >
         <button
           onClick={handleSave}
@@ -520,4 +505,52 @@ function fieldStyle(active: boolean, borderColor: string) {
     color: '#0F172A',
     fontWeight: 700,
   };
+}
+
+function TimeField({
+  value,
+  onChange,
+  active,
+  borderColor,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  active: boolean;
+  borderColor: string;
+}) {
+  return (
+    <div className="relative">
+      <Clock3
+        size={16}
+        style={{
+          position: 'absolute',
+          right: 14,
+          top: '50%',
+          transform: 'translateY(-50%)',
+          color: '#64748B',
+          pointerEvents: 'none',
+        }}
+      />
+      <input
+        type="time"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        className="w-full h-14 rounded-[20px] outline-none"
+        style={{
+          ...fieldStyle(active, borderColor),
+          textAlign: 'center',
+          direction: 'ltr',
+          paddingRight: '2.7rem',
+          paddingLeft: '1rem',
+          WebkitAppearance: 'none',
+          appearance: 'none',
+          letterSpacing: '0.06em',
+          fontSize: '1rem',
+          fontWeight: 800,
+          fontVariantNumeric: 'tabular-nums',
+          boxShadow: active ? '0 10px 22px rgba(148, 163, 184, 0.08)' : 'none',
+        }}
+      />
+    </div>
+  );
 }

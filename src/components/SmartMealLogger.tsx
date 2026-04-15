@@ -387,7 +387,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
         >
           <OverlayHeader
             title="רישום ארוחה"
-            subtitle={step === 2 ? 'צילום קטן, ניתוח ברור והתאמה לחולי סוכרת' : 'צילום, מאגר מזון וסיכום של פחמימות וקלוריות'}
+            subtitle={step === 2 ? 'צילום קטן, ניתוח ברור ותיקון מהיר' : 'צילום, מאגר מזון וסיכום קצר'}
             theme={theme}
             onBack={() => (step > 0 ? setStep(step - 1) : onClose())}
             onClose={onClose}
@@ -406,7 +406,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-3 sm:p-5 space-y-3 sm:space-y-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
+        <div className="flex-1 overflow-y-auto p-2.5 sm:p-4 space-y-3 sm:space-y-4 pb-[calc(6.5rem+env(safe-area-inset-bottom,0px))]">
           {errorMessage && (
             <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
               {errorMessage}
@@ -416,11 +416,11 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           {step === 0 && (
             <div className="space-y-4">
               <div
-                className="rounded-3xl p-4 text-right"
+                className="rounded-[26px] p-3.5 text-right"
                 style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}`, boxShadow: `0 16px 32px ${theme.primaryShadow}` }}
               >
-                <p style={{ fontWeight: 900, fontSize: 22, color: '#0F172A' }}>איזו ארוחה זו?</p>
-                <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.7, fontWeight: 600 }}>
+                <p style={{ fontWeight: 900, fontSize: 20, color: '#0F172A' }}>איזו ארוחה זו?</p>
+                <p style={{ color: '#475569', marginTop: 6, lineHeight: 1.65, fontWeight: 700, fontSize: 14 }}>
                   בוחרים סוג ארוחה, ואז אפשר לצלם או להוסיף מהמאגר.
                 </p>
               </div>
@@ -433,17 +433,17 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                     <button
                       key={value}
                       onClick={() => setMealType(value as MealType)}
-                      className="rounded-3xl p-4 text-right transition-all active:scale-[0.98]"
+                      className="rounded-[24px] p-3.5 text-right transition-all active:scale-[0.98]"
                       style={{
-                        minHeight: 108,
+                        minHeight: 96,
                         border: `2px solid ${active ? meta.accent : '#E2E8F0'}`,
                         backgroundColor: active ? `${meta.accent}14` : '#FFFFFF',
                         boxShadow: active ? `0 14px 30px ${meta.accent}25` : 'none',
                       }}
                     >
-                      <div className="w-full flex justify-end text-3xl">{meta.icon}</div>
-                      <p style={{ fontWeight: 800, marginTop: 8, color: '#0F172A' }}>{meta.label}</p>
-                      <p style={{ color: '#64748B', fontSize: 13, marginTop: 4 }}>תיעוד מותאם לארוחת {meta.label}</p>
+                      <div className="w-full flex justify-end text-[1.8rem]">{meta.icon}</div>
+                      <p style={{ fontWeight: 800, marginTop: 6, color: '#0F172A', fontSize: 15 }}>{meta.label}</p>
+                      <p style={{ color: '#64748B', fontSize: 12.5, marginTop: 4, lineHeight: 1.45 }}>תיעוד מותאם לארוחת {meta.label}</p>
                     </button>
                   );
                 })}
@@ -462,14 +462,14 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           {step === 1 && (
             <div className="space-y-4">
               <div
-                className="rounded-3xl p-4 sm:p-5 border-2 border-dashed text-center"
+                className="rounded-[26px] p-4 sm:p-5 border-2 border-dashed text-center"
                 style={{ borderColor: theme.primaryBorder, backgroundColor: '#FFFFFF' }}
               >
-                <div className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center" style={{ background: primaryButtonBackground, color: 'white' }}>
-                  <Camera size={26} />
+                <div className="w-14 h-14 rounded-[22px] mx-auto flex items-center justify-center" style={{ background: primaryButtonBackground, color: 'white' }}>
+                  <Camera size={24} />
                 </div>
-                <p style={{ fontWeight: 800, fontSize: 20, marginTop: 16, color: '#0F172A' }}>צלמו את הצלחת או העלו תמונה</p>
-                <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.7 }}>
+                <p style={{ fontWeight: 800, fontSize: 18, marginTop: 14, color: '#0F172A' }}>צלמו את הצלחת או העלו תמונה</p>
+                <p style={{ color: '#475569', marginTop: 6, lineHeight: 1.65, fontSize: 14, fontWeight: 600 }}>
                   ננסה לזהות את המזון, להעריך פחמימות וקלוריות, ואז תוכלו לתקן הכול ידנית.
                 </p>
                 <label
@@ -494,12 +494,12 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
 
           {step === 2 && (
               <div className="space-y-3">
-                <div className="grid gap-4 lg:grid-cols-[1.06fr_0.94fr]">
+                <div className="grid gap-3 lg:grid-cols-[1.06fr_0.94fr]">
                   <div className="space-y-3">
-                  <div className="rounded-3xl p-3.5" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
+                  <div className="rounded-[26px] p-3" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
                     <div className="flex flex-row-reverse items-center gap-3">
                       <div
-                        className="h-24 w-24 sm:h-28 sm:w-28 overflow-hidden rounded-2xl flex-shrink-0"
+                        className="h-20 w-20 sm:h-24 sm:w-24 overflow-hidden rounded-2xl flex-shrink-0"
                         style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
                       >
                         {imagePreviewUrl ? (
@@ -521,9 +521,9 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                             {selectedFoods.length} פריטים
                           </span>
                         </div>
-                        <p style={{ color: '#0F172A', fontWeight: 800, fontSize: 17 }}>התמונה שנשלחה לניתוח</p>
-                        <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.6, fontSize: 13.5 }}>
-                          שמרנו תמונה קטנה וברורה, כדי שהמסך יישאר נוח ולא יתנפח.
+                        <p style={{ color: '#0F172A', fontWeight: 800, fontSize: 16 }}>התמונה שנשלחה לניתוח</p>
+                        <p style={{ color: '#475569', marginTop: 6, lineHeight: 1.55, fontSize: 13, fontWeight: 600 }}>
+                          שמרנו תצוגה קטנה כדי שהמסך יישאר נוח וקריא.
                         </p>
 
                         <label
@@ -538,7 +538,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
 
-                    <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
+                    <div className="rounded-[26px] p-3.5" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
                     <div className="flex items-center justify-between mb-3">
                       <span style={{ color: '#64748B', fontSize: 13 }}>{selectedFoods.length} פריטים</span>
                       <p style={{ fontWeight: 800, color: '#0F172A' }}>פריטי הארוחה</p>
@@ -556,8 +556,8 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                    <div className="rounded-3xl p-4" style={{ backgroundColor: mealSuitability.bg, border: `1px solid ${mealSuitability.border}` }}>
+                <div className="space-y-3 pb-24">
+                    <div className="rounded-[26px] p-3.5" style={{ backgroundColor: mealSuitability.bg, border: `1px solid ${mealSuitability.border}` }}>
                     <div className="flex items-center justify-between gap-3">
                       <span
                         className="px-3 py-1 rounded-full text-xs"
@@ -567,23 +567,23 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                       </span>
                       <p style={{ color: mealSuitability.tone, fontWeight: 900, fontSize: 13 }}>התאמה לחולי סוכרת</p>
                     </div>
-                    <p style={{ color: mealSuitability.tone, fontWeight: 900, fontSize: 20, marginTop: 10 }}>{mealSuitability.title}</p>
-                    <p style={{ color: mealSuitability.tone, opacity: 0.94, marginTop: 8, lineHeight: 1.75 }}>{mealSuitability.body}</p>
+                    <p style={{ color: mealSuitability.tone, fontWeight: 900, fontSize: 18, marginTop: 8 }}>{mealSuitability.title}</p>
+                    <p style={{ color: mealSuitability.tone, opacity: 0.94, marginTop: 8, lineHeight: 1.65, fontSize: 14 }}>{mealSuitability.body}</p>
                     <div
-                      className="mt-3 rounded-2xl px-3.5 py-3"
+                      className="mt-3 rounded-2xl px-3 py-3"
                       style={{ backgroundColor: '#FFFFFF', border: `1px solid ${mealSuitability.border}` }}
                     >
-                      <p style={{ color: insight.tone, fontWeight: 800, fontSize: 15 }}>{insight.title}</p>
-                      <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.65, fontSize: 13.5 }}>{insight.body}</p>
+                      <p style={{ color: insight.tone, fontWeight: 800, fontSize: 14 }}>{insight.title}</p>
+                      <p style={{ color: '#475569', marginTop: 6, lineHeight: 1.6, fontSize: 13 }}>{insight.body}</p>
                     </div>
-                    <div className="grid grid-cols-3 gap-3 mt-4">
+                    <div className="grid grid-cols-3 gap-2 mt-4">
                       <MetricCard label="פחמימות" value={`${totalCarbs}`} color={mealSuitability.tone} border={mealSuitability.border} />
                       <MetricCard label="קלוריות" value={`${totalCalories}`} color={mealSuitability.tone} border={mealSuitability.border} />
                       <MetricCard label="פריטים" value={`${selectedFoods.length}`} color={mealSuitability.tone} border={mealSuitability.border} />
                     </div>
                   </div>
 
-                    <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
+                    <div className="rounded-[26px] p-3.5" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
                     <div className="mb-3 flex items-center justify-end gap-2">
                       <Search size={16} style={{ color: theme.primary }} />
                       <p style={{ fontWeight: 800, color: '#0F172A' }}>מאגר מזון לחולי סוכרת</p>
@@ -644,7 +644,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                       <span style={{ color: '#64748B', fontSize: 13 }}>מנות</span>
                     </div>
 
-                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
                       {databaseResults.map((item) => (
                         <FoodDatabaseRow
                           key={item.id}
@@ -657,7 +657,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
 
-                    <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
+                    <div className="rounded-[26px] p-3.5" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
                     <p style={{ fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>הוספה ידנית מהירה</p>
                     <div className="space-y-2">
                       <input
@@ -706,6 +706,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 className="sticky bottom-0 flex flex-col gap-3 sm:flex-row pt-2"
                 style={{
                   background: 'linear-gradient(180deg, rgba(248,250,252,0) 0%, rgba(248,250,252,0.98) 28%, rgba(248,250,252,0.98) 100%)',
+                  paddingBottom: 'calc(0.5rem + env(safe-area-inset-bottom, 0px))',
                 }}
               >
                 <button
@@ -779,9 +780,9 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
 
 function MetricCard({ label, value, color, border }: { label: string; value: string; color: string; border: string }) {
   return (
-    <div className="rounded-2xl p-3 text-center" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${border}` }}>
-      <p style={{ color: '#64748B', fontSize: 12, fontWeight: 700 }}>{label}</p>
-      <p style={{ color, fontWeight: 900, fontSize: 24, marginTop: 6 }}>{value}</p>
+    <div className="rounded-2xl p-2.5 text-center" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${border}` }}>
+      <p style={{ color: '#64748B', fontSize: 11, fontWeight: 700 }}>{label}</p>
+      <p style={{ color, fontWeight: 900, fontSize: 20, marginTop: 6 }}>{value}</p>
     </div>
   );
 }
@@ -791,7 +792,7 @@ function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => v
   const suitability = getFoodSuitability(food, match);
 
   return (
-    <div className="rounded-2xl p-3 flex items-start gap-3" style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
+    <div className="rounded-2xl p-2.5 flex items-start gap-3" style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}>
       <button
         onClick={onRemove}
         className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
@@ -803,27 +804,27 @@ function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => v
 
       <div className="flex-1 text-right">
         <div className="flex flex-row-reverse items-start gap-3">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
+          <div className="w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
             {food.source === 'vision' ? '📷' : food.source === 'database' ? '🗂️' : '🍽️'}
           </div>
           <div className="flex-1">
-            <p style={{ fontWeight: 800, color: '#0F172A', fontSize: 17 }}>{food.name}</p>
+            <p style={{ fontWeight: 800, color: '#0F172A', fontSize: 15.5, lineHeight: 1.45 }}>{food.name}</p>
             <div className="mt-1 flex flex-wrap justify-end gap-2">
               <span
-                className="px-3 py-1.5 rounded-full text-[13px]"
+                className="px-2.5 py-1 rounded-full text-[12px]"
                 style={{ backgroundColor: suitability.bg, color: suitability.tone, fontWeight: 800, border: `1px solid ${suitability.border}` }}
               >
                 {suitability.label}
               </span>
               {(food.confidence ?? 1) < 0.72 && (
-                <span className="px-3 py-1.5 rounded-full text-[13px]" style={{ backgroundColor: '#FEF3C7', color: '#B45309', fontWeight: 800 }}>
+                <span className="px-2.5 py-1 rounded-full text-[12px]" style={{ backgroundColor: '#FEF3C7', color: '#B45309', fontWeight: 800 }}>
                   דורש בדיקה
                 </span>
               )}
-              <span className="px-3 py-1.5 rounded-full text-[13px]" style={{ backgroundColor: '#F5F3FF', color: '#7C3AED', fontWeight: 800 }}>
+              <span className="px-2.5 py-1 rounded-full text-[12px]" style={{ backgroundColor: '#F5F3FF', color: '#7C3AED', fontWeight: 800 }}>
                 {food.carbs} גרם פחמימות
               </span>
-              <span className="px-3 py-1.5 rounded-full text-[13px]" style={{ backgroundColor: '#FFF7ED', color: '#C2410C', fontWeight: 800 }}>
+              <span className="px-2.5 py-1 rounded-full text-[12px]" style={{ backgroundColor: '#FFF7ED', color: '#C2410C', fontWeight: 800 }}>
                 {food.calories || 0} קלוריות
               </span>
             </div>
@@ -831,14 +832,14 @@ function FoodRow({ food, onRemove }: { food: SelectedMealFood; onRemove: () => v
         </div>
 
         {(food.servingLabel || food.note) && (
-          <div className="mt-2 text-sm text-right" style={{ color: '#64748B', lineHeight: 1.6 }}>
+          <div className="mt-2 text-right" style={{ color: '#475569', lineHeight: 1.55, fontSize: 13 }}>
             {food.servingLabel && <div>{food.servingLabel}</div>}
             {food.note && <div>{food.note}</div>}
           </div>
         )}
 
         {!food.note && (
-          <div className="mt-2 text-sm text-right" style={{ color: '#64748B', lineHeight: 1.6 }}>
+          <div className="mt-2 text-right" style={{ color: '#475569', lineHeight: 1.55, fontSize: 13 }}>
             {suitability.body}
           </div>
         )}
@@ -870,11 +871,11 @@ function FoodDatabaseRow({
   return (
     <button
       onClick={onAdd}
-      className="w-full rounded-2xl p-3 text-right transition-all active:scale-[0.99]"
+      className="w-full rounded-2xl p-2.5 text-right transition-all active:scale-[0.99]"
       style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
     >
       <div className="flex flex-row-reverse items-start gap-3">
-        <div className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
+        <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}>
           <span style={{ fontSize: 20 }}>{item.icon}</span>
         </div>
 
@@ -893,9 +894,9 @@ function FoodDatabaseRow({
               {item.carbs} גרם
             </span>
           </div>
-          <p style={{ fontWeight: 800, color: '#0F172A' }}>{item.name}</p>
-          <p style={{ color: '#475569', fontSize: 13, marginTop: 4 }}>{item.serving}</p>
-          <p style={{ color: '#64748B', fontSize: 12, marginTop: 8 }}>{item.note}</p>
+          <p style={{ fontWeight: 800, color: '#0F172A', fontSize: 15.5 }}>{item.name}</p>
+          <p style={{ color: '#475569', fontSize: 12.5, marginTop: 4, fontWeight: 600 }}>{item.serving}</p>
+          <p style={{ color: '#64748B', fontSize: 12, marginTop: 8, lineHeight: 1.5 }}>{item.note}</p>
         </div>
       </div>
     </button>

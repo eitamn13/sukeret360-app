@@ -364,7 +364,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         <div
-          className="rounded-3xl p-4"
+          className="rounded-3xl p-4 text-right"
           style={{
             backgroundColor: '#FFFFFF',
             border: `1px solid ${theme.primaryBorder}`,
@@ -374,13 +374,13 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
           <div className="flex items-center justify-end gap-2">
             <p style={{ color: '#0F172A', fontWeight: 900 }}>במה אפשר לעזור עכשיו?</p>
             <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
               style={{ background: theme.gradientCard, color: '#FFFFFF' }}
             >
               <Sparkles size={17} strokeWidth={1.8} />
             </div>
           </div>
-          <div className="flex flex-wrap justify-end gap-2 mt-3">
+          <div className="mt-3 flex flex-row-reverse flex-wrap justify-start gap-2">
             {['סוכר', 'תרופות', 'אוכל', 'תסמינים'].map((item) => (
               <span
                 key={item}
