@@ -102,7 +102,7 @@ export function GreetingSection({
 
           <button
             onClick={onSOSClick}
-            className="h-12 min-w-[98px] px-5 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95"
+            className="h-12 min-w-[108px] px-5 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95"
             style={{
               backgroundColor: 'rgba(255,255,255,0.16)',
               color: '#FFFFFF',
@@ -142,14 +142,15 @@ export function GreetingSection({
                 border: '1px solid rgba(255,255,255,0.18)',
               }}
             >
-              <div className="flex flex-row-reverse items-center justify-between gap-3">
+              <div className="flex flex-col items-end h-full text-right">
                 <div
-                  className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
                   style={{ backgroundColor: 'rgba(255,255,255,0.16)', color: '#FFFFFF' }}
                 >
                   {action.icon}
                 </div>
-                <div className="text-right flex-1">
+
+                <div className="text-right mt-auto w-full">
                   <p style={{ color: '#FFFFFF', fontWeight: 900 }}>{action.label}</p>
                   <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12, marginTop: 4 }}>
                     {action.note}

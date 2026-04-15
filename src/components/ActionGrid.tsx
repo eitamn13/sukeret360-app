@@ -91,16 +91,17 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
 
   return (
     <section className="px-4 mt-6" dir="rtl">
-      <div className="flex items-center justify-between mb-3 gap-3">
-        <div className="text-right">
-          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>מה צריך עכשיו</h3>
-          <p style={{ color: '#64748B', fontSize: 13 }}>קצר, ברור ומהיר.</p>
-        </div>
+      <div className="flex flex-row-reverse items-center justify-start mb-3 gap-3">
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
         >
           <Sparkles size={18} strokeWidth={1.9} />
+        </div>
+
+        <div className="text-right">
+          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>מה צריך עכשיו</h3>
+          <p style={{ color: '#64748B', fontSize: 13 }}>קצר, ברור ומהיר.</p>
         </div>
       </div>
 
@@ -119,9 +120,9 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
                 : '0 10px 26px rgba(15, 23, 42, 0.05)',
             }}
           >
-            <div className="flex flex-col items-end h-full">
+            <div className="flex flex-col items-end h-full text-right">
               <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
                 style={{
                   background: action.accent ? 'rgba(255,255,255,0.16)' : theme.primaryBg,
                   color: action.accent ? '#FFFFFF' : theme.primary,
@@ -130,7 +131,7 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
                 {action.icon}
               </div>
 
-              <div className="mt-auto">
+              <div className="mt-auto w-full text-right">
                 <p
                   className="text-[15px] leading-tight"
                   style={{ color: action.accent ? '#FFFFFF' : '#0F172A', fontWeight: 900 }}

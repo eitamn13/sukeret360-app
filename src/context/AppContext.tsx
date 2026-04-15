@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 
 export type Gender = 'female' | 'male' | '';
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -245,6 +245,18 @@ function getTodayDateForTime(time: string): Date {
   return date;
 }
 
+function buildMedicationAlertMessage(
+  patientName: string,
+  gender: Gender,
+  medication: MedicationScheduleItem
+) {
+  const displayName = patientName.trim() || genderedText(gender, 'המטופלת', 'המטופל');
+  const appearance = medication.appearanceLabel ? ` (${medication.appearanceLabel})` : '';
+  const markedWord = genderedText(gender, 'סימנה', 'סימן');
+
+  return `${displayName} עדיין לא ${markedWord} שלקח/ה את ${medication.name}${appearance} של ${medication.period}, שנקבעה לשעה ${medication.time}.`;
+}
+
 function getThemeForProfile(profile: UserProfile): Theme {
   return profile.gender === 'male' ? MALE_THEME : FEMALE_THEME;
 }
@@ -337,6 +349,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       entry.startsWith(todayKey)
     );
   });
+  const emergencyAlertInFlight = useRef<Set<string>>(new Set());
 
   const theme = useMemo(() => getThemeForProfile(userProfile), [userProfile]);
 
@@ -564,9 +577,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [medicationLogs]);
 
   useEffect(() => {
-    if (typeof Notification === 'undefined') return;
-    if (notificationPermission !== 'granted') return;
     if (medicationSchedule.length === 0) return;
+
+    const canSendBrowserNotifications =
+      typeof Notification !== 'undefined' && notificationPermission === 'granted';
 
     const checkMedicationReminders = () => {
       const todayKey = getTodayKey();
@@ -593,9 +607,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
         const dueKey = `${todayKey}:${medication.id}:due`;
         const overdueKey = `${todayKey}:${medication.id}:overdue`;
+        const emergencyKey = `${todayKey}:${medication.id}:emergency`;
+        const emergencyUnavailableKey = `${todayKey}:${medication.id}:emergency-unavailable`;
         const overdueThreshold = medication.notifyEmergencyAfterMinutes ?? 45;
 
         if (
+          canSendBrowserNotifications &&
           minutesLate >= overdueThreshold &&
           !sentMedicationNotifications.includes(overdueKey)
         ) {
@@ -606,15 +623,80 @@ export function AppProvider({ children }: { children: ReactNode }) {
             tag: overdueKey,
           });
           nextNotificationKeys.push(overdueKey);
-          continue;
         }
 
-        if (!sentMedicationNotifications.includes(dueKey)) {
+        if (canSendBrowserNotifications && !sentMedicationNotifications.includes(dueKey)) {
           new Notification('זמן לקחת תרופה', {
             body: `${medication.name} • ${medication.dosage} בשעה ${medication.time}`,
             tag: dueKey,
           });
           nextNotificationKeys.push(dueKey);
+        }
+
+        if (
+          minutesLate >= overdueThreshold &&
+          emergencyContact.phone.trim() &&
+          !sentMedicationNotifications.includes(emergencyKey) &&
+          !sentMedicationNotifications.includes(emergencyUnavailableKey) &&
+          !emergencyAlertInFlight.current.has(emergencyKey)
+        ) {
+          emergencyAlertInFlight.current.add(emergencyKey);
+
+          void fetch('/api/medication-alert', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              patientName: userProfile.name,
+              patientGender: userProfile.gender,
+              contactName: emergencyContact.name,
+              contactPhone: emergencyContact.phone,
+              medicationName: medication.name,
+              medicationAppearance: medication.appearanceLabel,
+              medicationPeriod: medication.period,
+              medicationTime: medication.time,
+              message: buildMedicationAlertMessage(userProfile.name, userProfile.gender, medication),
+            }),
+          })
+            .then(async (response) => {
+              const payload = (await response.json().catch(() => null)) as
+                | { delivered?: boolean; reason?: string }
+                | null;
+
+              if (!response.ok) {
+                throw new Error(payload?.reason || 'Failed to send emergency alert');
+              }
+
+              if (payload?.delivered) {
+                setSentMedicationNotifications((prev) =>
+                  Array.from(new Set([...prev, emergencyKey]))
+                );
+
+                if (typeof Notification !== 'undefined' && notificationPermission === 'granted') {
+                  new Notification('עודכן איש קשר לחירום', {
+                    body: emergencyContact.name
+                      ? `נשלחה הודעה אוטומטית אל ${emergencyContact.name}.`
+                      : 'נשלחה הודעה אוטומטית לאיש הקשר לחירום.',
+                    tag: emergencyKey,
+                  });
+                }
+
+                return;
+              }
+
+              if (payload?.reason === 'missing_webhook') {
+                setSentMedicationNotifications((prev) =>
+                  Array.from(new Set([...prev, emergencyUnavailableKey]))
+                );
+              }
+            })
+            .catch((error) => {
+              console.error('Automatic medication alert failed:', error);
+            })
+            .finally(() => {
+              emergencyAlertInFlight.current.delete(emergencyKey);
+            });
         }
       }
 
@@ -631,10 +713,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return () => window.clearInterval(intervalId);
   }, [
     emergencyContact.name,
+    emergencyContact.phone,
     medicationLogs,
     medicationSchedule,
     notificationPermission,
     sentMedicationNotifications,
+    userProfile.gender,
+    userProfile.name,
   ]);
 
   const value = useMemo<AppContextValue>(

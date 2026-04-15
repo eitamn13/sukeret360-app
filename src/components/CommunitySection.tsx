@@ -47,16 +47,17 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
 
   return (
     <section className="px-4 mt-6 pb-8" dir="rtl">
-      <div className="flex items-center justify-between mb-3 gap-3">
-        <div className="text-right">
-          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>תמיכה וקהילה</h3>
-          <p style={{ color: '#64748B', fontSize: 13 }}>מקום לשאול, לשתף ולהתחזק.</p>
-        </div>
+      <div className="flex flex-row-reverse items-center justify-start mb-3 gap-3">
         <div
           className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
           style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
         >
           <Users size={18} strokeWidth={1.9} />
+        </div>
+
+        <div className="text-right">
+          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>תמיכה וקהילה</h3>
+          <p style={{ color: '#64748B', fontSize: 13 }}>מקום לשאול, לשתף ולהתחזק.</p>
         </div>
       </div>
 
@@ -73,15 +74,15 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
               boxShadow: '0 10px 26px rgba(15, 23, 42, 0.05)',
             }}
           >
-            <div className="flex flex-col items-end h-full">
+            <div className="flex flex-col items-end h-full text-right">
               <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                className="w-11 h-11 rounded-2xl flex items-center justify-center self-end"
                 style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
               >
                 {item.icon}
               </div>
 
-              <div className="mt-auto">
+              <div className="mt-auto w-full text-right">
                 <p style={{ color: '#0F172A', fontWeight: 900 }}>{item.label}</p>
                 <p style={{ color: '#64748B', fontSize: 12, marginTop: 4, fontWeight: 700 }}>
                   {item.hint}
