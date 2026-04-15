@@ -235,16 +235,16 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
-      style={{ background: 'rgba(15,23,42,0.46)', backdropFilter: 'blur(6px)' }}
+      className="fixed inset-0 z-[10000] bg-white sm:flex sm:items-center sm:justify-center sm:p-4"
+      style={{ background: theme.gradientFull }}
       dir="rtl"
     >
       <div
-        className="w-full max-w-[430px] sm:max-w-xl max-h-[92vh] overflow-y-auto rounded-[28px]"
-        style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))', boxShadow: '0 30px 80px rgba(15,23,42,0.28)' }}
+        className="w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-[430px] lg:max-w-xl overflow-hidden flex flex-col rounded-none sm:rounded-[28px]"
+        style={{ background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(248,250,252,0.98))' }}
       >
         <div
-          className="sticky top-0 z-10 rounded-t-[28px] overflow-hidden"
+          className="flex-shrink-0 sm:rounded-t-[28px] overflow-hidden"
           style={{ background: 'rgba(255,255,255,0.94)', backdropFilter: 'blur(10px)' }}
         >
           <OverlayHeader
@@ -268,7 +268,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
-        <div className="p-4 sm:p-5 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5 space-y-4 pb-[calc(1rem+env(safe-area-inset-bottom,0px))]">
           {errorMessage && (
             <div className="rounded-2xl px-4 py-3 text-sm" style={{ backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C' }}>
               {errorMessage}
@@ -297,7 +297,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                       onClick={() => setMealType(value as MealType)}
                       className="rounded-3xl p-4 text-right transition-all active:scale-[0.98]"
                       style={{
-                        minHeight: 118,
+                        minHeight: 108,
                         border: `2px solid ${active ? meta.accent : '#E2E8F0'}`,
                         backgroundColor: active ? `${meta.accent}14` : '#FFFFFF',
                         boxShadow: active ? `0 14px 30px ${meta.accent}25` : 'none',
@@ -313,7 +313,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
 
               <button
                 onClick={() => setStep(1)}
-                className="w-full h-14 rounded-2xl text-white text-base transition-all active:scale-[0.99]"
+                  className="w-full h-[52px] sm:h-14 rounded-2xl text-white text-base transition-all active:scale-[0.99]"
                 style={{ background: primaryButtonBackground, fontWeight: 800, boxShadow: primaryButtonShadow }}
               >
                 המשך לצילום או להעלאה
@@ -324,7 +324,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           {step === 1 && (
             <div className="space-y-4">
               <div
-                className="rounded-3xl p-5 border-2 border-dashed text-center"
+                className="rounded-3xl p-4 sm:p-5 border-2 border-dashed text-center"
                 style={{ borderColor: theme.primaryBorder, backgroundColor: '#FFFFFF' }}
               >
                 <div className="w-16 h-16 rounded-3xl mx-auto flex items-center justify-center" style={{ background: primaryButtonBackground, color: 'white' }}>
@@ -362,9 +362,9 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
           )}
 
           {step === 2 && (
-            <div className="space-y-5">
-              <div className="grid gap-4 lg:grid-cols-[1.06fr_0.94fr]">
-                <div className="space-y-4">
+              <div className="space-y-4">
+                <div className="grid gap-4 lg:grid-cols-[1.06fr_0.94fr]">
+                  <div className="space-y-4">
                   <div className="rounded-3xl overflow-hidden" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
                     <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #E2E8F0' }}>
                       <span className="px-3 py-1 rounded-full text-xs" style={{ backgroundColor: `${MEAL_TYPE_META[mealType].accent}18`, color: MEAL_TYPE_META[mealType].accent, fontWeight: 800 }}>
@@ -373,7 +373,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                       <span style={{ color: '#64748B', fontSize: 13, fontWeight: 700 }}>צילום הארוחה</span>
                     </div>
                     {imagePreviewUrl ? (
-                      <img src={imagePreviewUrl} alt="Meal preview" style={{ width: '100%', maxHeight: 190, objectFit: 'cover', objectPosition: 'center center' }} />
+                      <img src={imagePreviewUrl} alt="Meal preview" style={{ width: '100%', height: 'clamp(180px, 32vh, 220px)', objectFit: 'cover', objectPosition: 'center center' }} />
                     ) : (
                       <div className="p-6 text-center" style={{ color: '#64748B' }}>
                         לא הועלתה תמונה. אפשר עדיין לבנות ארוחה מדויקת ידנית.
@@ -381,7 +381,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                     )}
                   </div>
 
-                  <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
+                    <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
                     <div className="flex items-center justify-between mb-3">
                       <span style={{ color: '#64748B', fontSize: 13 }}>{selectedFoods.length} פריטים</span>
                       <p style={{ fontWeight: 800, color: '#0F172A' }}>פריטי הארוחה</p>
@@ -410,7 +410,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
 
-                  <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
+                    <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
                     <div className="mb-3 flex items-center justify-end gap-2">
                       <Search size={16} style={{ color: theme.primary }} />
                       <p style={{ fontWeight: 800, color: '#0F172A' }}>מאגר מזון לחולי סוכרת</p>
@@ -484,7 +484,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                     </div>
                   </div>
 
-                  <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
+                    <div className="rounded-3xl p-4" style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}>
                     <p style={{ fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>הוספה ידנית מהירה</p>
                     <div className="space-y-2">
                       <input
@@ -529,7 +529,12 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div
+                className="sticky bottom-0 flex flex-col gap-3 sm:flex-row pt-3"
+                style={{
+                  background: 'linear-gradient(180deg, rgba(248,250,252,0) 0%, rgba(248,250,252,0.98) 28%, rgba(248,250,252,0.98) 100%)',
+                }}
+              >
                 <button
                   onClick={() => setStep(1)}
                   className="flex-1 h-12 rounded-2xl"
