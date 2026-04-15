@@ -1,12 +1,11 @@
-import { X, TrendingUp, TrendingDown, Minus, Share2, Droplets, UtensilsCrossed, Pill } from 'lucide-react';
-import { type ReactNode, useMemo } from 'react';
+import { useMemo } from 'react';
+import { Droplets, Pill, Share2, UtensilsCrossed } from 'lucide-react';
+import { OverlayHeader } from './OverlayHeader';
 import { useAppContext } from '../context/AppContext';
 
 interface HistoryScreenProps {
   onClose: () => void;
 }
-
-const DAY_LABELS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'];
 
 function isWithinLastDays(isoDate: string, days: number) {
   const targetTime = new Date(isoDate).getTime();
@@ -18,267 +17,178 @@ function getDateKey(date: Date) {
   return date.toISOString().split('T')[0];
 }
 
-function getLevelStatus(level: number, low: number, high: number): { label: string; color: string; bg: string } {
+function getLevelStatus(level: number, low: number, high: number) {
   if (level < low) return { label: 'נמוך', color: '#DC2626', bg: '#FEF2F2' };
-  if (level > high) return { label: 'גבוה', color: '#D97706', bg: '#FEF3C7' };
+  if (level > high) return { label: 'גבוה', color: '#D97706', bg: '#FFF7ED' };
   return { label: 'בטווח', color: '#16A34A', bg: '#F0FDF4' };
 }
 
-function getTrend(current: number, previous: number | null): 'up' | 'down' | 'stable' {
-  if (previous === null) return 'stable';
-  if (current - previous >= 10) return 'up';
-  if (previous - current >= 10) return 'down';
-  return 'stable';
-}
-
 export function HistoryScreen({ onClose }: HistoryScreenProps) {
-  const {
-    theme,
-    sugarLogs,
-    mealLogs,
-    medicationLogs,
-    medicationSchedule,
-    userProfile,
-  } = useAppContext();
+  const { theme, sugarLogs, mealLogs, medicationLogs, medicationSchedule, userProfile } = useAppContext();
 
   const targetLow = Number(userProfile.targetLow || 80);
   const targetHigh = Number(userProfile.targetHigh || 140);
+  const todayKey = getDateKey(new Date());
 
   const weeklySugarLogs = useMemo(
     () => sugarLogs.filter((log) => isWithinLastDays(log.loggedAt, 7)),
     [sugarLogs]
   );
 
-  const chartData = useMemo(() => {
-    return Array.from({ length: 7 }, (_, index) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (6 - index));
-      const dateKey = getDateKey(date);
-      const dayLogs = weeklySugarLogs.filter((log) => log.dateKey === dateKey);
-      const value = dayLogs.length
-        ? Math.round(dayLogs.reduce((sum, log) => sum + log.level, 0) / dayLogs.length)
-        : 0;
+  const weeklyMealLogs = useMemo(
+    () => mealLogs.filter((meal) => isWithinLastDays(meal.loggedAt, 7)),
+    [mealLogs]
+  );
 
-      return {
-        label: DAY_LABELS[date.getDay()],
-        value,
-        dateKey,
-        hasData: dayLogs.length > 0,
-      };
-    });
-  }, [weeklySugarLogs]);
-
-  const activeChartValues = chartData.filter((day) => day.hasData).map((day) => day.value);
-  const avgLevel = activeChartValues.length
-    ? Math.round(activeChartValues.reduce((sum, value) => sum + value, 0) / activeChartValues.length)
+  const avgLevel = weeklySugarLogs.length
+    ? Math.round(weeklySugarLogs.reduce((sum, log) => sum + log.level, 0) / weeklySugarLogs.length)
     : null;
+
   const inRangePercent = weeklySugarLogs.length
     ? Math.round(
-        (weeklySugarLogs.filter(
-          (log) => log.level >= targetLow && log.level <= targetHigh
-        ).length /
+        (weeklySugarLogs.filter((log) => log.level >= targetLow && log.level <= targetHigh).length /
           weeklySugarLogs.length) *
           100
       )
     : null;
 
-  const recentSugarLogs = sugarLogs.slice(0, 8).map((log, index, array) => ({
-    ...log,
-    trend: getTrend(log.level, array[index + 1]?.level ?? null),
-  }));
-
-  const weeklyMealLogs = mealLogs.filter((meal) => isWithinLastDays(meal.loggedAt, 7));
-  const averageMealCarbs = weeklyMealLogs.length
-    ? Math.round(
-        weeklyMealLogs.reduce((sum, meal) => sum + meal.carbs, 0) / weeklyMealLogs.length
-      )
+  const mealAverageCarbs = weeklyMealLogs.length
+    ? Math.round(weeklyMealLogs.reduce((sum, meal) => sum + meal.carbs, 0) / weeklyMealLogs.length)
     : null;
 
-  const todayKey = getDateKey(new Date());
   const medicationDoneToday = medicationLogs.filter((log) => log.dateKey === todayKey).length;
   const medicationProgress = medicationSchedule.length
     ? Math.round((medicationDoneToday / medicationSchedule.length) * 100)
     : 0;
 
-  const handleShare = () => {
+  const recentSugarLogs = sugarLogs.slice(0, 5);
+  const recentMeals = mealLogs.slice(0, 5);
+
+  const todayMedicationStatus = medicationSchedule.map((item) => {
+    const taken = medicationLogs.some(
+      (log) => log.dateKey === todayKey && log.medicationId === item.id
+    );
+
+    return {
+      ...item,
+      taken,
+    };
+  });
+
+  const handleShare = async () => {
+    const text = `ממוצע שבועי: ${avgLevel ?? '--'} mg/dL | בטווח: ${inRangePercent ?? '--'}% | ארוחות השבוע: ${weeklyMealLogs.length}`;
+
     if (navigator.share) {
-      navigator.share({
-        title: 'דו״ח סוכרת שבועי',
-        text: `ממוצע שבועי: ${avgLevel ?? '--'} mg/dL | בטווח: ${inRangePercent ?? '--'}% | ארוחות רשומות: ${weeklyMealLogs.length}`,
+      await navigator.share({
+        title: 'הסוכרת שלי',
+        text,
       });
+      return;
     }
+
+    await navigator.clipboard?.writeText(text);
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col overflow-hidden animate-slide-in-right" style={{ background: theme.gradientFull }}>
-      <div
-        className="flex-shrink-0 flex items-center justify-between px-5 pt-12 pb-4"
-        style={{ backgroundColor: theme.headerBg, backdropFilter: 'blur(14px)', WebkitBackdropFilter: 'blur(14px)', borderBottom: `1px solid ${theme.primaryBorder}` }}
-      >
-        <button
-          onClick={onClose}
-          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95"
-          style={{ border: `1.5px solid ${theme.primaryBorder}`, backgroundColor: 'white' }}
-          aria-label="סגור"
-        >
-          <X size={20} strokeWidth={2} style={{ color: theme.primary }} />
-        </button>
-
-        <div className="text-center">
-          <h1 className="text-lg" style={{ color: '#1F2937', fontWeight: 800, letterSpacing: '-0.03em' }}>
-            היסטוריה ודוחות
-          </h1>
-          <p className="text-xs mt-0.5" style={{ color: '#9CA3AF', fontWeight: 500 }}>
-            7 הימים האחרונים
-          </p>
-        </div>
-
-        <button
-          onClick={handleShare}
-          className="w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-95"
-          style={{ backgroundColor: theme.primaryBg, border: `1.5px solid ${theme.primaryBorder}` }}
-        >
-          <Share2 size={16} strokeWidth={2} style={{ color: theme.primary }} />
-        </button>
-      </div>
+    <div
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden animate-slide-in-right"
+      style={{ background: theme.gradientFull }}
+    >
+      <OverlayHeader
+        title="היסטוריה"
+        subtitle="סוכר, ארוחות ותרופות"
+        theme={theme}
+        onBack={onClose}
+        onClose={onClose}
+        rightSlot={
+          <button
+            onClick={() => void handleShare()}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-95"
+            style={{
+              backgroundColor: '#FFFFFF',
+              color: theme.primary,
+              border: `1px solid ${theme.primaryBorder}`,
+            }}
+            aria-label="שיתוף"
+          >
+            <Share2 size={18} strokeWidth={1.8} />
+          </button>
+        }
+      />
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: 'ממוצע שבועי', value: avgLevel ? `${avgLevel}` : '--', suffix: 'mg/dL', color: theme.primary, bg: theme.primaryBg },
-            { label: 'בטווח היעד', value: inRangePercent !== null ? `${inRangePercent}%` : '--', suffix: `${targetLow}-${targetHigh}`, color: '#16A34A', bg: '#F0FDF4' },
-            { label: 'ארוחות השבוע', value: String(weeklyMealLogs.length), suffix: averageMealCarbs ? `${averageMealCarbs} גרם בממוצע` : 'אין נתונים', color: '#7C3AED', bg: '#F5F3FF' },
-            { label: 'תרופות היום', value: `${medicationProgress}%`, suffix: `${medicationDoneToday}/${medicationSchedule.length || 0} סומנו`, color: '#D97706', bg: '#FFF7ED' },
-          ].map((stat) => (
-            <div
-              key={stat.label}
-              className="rounded-2xl p-4 text-center"
-              style={{ backgroundColor: stat.bg, border: `1.5px solid ${stat.bg}` }}
-            >
-              <p className="text-2xl leading-none mb-1" style={{ color: stat.color, fontWeight: 900 }}>
-                {stat.value}
-              </p>
-              <p className="text-xs" style={{ color: stat.color, fontWeight: 600, opacity: 0.78 }}>
-                {stat.suffix}
-              </p>
-              <p className="text-xs mt-2" style={{ color: stat.color, fontWeight: 700 }}>
-                {stat.label}
-              </p>
-            </div>
-          ))}
+          <TopCard
+            title="ממוצע שבועי"
+            value={avgLevel !== null ? `${avgLevel}` : '--'}
+            hint="mg/dL"
+            color={theme.primary}
+            background={theme.primaryBg}
+          />
+          <TopCard
+            title="בטווח היעד"
+            value={inRangePercent !== null ? `${inRangePercent}%` : '--'}
+            hint={`${targetLow}-${targetHigh}`}
+            color="#16A34A"
+            background="#F0FDF4"
+          />
+          <TopCard
+            title="ארוחות השבוע"
+            value={String(weeklyMealLogs.length)}
+            hint={mealAverageCarbs !== null ? `${mealAverageCarbs} גרם בממוצע` : 'אין מספיק נתונים'}
+            color="#7C3AED"
+            background="#F5F3FF"
+          />
+          <TopCard
+            title="תרופות היום"
+            value={`${medicationProgress}%`}
+            hint={`${medicationDoneToday}/${medicationSchedule.length || 0}`}
+            color="#D97706"
+            background="#FFF7ED"
+          />
         </div>
 
-        <div
-          className="bg-white rounded-2xl p-4"
-          style={{
-            border: '1.5px solid #F3F4F6',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.05), 0 6px 24px rgba(0,0,0,0.04)',
-          }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-0.5 rounded-full" style={{ backgroundColor: '#FCA5A5' }} />
-                <span className="text-xs" style={{ color: '#9CA3AF', fontWeight: 500 }}>גבוה ({targetHigh})</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-3 h-0.5 rounded-full" style={{ backgroundColor: '#86EFAC' }} />
-                <span className="text-xs" style={{ color: '#9CA3AF', fontWeight: 500 }}>יעד ({targetLow}-{targetHigh})</span>
-              </div>
-            </div>
-            <p className="text-sm" style={{ color: '#1F2937', fontWeight: 700 }}>
-              ממוצעי סוכר לפי יום
-            </p>
-          </div>
+        <InsightCard
+          title="סיכום קצר"
+          text={
+            avgLevel === null
+              ? 'עדיין אין מספיק נתונים. ברגע שתתחיל לרשום סוכר וארוחות, נראה כאן תמונה אמיתית.'
+              : inRangePercent !== null && inRangePercent >= 70
+                ? `נראה שיש יציבות יפה השבוע. ממוצע הסוכר הוא ${avgLevel} mg/dL ו-${inRangePercent}% מהמדידות היו בטווח.`
+                : `יש מקום ליותר יציבות. ממוצע הסוכר השבועי הוא ${avgLevel} mg/dL, ולכן כדאי להמשיך לעקוב אחרי ארוחות, תרופות ומדידות.`
+          }
+          themeColor={theme.primary}
+          background={`linear-gradient(135deg, ${theme.primaryBg} 0%, #FFFFFF 100%)`}
+          border={theme.primaryBorder}
+        />
 
-          <div className="relative" style={{ height: '140px' }}>
-            <div
-              className="absolute left-0 right-0"
-              style={{
-                bottom: `${(targetHigh / 220) * 100}%`,
-                borderTop: '1.5px dashed #FCA5A5',
-                zIndex: 1,
-              }}
-            />
-            <div
-              className="absolute left-0 right-0"
-              style={{
-                bottom: `${(targetLow / 220) * 100}%`,
-                borderTop: '1.5px dashed #86EFAC',
-                zIndex: 1,
-              }}
-            />
-
-            <div className="absolute inset-0 flex items-end justify-between gap-1.5 px-1">
-              {chartData.map((day) => {
-                const status = getLevelStatus(day.value || targetLow, targetLow, targetHigh);
-                const barHeight = day.hasData ? `${Math.max((day.value / 220) * 100, 8)}%` : '6%';
-
-                return (
-                  <div key={day.dateKey} className="flex-1 flex flex-col items-center gap-1">
-                    <span
-                      className="text-xs"
-                      style={{ color: day.hasData ? status.color : '#CBD5E1', fontWeight: 700 }}
-                    >
-                      {day.hasData ? day.value : '--'}
-                    </span>
-                    <div
-                      className="w-full rounded-t-lg transition-all duration-500 relative"
-                      style={{
-                        height: barHeight,
-                        background: day.hasData
-                          ? day.value > targetHigh
-                            ? 'linear-gradient(180deg, #FBBF24 0%, #FDE68A 100%)'
-                            : day.value < targetLow
-                            ? 'linear-gradient(180deg, #FB7185 0%, #FECDD3 100%)'
-                            : theme.gradientCard
-                          : '#E2E8F0',
-                        boxShadow: day.hasData ? `0 2px 8px ${theme.primaryShadow}` : 'none',
-                      }}
-                    />
-                    <span
-                      style={{
-                        color: '#64748B',
-                        fontWeight: 700,
-                        fontSize: '11px',
-                      }}
-                    >
-                      {day.label}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        <SectionTitle title="יומן מדידות" />
-        <div className="space-y-2.5">
-          {recentSugarLogs.length === 0 && (
-            <EmptyCard text="עדיין אין מדידות סוכר. ברגע שתתחיל/י לרשום, יוצגו כאן מגמות אמיתיות." />
-          )}
+        <SectionTitle title="מדידות אחרונות" />
+        <div className="space-y-3">
+          {recentSugarLogs.length === 0 && <EmptyCard text="עדיין אין מדידות סוכר." />}
 
           {recentSugarLogs.map((log) => {
             const status = getLevelStatus(log.level, targetLow, targetHigh);
+
             return (
               <div
                 key={log.id}
-                className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3"
-                style={{ border: '1.5px solid #F3F4F6', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
+                className="bg-white rounded-3xl px-4 py-3.5 flex items-center gap-3"
+                style={{
+                  border: `1px solid ${theme.primaryBorder}`,
+                  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
+                }}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style={{ backgroundColor: '#F8FAFC' }}
+                  className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
                 >
-                  <Droplets size={18} strokeWidth={1.6} style={{ color: theme.primary }} />
+                  <Droplets size={18} strokeWidth={1.8} />
                 </div>
 
-                <div className="flex-1 min-w-0 text-right">
-                  <span className="text-sm" style={{ color: '#334155', fontWeight: 700 }}>
-                    {log.contextLabel}
-                  </span>
-                  <p className="text-xs mt-1" style={{ color: '#9CA3AF', fontWeight: 500 }}>
-                    {new Date(log.loggedAt).toLocaleDateString('he-IL')} •{' '}
+                <div className="flex-1 text-right min-w-0">
+                  <p style={{ color: '#0F172A', fontWeight: 900 }}>{log.contextLabel}</p>
+                  <p style={{ color: '#64748B', fontSize: 13, marginTop: 4 }}>
+                    {new Date(log.loggedAt).toLocaleDateString('he-IL')} ·{' '}
                     {new Date(log.loggedAt).toLocaleTimeString('he-IL', {
                       hour: '2-digit',
                       minute: '2-digit',
@@ -286,18 +196,11 @@ export function HistoryScreen({ onClose }: HistoryScreenProps) {
                   </p>
                 </div>
 
-                <div className="flex flex-col items-end gap-1 flex-shrink-0">
-                  <div className="flex items-center gap-1.5">
-                    {log.trend === 'up' && <TrendingUp size={14} strokeWidth={2} style={{ color: '#D97706' }} />}
-                    {log.trend === 'down' && <TrendingDown size={14} strokeWidth={2} style={{ color: '#16A34A' }} />}
-                    {log.trend === 'stable' && <Minus size={14} strokeWidth={2} style={{ color: '#6B7280' }} />}
-                    <span className="text-base" style={{ color: status.color, fontWeight: 900 }}>
-                      {log.level}
-                    </span>
-                  </div>
+                <div className="text-left flex-shrink-0">
+                  <p style={{ color: status.color, fontWeight: 900, fontSize: 20 }}>{log.level}</p>
                   <span
-                    className="text-xs px-2 py-0.5 rounded-full"
-                    style={{ backgroundColor: status.bg, color: status.color, fontWeight: 700 }}
+                    className="inline-flex px-2.5 py-1 rounded-full text-xs"
+                    style={{ backgroundColor: status.bg, color: status.color, fontWeight: 800 }}
                   >
                     {status.label}
                   </span>
@@ -308,28 +211,29 @@ export function HistoryScreen({ onClose }: HistoryScreenProps) {
         </div>
 
         <SectionTitle title="ארוחות אחרונות" />
-        <div className="space-y-2.5">
-          {mealLogs.slice(0, 6).length === 0 && (
-            <EmptyCard text="עדיין אין ארוחות ביומן. אחרי צילום או הוספה ידנית, הן יופיעו כאן." />
-          )}
+        <div className="space-y-3">
+          {recentMeals.length === 0 && <EmptyCard text="עדיין אין ארוחות ביומן." />}
 
-          {mealLogs.slice(0, 6).map((meal) => (
+          {recentMeals.map((meal) => (
             <div
               key={meal.id}
-              className="bg-white rounded-2xl px-4 py-3 flex items-center gap-3"
-              style={{ border: '1.5px solid #F3F4F6', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}
+              className="bg-white rounded-3xl px-4 py-3.5 flex items-center gap-3"
+              style={{
+                border: `1px solid ${theme.primaryBorder}`,
+                boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
+              }}
             >
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 text-lg"
+                className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg flex-shrink-0"
                 style={{ backgroundColor: '#F8FAFC' }}
               >
                 {meal.icon}
               </div>
 
-              <div className="flex-1 text-right">
-                <p style={{ color: '#1F2937', fontWeight: 800 }}>{meal.name}</p>
+              <div className="flex-1 text-right min-w-0">
+                <p style={{ color: '#0F172A', fontWeight: 900 }}>{meal.name}</p>
                 <p style={{ color: '#64748B', fontSize: 13, marginTop: 4 }}>
-                  {meal.servingLabel || 'פריט ביומן הארוחות'}
+                  {meal.servingLabel || 'פריט שנשמר ביומן הארוחות'}
                 </p>
               </div>
 
@@ -340,7 +244,7 @@ export function HistoryScreen({ onClose }: HistoryScreenProps) {
                 >
                   {meal.carbs} גרם
                 </div>
-                <p className="text-xs mt-1" style={{ color: '#9CA3AF', fontWeight: 500 }}>
+                <p style={{ color: '#94A3B8', fontSize: 12, marginTop: 6 }}>
                   {new Date(meal.loggedAt).toLocaleDateString('he-IL')}
                 </p>
               </div>
@@ -348,47 +252,51 @@ export function HistoryScreen({ onClose }: HistoryScreenProps) {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <SummaryCard
-            icon={<UtensilsCrossed size={18} strokeWidth={1.75} style={{ color: '#7C3AED' }} />}
-            title="פחמימות ממוצעות"
-            text={
-              averageMealCarbs !== null
-                ? `ב-7 הימים האחרונים ממוצע הפחמימות שלך לארוחה הוא ${averageMealCarbs} גרם.`
-                : 'כדי לקבל ממוצע ארוחות, צריך להתחיל לצלם או להוסיף מזון ליומן.'
-            }
-            background="#F5F3FF"
-            border="#DDD6FE"
-          />
-          <SummaryCard
-            icon={<Pill size={18} strokeWidth={1.75} style={{ color: '#D97706' }} />}
-            title="עמידה בתרופות"
-            text={
-              medicationSchedule.length > 0
-                ? `היום סומנו ${medicationDoneToday} מתוך ${medicationSchedule.length} תזכורות תרופה.`
-                : 'עדיין לא הוגדרו תרופות. אפשר להוסיף אותן במסך התרופות או בהרשמה.'
-            }
-            background="#FFF7ED"
-            border="#FED7AA"
-          />
+        <SectionTitle title="לוח תרופות להיום" />
+        <div className="space-y-3">
+          {todayMedicationStatus.length === 0 && <EmptyCard text="עדיין לא הוגדרו תרופות." />}
+
+          {todayMedicationStatus.map((item) => (
+            <div
+              key={item.id}
+              className="bg-white rounded-3xl px-4 py-3.5 flex items-center gap-3"
+              style={{
+                border: `1px solid ${theme.primaryBorder}`,
+                boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
+              }}
+            >
+              <div
+                className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{
+                  backgroundColor: item.taken ? '#F0FDF4' : theme.primaryBg,
+                  color: item.taken ? '#16A34A' : theme.primary,
+                }}
+              >
+                <Pill size={18} strokeWidth={1.8} />
+              </div>
+
+              <div className="flex-1 text-right min-w-0">
+                <p style={{ color: '#0F172A', fontWeight: 900 }}>{item.name}</p>
+                <p style={{ color: '#64748B', fontSize: 13, marginTop: 4 }}>
+                  {item.time} · {item.dosage}
+                </p>
+              </div>
+
+              <span
+                className="px-3 py-1 rounded-full text-xs flex-shrink-0"
+                style={{
+                  backgroundColor: item.taken ? '#F0FDF4' : '#FFF7ED',
+                  color: item.taken ? '#15803D' : '#C2410C',
+                  fontWeight: 800,
+                }}
+              >
+                {item.taken ? 'סומן' : 'ממתין'}
+              </span>
+            </div>
+          ))}
         </div>
 
-        {avgLevel !== null && (
-          <div
-            className="rounded-2xl p-4 flex items-center gap-3"
-            style={{ backgroundColor: theme.primaryBg, border: `1.5px solid ${theme.primaryBorder}` }}
-          >
-            <Droplets size={20} strokeWidth={1.5} style={{ color: theme.primary }} />
-            <p className="text-sm text-right flex-1" style={{ color: '#1E3A5F', fontWeight: 600 }}>
-              ממוצע הסוכר השבועי שלך הוא <strong>{avgLevel} mg/dL</strong>.{' '}
-              {inRangePercent !== null && inRangePercent >= 70
-                ? 'נראה שיש יציבות יחסית טובה בטווח היעד.'
-                : 'יש מקום לשפר יציבות דרך מעקב עקבי אחר ארוחות, תרופות ומדידות.'}
-            </p>
-          </div>
-        )}
-
-        <div className="h-4" />
+        <div className="pb-4" />
       </div>
     </div>
   );
@@ -398,7 +306,7 @@ function SectionTitle({ title }: { title: string }) {
   return (
     <p
       className="text-xs uppercase tracking-widest"
-      style={{ color: '#9CA3AF', fontWeight: 700, letterSpacing: '0.12em' }}
+      style={{ color: '#94A3B8', fontWeight: 800, letterSpacing: '0.12em' }}
     >
       {title}
     </p>
@@ -408,37 +316,77 @@ function SectionTitle({ title }: { title: string }) {
 function EmptyCard({ text }: { text: string }) {
   return (
     <div
-      className="rounded-2xl p-4 text-sm text-right"
-      style={{ backgroundColor: '#FFFFFF', color: '#64748B', border: '1.5px solid #E2E8F0' }}
+      className="rounded-3xl p-4 text-sm text-right"
+      style={{
+        backgroundColor: '#FFFFFF',
+        color: '#64748B',
+        border: '1px solid #E2E8F0',
+      }}
     >
       {text}
     </div>
   );
 }
 
-function SummaryCard({
-  icon,
+function TopCard({
+  title,
+  value,
+  hint,
+  color,
+  background,
+}: {
+  title: string;
+  value: string;
+  hint: string;
+  color: string;
+  background: string;
+}) {
+  return (
+    <div
+      className="rounded-3xl p-4 text-right"
+      style={{
+        backgroundColor: background,
+        border: `1px solid ${background}`,
+      }}
+    >
+      <p style={{ color, fontWeight: 900, fontSize: 24, lineHeight: 1 }}>{value}</p>
+      <p style={{ color, opacity: 0.78, fontSize: 12, fontWeight: 700, marginTop: 6 }}>{hint}</p>
+      <p style={{ color: '#334155', fontWeight: 800, marginTop: 10 }}>{title}</p>
+    </div>
+  );
+}
+
+function InsightCard({
   title,
   text,
+  themeColor,
   background,
   border,
 }: {
-  icon: ReactNode;
   title: string;
   text: string;
+  themeColor: string;
   background: string;
   border: string;
 }) {
   return (
     <div
-      className="rounded-2xl p-4"
-      style={{ backgroundColor: background, border: `1.5px solid ${border}` }}
+      className="rounded-3xl p-4"
+      style={{
+        background,
+        border: `1px solid ${border}`,
+      }}
     >
       <div className="flex items-center justify-end gap-2 mb-2">
-        <p style={{ color: '#1F2937', fontWeight: 800 }}>{title}</p>
-        {icon}
+        <p style={{ color: '#0F172A', fontWeight: 900 }}>{title}</p>
+        <div
+          className="w-10 h-10 rounded-2xl flex items-center justify-center"
+          style={{ backgroundColor: themeColor, color: '#FFFFFF' }}
+        >
+          <UtensilsCrossed size={18} strokeWidth={1.8} />
+        </div>
       </div>
-      <p style={{ color: '#475569', fontSize: 14, lineHeight: 1.7 }}>{text}</p>
+      <p style={{ color: '#475569', lineHeight: 1.8, fontSize: 14 }}>{text}</p>
     </div>
   );
 }

@@ -9,7 +9,7 @@ import {
   Video,
 } from 'lucide-react';
 import { type ReactNode } from 'react';
-import { Gender, genderedText, useAppContext } from '../context/AppContext';
+import { type Gender, genderedText, useAppContext } from '../context/AppContext';
 
 interface ActionItem {
   icon: ReactNode;
@@ -26,30 +26,30 @@ interface ActionGridProps {
   onActionClick?: (id: string, label: string) => void;
 }
 
-const primaryActions: ActionItem[] = [
+const PRIMARY_ACTIONS: ActionItem[] = [
   {
     icon: <Search size={24} strokeWidth={1.7} />,
     label: 'רישום ארוחה',
-    hint: 'צילום',
+    hint: 'צילום או חיפוש',
     accent: true,
     id: 'meal-logger',
   },
   {
     icon: <Droplets size={24} strokeWidth={1.7} />,
     label: 'רישום סוכר',
-    hint: 'מדידה',
+    hint: 'מדידה חדשה',
     id: 'sugar',
   },
   {
     icon: <Pill size={24} strokeWidth={1.7} />,
     label: 'תרופות',
-    hint: 'תזכורות',
+    hint: 'לוח ותזכורות',
     id: 'medications',
   },
   {
     icon: <UtensilsCrossed size={24} strokeWidth={1.7} />,
-    label: 'הצעות ארוחה',
-    hint: 'רעיונות',
+    label: 'ארוחות',
+    hint: 'רעיונות מהירים',
     id: 'meals',
   },
   {
@@ -61,13 +61,13 @@ const primaryActions: ActionItem[] = [
   {
     icon: <BookOpen size={24} strokeWidth={1.7} />,
     label: 'היסטוריה',
-    hint: 'נתונים',
+    hint: 'מה קרה השבוע',
     id: 'history',
   },
   {
     icon: <Video size={24} strokeWidth={1.7} />,
     labelFn: (gender) => genderedText(gender, 'עוזרת AI', 'עוזר AI'),
-    hint: 'שאלה מהירה',
+    hint: 'שאלה לרופא הדיגיטלי',
     accent: true,
     id: 'doctor',
   },
@@ -105,13 +105,13 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
           <Sparkles size={18} strokeWidth={1.9} />
         </div>
         <div className="text-right">
-          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>פעולות נוספות</h3>
-          <p style={{ color: '#64748B', fontSize: 13 }}>כל מה שצריך, בקיצור.</p>
+          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>מה צריך עכשיו</h3>
+          <p style={{ color: '#64748B', fontSize: 13 }}>קצר, ברור ומהיר.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {primaryActions.map((action) => {
+        {PRIMARY_ACTIONS.map((action) => {
           const label = getLabel(action);
 
           return (
@@ -122,7 +122,7 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
               style={{
                 minHeight: 118,
                 background: action.accent ? theme.gradientCard : '#FFFFFF',
-                border: action.accent ? 'none' : `1.5px solid ${theme.primaryBorder}`,
+                border: action.accent ? 'none' : `1px solid ${theme.primaryBorder}`,
                 boxShadow: action.accent
                   ? `0 18px 34px ${theme.primaryShadow}`
                   : '0 10px 26px rgba(15, 23, 42, 0.05)',
@@ -148,7 +148,10 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
                   </p>
                   <p
                     className="text-xs mt-1"
-                    style={{ color: action.accent ? 'rgba(255,255,255,0.78)' : '#64748B', fontWeight: 700 }}
+                    style={{
+                      color: action.accent ? 'rgba(255,255,255,0.78)' : '#64748B',
+                      fontWeight: 700,
+                    }}
                   >
                     {action.hint}
                   </p>

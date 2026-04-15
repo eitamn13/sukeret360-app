@@ -34,19 +34,23 @@ type OpenAIResponsesResult = {
   };
 };
 
+function normalizeMessage(message: string) {
+  return message.trim().toLowerCase();
+}
+
 function createQuickReply(message: string): string | null {
-  const normalized = message.trim().toLowerCase();
+  const normalized = normalizeMessage(message);
 
   if (!normalized) {
     return null;
   }
 
   if (['ai', 'היי', 'הי', 'שלום', 'hello', 'hey'].includes(normalized)) {
-    return 'אני כאן בשבילך. אפשר לשאול אותי על סוכר, תרופות, ארוחות, תסמינים או מה לעשות עכשיו כדי להישאר מאוזן יותר.';
+    return 'אני כאן. אפשר לשאול על סוכר, תרופות, אוכל, תסמינים או מה לעשות עכשיו.';
   }
 
-  if (normalized.includes('סוכר') && normalized.includes('לפני')) {
-    return 'בדרך כלל יעד מקובל לפני ארוחה הוא בערך 80 עד 130 mg/dL, אבל חשוב לפעול לפי היעד שהרופא או הצוות המטפל הגדירו עבורך באופן אישי.';
+  if (normalized.includes('סוכר') && normalized.includes('לפני') && normalized.includes('ארוחה')) {
+    return 'בדרך כלל יעד מקובל לפני ארוחה הוא בערך 80 עד 130 mg/dL, אבל חשוב לפעול לפי היעד האישי שהרופא הגדיר.';
   }
 
   if (
@@ -55,15 +59,19 @@ function createQuickReply(message: string): string | null {
     normalized.includes('סחרחורת') ||
     normalized.includes('חולשה')
   ) {
-    return 'אם יש רעד, חולשה, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם הערך נמוך, נהוג לקחת פחמימה מהירה ולבדוק שוב אחרי כ־15 דקות. אם יש החמרה, בלבול או אובדן הכרה, צריך לפנות לעזרה רפואית מיד.';
+    return 'אם יש רעד, חולשה, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם הוא נמוך, נהוג לקחת פחמימה מהירה ולבדוק שוב אחרי כ-15 דקות. אם יש החמרה, בלבול או קושי לדבר, צריך לפנות מיד לעזרה רפואית.';
   }
 
   if (normalized.includes('מטפורמין')) {
-    return 'מטפורמין נלקח בדרך כלל עם אוכל או אחרי אוכל כדי להפחית אי נוחות בבטן, אבל חשוב לפעול לפי ההנחיה האישית שקיבלת מהרופא.';
+    return 'מטפורמין נלקח בדרך כלל עם אוכל או אחרי אוכל כדי להפחית אי נוחות בבטן, אבל הכי חשוב לפעול לפי ההנחיה האישית שקיבלת.';
   }
 
-  if (normalized.includes('ארוח') || normalized.includes('פחמימ')) {
-    return 'ארוחה טובה לחולי סוכרת בדרך כלל משלבת פחמימה מדודה, חלבון וירקות. לדוגמה: יוגורט עם אגוזים, חביתה עם סלט, או עוף עם כמות מדודה של אורז או קינואה.';
+  if (
+    normalized.includes('אוכל') ||
+    normalized.includes('ארוחה') ||
+    normalized.includes('פחמ')
+  ) {
+    return 'בדרך כלל עדיף לבחור ארוחה פשוטה עם חלבון, ירקות ופחמימה מדודה. למשל יוגורט עם אגוזים, חביתה עם סלט, או עוף עם אורז בכמות קטנה.';
   }
 
   return null;
@@ -183,14 +191,16 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       body: JSON.stringify({
         model: 'gpt-4.1-mini',
         instructions:
-          'You are the assistant of "הסוכרת שלי", a supportive medical diabetes assistant. ' +
-          'Reply in simple, warm, professional Hebrew. ' +
-          'Keep answers practical and easy for older adults to understand. ' +
-          'Prefer short paragraphs, clear next steps, and calm language. ' +
-          'Always answer the user\'s actual last question directly in the first sentence. ' +
-          'Do not greet again unless the message is only a greeting like "AI", "hello", or "מי אתה". ' +
-          'Avoid generic introductions when the user asked a concrete diabetes question. ' +
-          'If the user describes an emergency, tell them to contact a medical professional or emergency services immediately.',
+          'You are the assistant of "הסוכרת שלי", a supportive diabetes companion. ' +
+          'Reply in warm, simple, professional Hebrew. ' +
+          'Keep answers short and easy for older adults to understand. ' +
+          'Answer the user directly in the first sentence. ' +
+          'Prefer 2 to 4 short sentences. ' +
+          'Use bullet points only when steps are clearer than prose. ' +
+          'Avoid repeating greetings when the user asked a concrete question. ' +
+          'If the user describes an emergency, tell them to contact a medical professional or emergency services immediately. ' +
+          'Do not claim to replace a doctor. ' +
+          'Focus on practical next steps.',
         input: [
           ...conversation,
           {
@@ -198,7 +208,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
             content: userMessage,
           },
         ],
-        max_output_tokens: 350,
+        max_output_tokens: 320,
         store: false,
       }),
     });

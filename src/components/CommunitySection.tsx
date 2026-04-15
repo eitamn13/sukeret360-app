@@ -6,7 +6,7 @@ interface CommunitySectionProps {
   onItemClick?: (id: string, label: string) => void;
 }
 
-const communityItems = [
+const COMMUNITY_ITEMS = [
   {
     id: 'community',
     icon: <Users size={22} strokeWidth={1.7} />,
@@ -23,7 +23,7 @@ const communityItems = [
     id: 'support',
     icon: <Heart size={22} strokeWidth={1.7} />,
     label: 'תמיכה',
-    hint: 'עזרה מהירה',
+    hint: 'קבוצות רגועות',
   },
   {
     id: 'challenges',
@@ -55,13 +55,13 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
           <Users size={18} strokeWidth={1.9} />
         </div>
         <div className="text-right">
-          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>קהילה ותמיכה</h3>
-          <p style={{ color: '#64748B', fontSize: 13 }}>פחות מילים, יותר עזרה.</p>
+          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>תמיכה וקהילה</h3>
+          <p style={{ color: '#64748B', fontSize: 13 }}>מקום לשאול, לשתף ולהתחזק.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {communityItems.map((item) => (
+        {COMMUNITY_ITEMS.map((item) => (
           <button
             key={item.id}
             onClick={() => handleClick(item.id, item.label)}
@@ -69,7 +69,7 @@ export function CommunitySection({ onCommunityClick, onItemClick }: CommunitySec
             style={{
               minHeight: 112,
               backgroundColor: '#FFFFFF',
-              border: `1.5px solid ${theme.primaryBorder}`,
+              border: `1px solid ${theme.primaryBorder}`,
               boxShadow: '0 10px 26px rgba(15, 23, 42, 0.05)',
             }}
           >

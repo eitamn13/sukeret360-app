@@ -13,17 +13,22 @@ export function Logo({ size = 40 }: LogoProps) {
       aria-label="הסוכרת שלי"
       style={{ width: size, height: size, flexShrink: 0 }}
     >
-      <circle cx="32" cy="32" r="25" stroke="currentColor" strokeWidth="3" opacity="0.18" />
+      <rect x="10" y="10" width="44" height="44" rx="16" stroke="currentColor" strokeWidth="3" opacity="0.18" />
       <path
-        d="M32 15C26.8 23 23 28 23 33.9C23 40.1 27.1 44.5 32 44.5C36.9 44.5 41 40.1 41 33.9C41 28 37.2 23 32 15Z"
+        d="M32 16C27.3 22.1 24 26.8 24 32.6C24 38.2 27.6 42.2 32 42.2C36.4 42.2 40 38.2 40 32.6C40 26.8 36.7 22.1 32 16Z"
         fill="currentColor"
       />
       <path
-        d="M18 38H25L28.5 32L33 42L36.5 35.5H46"
-        stroke="currentColor"
-        strokeWidth="3"
+        d="M32 24V34"
+        stroke="#FFFFFF"
+        strokeWidth="3.6"
         strokeLinecap="round"
-        strokeLinejoin="round"
+      />
+      <path
+        d="M27 29H37"
+        stroke="#FFFFFF"
+        strokeWidth="3.6"
+        strokeLinecap="round"
       />
     </svg>
   );
