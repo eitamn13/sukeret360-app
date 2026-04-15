@@ -1,0 +1,40 @@
+{
+  "id": "/",
+  "name": "הסוכרת שלי",
+  "short_name": "הסוכרת שלי",
+  "description": "אפליקציה רפואית ברורה וקלה לניהול סוכרת, תרופות, ארוחות ומעקב יומי.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F8FBFF",
+  "theme_color": "#2563EB",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "רישום סוכר",
+      "short_name": "סוכר",
+      "url": "/?open=sugar"
+    },
+    {
+      "name": "רישום ארוחה",
+      "short_name": "ארוחה",
+      "url": "/?open=meal"
+    }
+  ]
+}

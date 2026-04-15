@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import SOSModal from './components/SOSModal';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { Header } from './components/Header';
@@ -36,6 +36,33 @@ function AppInner() {
   const [showNotifications, setShowNotifications] = useState(false);
   const [communityTab, setCommunityTab] = useState<CommunityView>('community');
   const [comingSoon, setComingSoon] = useState<string | null>(null);
+
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute('content', theme.primary);
+    }
+  }, [theme.primary]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const open = params.get('open');
+
+    if (open === 'sugar') {
+      setShowSugarModal(true);
+    }
+
+    if (open === 'meal') {
+      setShowMealLogger(true);
+    }
+
+    if (open) {
+      params.delete('open');
+      const next = params.toString();
+      const nextUrl = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`;
+      window.history.replaceState({}, '', nextUrl);
+    }
+  }, []);
 
   if (!onboardingDone) {
     return <OnboardingScreen />;
@@ -95,7 +122,7 @@ function AppInner() {
 
   return (
     <div
-      className="min-h-screen transition-all duration-500"
+      className="min-h-[100svh] transition-all duration-500 overflow-x-hidden app-shell"
       style={{ background: theme.gradientFull }}
     >
       <div className="max-w-md mx-auto" dir="rtl">
@@ -104,7 +131,12 @@ function AppInner() {
           onNotificationsClick={() => setShowNotifications(true)}
         />
 
-        <main className="pb-28">
+        <main
+          className="pb-28"
+          style={{
+            paddingBottom: 'max(7rem, calc(env(safe-area-inset-bottom, 0px) + 5.5rem))',
+          }}
+        >
           <GreetingSection
             onSOSClick={() => setShowSOS(true)}
             onSugarClick={() => setShowSugarModal(true)}
