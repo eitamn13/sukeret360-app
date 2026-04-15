@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import SOSModal from './components/SOSModal';
 import { AppProvider, useAppContext } from './context/AppContext';
+import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Header } from './components/Header';
 import { GreetingSection } from './components/GreetingSection';
 import { ActionGrid } from './components/ActionGrid';
@@ -18,11 +19,12 @@ import { MealSuggestionsScreen } from './components/MealSuggestionsScreen';
 import { ProfileSettingsModal } from './components/ProfileSettingsModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { WelcomeIntroScreen } from './components/WelcomeIntroScreen';
+import { AuthScreen } from './components/AuthScreen';
 
 type CommunityView = 'community' | 'forum' | 'support' | 'challenges';
 
 function AppInner() {
-  const { onboardingDone, theme, logSugar } = useAppContext();
+  const { onboardingDone, theme, logSugar, remoteReady } = useAppContext();
   const [showWelcomeIntro, setShowWelcomeIntro] = useState<boolean>(() => {
     if (typeof window === 'undefined') return true;
     return window.localStorage.getItem('welcomeIntroSeen') !== 'true';
@@ -68,6 +70,26 @@ function AppInner() {
       window.history.replaceState({}, '', nextUrl);
     }
   }, []);
+
+  if (!remoteReady) {
+    return (
+      <div
+        className="min-h-[100dvh] flex items-center justify-center px-6"
+        dir="rtl"
+        style={{ background: theme.gradientFull }}
+      >
+        <div className="max-w-sm w-full text-center">
+          <div
+            className="mx-auto mb-4 h-16 w-16 rounded-full border-4 border-[#DCE7F8] border-t-[#6B97D6] animate-spin"
+          />
+          <h2 className="text-2xl font-black text-[#4D5B73]">טוענים את החשבון שלך</h2>
+          <p className="mt-3 text-sm leading-7 text-[#7F8CA0]">
+            עוד רגע כל הנתונים האישיים שלך יסתנכרנו בצורה מאובטחת.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!onboardingDone) {
     if (showWelcomeIntro) {
@@ -244,6 +266,37 @@ function AppInner() {
 }
 
 function App() {
+  return (
+    <AuthProvider>
+      <AppShell />
+    </AuthProvider>
+  );
+}
+
+function AppShell() {
+  const { authEnabled, loading, user } = useAuthContext();
+
+  if (loading) {
+    return (
+      <div
+        className="min-h-[100dvh] flex items-center justify-center px-6"
+        dir="rtl"
+        style={{
+          background: 'linear-gradient(180deg, #FFFDF8 0%, #F6FAFF 45%, #FFF8F4 100%)',
+        }}
+      >
+        <div className="max-w-sm w-full text-center">
+          <div className="mx-auto mb-4 h-16 w-16 rounded-full border-4 border-[#E5EAF5] border-t-[#8EADE4] animate-spin" />
+          <h2 className="text-2xl font-black text-[#4D5B73]">בודקים התחברות מאובטחת</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (authEnabled && !user) {
+    return <AuthScreen />;
+  }
+
   return (
     <AppProvider>
       <AppInner />

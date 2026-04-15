@@ -4,10 +4,12 @@ import {
   Check,
   Clock3,
   HeartHandshake,
+  LogOut,
   Phone,
   Save,
   UserRound,
 } from 'lucide-react';
+import { useAuthContext } from '../context/AuthContext';
 import { Gender, TreatmentType, UserProfile, useAppContext } from '../context/AppContext';
 import { OverlayHeader } from './OverlayHeader';
 
@@ -30,6 +32,7 @@ const DEFAULT_EMERGENCY_CONTACT: EmergencyContactDraft = {
 
 export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalProps) {
   const { userProfile, saveUserProfile, saveEmergencyContact, theme } = useAppContext();
+  const { authEnabled, signOut } = useAuthContext();
 
   const [name, setName] = useState(userProfile.name);
   const [age, setAge] = useState(userProfile.age);
@@ -417,6 +420,21 @@ export function ProfileSettingsModal({ isOpen, onClose }: ProfileSettingsModalPr
             boxShadow: `0 -14px 38px ${theme.primary}22`,
           }}
         >
+          {authEnabled && (
+            <button
+              onClick={() => void signOut()}
+              className="w-full h-[50px] rounded-2xl flex items-center justify-center gap-2 transition-all mb-3"
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: `1px solid ${theme.primaryBorder}`,
+                color: theme.primaryDark,
+                fontWeight: 900,
+              }}
+            >
+              <LogOut size={17} strokeWidth={2.2} />
+              <span>התנתקות מהחשבון</span>
+            </button>
+          )}
           <button
             onClick={handleSave}
             disabled={!isValid}

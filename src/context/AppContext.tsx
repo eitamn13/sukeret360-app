@@ -1,4 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
+import { useAuthContext } from './AuthContext';
+import {
+  fetchRemoteAppSnapshot,
+  isSupabaseConfigured,
+  RemoteAppSnapshot,
+  saveRemoteAppSnapshot,
+} from '../lib/supabase';
 
 export type Gender = 'female' | 'male' | '';
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
@@ -168,6 +175,7 @@ const DEFAULT_MEDS: MedicationScheduleItem[] = [
 ];
 
 interface AppState {
+  remoteReady: boolean;
   userProfile: UserProfile;
   onboardingDone: boolean;
   theme: Theme;
@@ -262,25 +270,10 @@ function getThemeForProfile(profile: UserProfile): Theme {
   return profile.gender === 'male' ? MALE_THEME : FEMALE_THEME;
 }
 
-function normalizeMealLogs(): LoggedMeal[] {
-  const legacyTodayMeals = readJson<LoggedMeal[]>('todayMeals', []);
-  const mealLogs = readJson<LoggedMeal[]>('meal_logs', legacyTodayMeals);
+function normalizeMedicationScheduleFrom(schedule: MedicationScheduleItem[] = []): MedicationScheduleItem[] {
+  const base = schedule.length > 0 ? schedule : DEFAULT_MEDS;
 
-  return mealLogs
-    .map((meal) => ({
-      ...meal,
-      icon: meal.icon || '🍽️',
-      mealType: meal.mealType || 'snack',
-      source: meal.source || 'manual',
-      calories: typeof meal.calories === 'number' ? meal.calories : undefined,
-    }))
-    .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
-}
-
-function normalizeMedicationSchedule(): MedicationScheduleItem[] {
-  const saved = readJson<MedicationScheduleItem[]>('medication_schedule', DEFAULT_MEDS);
-
-  return saved.map((item) => ({
+  return base.map((item) => ({
     ...item,
     period: item.period || getPeriodFromTime(item.time),
     image: item.image || (item.type === 'injection' ? '💉' : '💊'),
@@ -294,6 +287,52 @@ function normalizeMedicationSchedule(): MedicationScheduleItem[] {
   }));
 }
 
+function normalizeMealLogsFrom(meals: LoggedMeal[] = []): LoggedMeal[] {
+  return meals
+    .map((meal) => ({
+      ...meal,
+      icon: meal.icon || '🍽️',
+      mealType: meal.mealType || 'snack',
+      source: meal.source || 'manual',
+      calories: typeof meal.calories === 'number' ? meal.calories : undefined,
+    }))
+    .sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+}
+
+function normalizeSugarLogsFrom(logs: SugarLogEntry[] = []): SugarLogEntry[] {
+  return [...logs].sort((a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime());
+}
+
+function normalizeRemoteSnapshot(snapshot: RemoteAppSnapshot): RemoteAppSnapshot {
+  return {
+    onboardingDone: Boolean(snapshot.onboardingDone),
+    userProfile: normalizeUserProfile(snapshot.userProfile),
+    emergencyContact: {
+      ...DEFAULT_CONTACT,
+      ...(snapshot.emergencyContact ?? DEFAULT_CONTACT),
+    },
+    savedLocation: snapshot.savedLocation ?? null,
+    locationPermissionGranted: Boolean(snapshot.locationPermissionGranted),
+    medicationSchedule: normalizeMedicationScheduleFrom(snapshot.medicationSchedule),
+    medicationLogs: Array.isArray(snapshot.medicationLogs) ? snapshot.medicationLogs : [],
+    mealLogs: normalizeMealLogsFrom(snapshot.mealLogs),
+    sugarLogs: normalizeSugarLogsFrom(snapshot.sugarLogs),
+  };
+}
+
+function normalizeMealLogs(): LoggedMeal[] {
+  const legacyTodayMeals = readJson<LoggedMeal[]>('todayMeals', []);
+  const mealLogs = readJson<LoggedMeal[]>('meal_logs', legacyTodayMeals);
+
+  return normalizeMealLogsFrom(mealLogs);
+}
+
+function normalizeMedicationSchedule(): MedicationScheduleItem[] {
+  const saved = readJson<MedicationScheduleItem[]>('medication_schedule', DEFAULT_MEDS);
+
+  return normalizeMedicationScheduleFrom(saved);
+}
+
 function normalizeUserProfile(profile: UserProfile): UserProfile {
   return {
     ...DEFAULT_PROFILE,
@@ -302,6 +341,7 @@ function normalizeUserProfile(profile: UserProfile): UserProfile {
 }
 
 export function AppProvider({ children }: { children: ReactNode }) {
+  const { authEnabled, user } = useAuthContext();
   const [userProfile, setUserProfile] = useState<UserProfile>(() =>
     normalizeUserProfile(readJson<UserProfile>('userProfile', DEFAULT_PROFILE))
   );
@@ -340,10 +380,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [mealLogs, setMealLogs] = useState<LoggedMeal[]>(normalizeMealLogs);
 
   const [sugarLogs, setSugarLogs] = useState<SugarLogEntry[]>(() =>
-    readJson<SugarLogEntry[]>('sugar_logs', []).sort(
-      (a, b) => new Date(b.loggedAt).getTime() - new Date(a.loggedAt).getTime()
-    )
+    normalizeSugarLogsFrom(readJson<SugarLogEntry[]>('sugar_logs', []))
   );
+  const [remoteReady, setRemoteReady] = useState<boolean>(() => !(authEnabled && isSupabaseConfigured && user));
 
   const [sentMedicationNotifications, setSentMedicationNotifications] = useState<string[]>(() => {
     const todayKey = getTodayKey();
@@ -352,13 +391,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
   });
   const emergencyAlertInFlight = useRef<Set<string>>(new Set());
+  const remoteHydrating = useRef(false);
+  const lastRemoteSnapshot = useRef('');
 
   const theme = useMemo(() => getThemeForProfile(userProfile), [userProfile]);
+  const userId = user?.id ?? null;
 
   const todayMeals = useMemo(() => {
     const todayKey = getTodayKey();
     return mealLogs.filter((meal) => meal.loggedAt.startsWith(todayKey));
   }, [mealLogs]);
+
+  const remoteSnapshot = useMemo<RemoteAppSnapshot>(
+    () => ({
+      onboardingDone,
+      userProfile,
+      emergencyContact,
+      savedLocation,
+      locationPermissionGranted,
+      medicationSchedule,
+      medicationLogs,
+      mealLogs,
+      sugarLogs,
+    }),
+    [
+      onboardingDone,
+      userProfile,
+      emergencyContact,
+      savedLocation,
+      locationPermissionGranted,
+      medicationSchedule,
+      medicationLogs,
+      mealLogs,
+      sugarLogs,
+    ]
+  );
+  const serializedRemoteSnapshot = useMemo(() => JSON.stringify(remoteSnapshot), [remoteSnapshot]);
 
   useEffect(() => {
     writeJson('userProfile', userProfile);
@@ -416,6 +484,70 @@ export function AppProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     writeJson('sugar_logs', sugarLogs);
   }, [sugarLogs]);
+
+  useEffect(() => {
+    let active = true;
+
+    if (!(authEnabled && isSupabaseConfigured && userId)) {
+      setRemoteReady(true);
+      lastRemoteSnapshot.current = serializedRemoteSnapshot;
+      return () => {
+        active = false;
+      };
+    }
+
+    setRemoteReady(false);
+
+    void fetchRemoteAppSnapshot(userId).then((snapshot) => {
+      if (!active) return;
+
+      remoteHydrating.current = true;
+
+      if (snapshot) {
+        const normalized = normalizeRemoteSnapshot(snapshot);
+
+        setUserProfile(normalized.userProfile);
+        setOnboardingDone(normalized.onboardingDone);
+        setEmergencyContact(normalized.emergencyContact);
+        setSavedLocationState(normalized.savedLocation);
+        setLocationPermissionGrantedState(normalized.locationPermissionGranted);
+        setMedicationSchedule(normalized.medicationSchedule);
+        setMedicationLogs(normalized.medicationLogs);
+        setMealLogs(normalized.mealLogs);
+        setSugarLogs(normalized.sugarLogs);
+        lastRemoteSnapshot.current = JSON.stringify(normalized);
+      } else {
+        lastRemoteSnapshot.current = serializedRemoteSnapshot;
+      }
+
+      remoteHydrating.current = false;
+      setRemoteReady(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [authEnabled, serializedRemoteSnapshot, userId]);
+
+  useEffect(() => {
+    if (!(authEnabled && isSupabaseConfigured && userId) || !remoteReady || remoteHydrating.current) {
+      return;
+    }
+
+    const serialized = serializedRemoteSnapshot;
+
+    if (serialized === lastRemoteSnapshot.current) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      void saveRemoteAppSnapshot(userId, remoteSnapshot).then(() => {
+        lastRemoteSnapshot.current = serialized;
+      });
+    }, 700);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [authEnabled, userId, remoteReady, remoteSnapshot, serializedRemoteSnapshot]);
 
   useEffect(() => {
     const todayKey = getTodayKey();
@@ -726,6 +858,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<AppContextValue>(
     () => ({
+      remoteReady,
       userProfile,
       onboardingDone,
       theme,
@@ -757,6 +890,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       clearSugarLogs,
     }),
     [
+      remoteReady,
       userProfile,
       onboardingDone,
       theme,
