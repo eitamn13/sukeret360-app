@@ -1,5 +1,37 @@
 apply plugin: 'com.android.application'
 
+def keystorePropertiesFile = rootProject.file('keystore.properties')
+def keystoreProperties = new Properties()
+
+if (keystorePropertiesFile.exists()) {
+    keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+}
+
+def keystoreValue = { key ->
+    def direct = keystoreProperties.getProperty(key)
+    if (direct != null) {
+        return direct
+    }
+
+    def matchedKey = keystoreProperties.stringPropertyNames().find { name ->
+        name?.trim()?.endsWith(key)
+    }
+
+    return matchedKey ? keystoreProperties.getProperty(matchedKey) : null
+}
+
+def resolveKeystoreFile = {
+    def configuredPath = keystoreValue('storeFile')
+    if (!configuredPath) {
+        return null
+    }
+
+    def normalizedPath = configuredPath.trim()
+    def directFile = new File(normalizedPath)
+
+    return directFile.isAbsolute() ? directFile : rootProject.file(normalizedPath)
+}
+
 android {
     namespace = "com.sukeret.mydiabetes"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,8 +48,21 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            if (keystorePropertiesFile.exists()) {
+                storeFile resolveKeystoreFile()
+                storePassword keystoreValue('storePassword')
+                keyAlias keystoreValue('keyAlias')
+                keyPassword keystoreValue('keyPassword')
+            }
+        }
+    }
     buildTypes {
         release {
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
