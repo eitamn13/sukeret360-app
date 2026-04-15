@@ -1,8 +1,9 @@
 import { ChangeEvent, useEffect, useMemo, useState } from 'react';
-import { Camera, Plus, Search, Sparkles, Trash2, X } from 'lucide-react';
+import { Camera, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 import { FOOD_DATABASE, FoodDatabaseItem } from '../data/foodDatabase';
 import { MealType, genderedText, useAppContext } from '../context/AppContext';
 import { DetectedFood, detectFoodsFromImage } from '../utils/vision';
+import { OverlayHeader } from './OverlayHeader';
 
 const MEAL_TYPE_META: Record<MealType, { label: string; icon: string; accent: string }> = {
   breakfast: { label: 'בוקר', icon: '☀️', accent: '#F59E0B' },
@@ -21,7 +22,7 @@ function buildMealInsight(totalCarbs: number, foods: SelectedMealFood[]) {
   if (foods.length === 0) {
     return {
       title: 'אפשר לדייק את הארוחה',
-      body: 'הוסיפו לפחות פריט אחד כדי לקבל סיכום פחמימות ותובנה חכמה.',
+      body: 'הוסיפו לפחות פריט אחד כדי לקבל סיכום פחמימות ותובנה חכמה על הארוחה.',
       bg: '#FFF7ED',
       border: '#FED7AA',
       color: '#C2410C',
@@ -29,17 +30,16 @@ function buildMealInsight(totalCarbs: number, foods: SelectedMealFood[]) {
   }
 
   const hasFiberRichFood = foods.some((food) =>
-    /עדש|חומוס|אבוקדו|מלפפון|עגבני|שיבולת|קינואה|אורז מלא/.test(food.name)
+    /עדש|חומוס|אבוקדו|מלפפון|עגבנ|שיבולת|קינואה|אורז מלא/.test(food.name)
   );
   const hasProteinFood = foods.some((food) =>
-    /עוף|ביצה|יוגורט|סלמון|קוטג|גבינה|טונה|אינסולין/.test(food.name) === false &&
     /עוף|ביצה|יוגורט|סלמון|קוטג|גבינה|טונה/.test(food.name)
   );
 
   if (totalCarbs <= 20) {
     return {
-      title: 'ארוחה קלה בפחמימות',
-      body: 'הארוחה נראית יחסית מתונה. אם זו ארוחה עיקרית, שווה לבדוק שיש גם חלבון או שומן טוב לשובע.',
+      title: 'ארוחה קלה יחסית בפחמימות',
+      body: 'אם זו ארוחה עיקרית, שווה לוודא שיש גם חלבון או שומן טוב כדי לקבל יותר שובע ויציבות.',
       bg: '#F0FDF4',
       border: '#BBF7D0',
       color: '#15803D',
@@ -50,8 +50,8 @@ function buildMealInsight(totalCarbs: number, foods: SelectedMealFood[]) {
     return {
       title: 'טווח פחמימות מאוזן',
       body: hasFiberRichFood || hasProteinFood
-        ? 'נראה שיש כאן איזון טוב יותר לארוחה. שילוב של סיבים או חלבון יכול לעזור למתן קפיצות סוכר.'
-        : 'כמות הפחמימות סבירה, ומומלץ לצרף ירקות או חלבון כדי לשפר יציבות אחרי האוכל.',
+        ? 'נראה שיש כאן איזון טוב יחסית. השילוב של סיבים או חלבון יכול לעזור לרכך קפיצות סוכר.'
+        : 'כמות הפחמימות סבירה, וכדאי לשלב עוד ירקות או חלבון כדי לשפר את היציבות אחרי האוכל.',
       bg: '#EFF6FF',
       border: '#BFDBFE',
       color: '#1D4ED8',
@@ -73,7 +73,7 @@ function findFoodTemplateByName(name: string): FoodDatabaseItem | undefined {
 }
 
 export function SmartMealLogger({ onClose }: { onClose: () => void }) {
-  const { logMeal, theme, userProfile } = useAppContext();
+  const { logMeal, mealLogs, theme, userProfile } = useAppContext();
   const gender = userProfile.gender;
 
   const [step, setStep] = useState(0);
@@ -99,16 +99,46 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
     [selectedFoods]
   );
 
-  const mealInsight = useMemo(() => buildMealInsight(totalCarbs, selectedFoods), [selectedFoods, totalCarbs]);
+  const mealInsight = useMemo(
+    () => buildMealInsight(totalCarbs, selectedFoods),
+    [selectedFoods, totalCarbs]
+  );
 
   const databaseResults = useMemo(() => {
     const query = foodSearch.trim().toLowerCase();
     if (!query) {
-      return FOOD_DATABASE.slice(0, 6);
+      return FOOD_DATABASE.slice(0, 7);
     }
 
-    return FOOD_DATABASE.filter((item) => item.name.toLowerCase().includes(query)).slice(0, 6);
+    return FOOD_DATABASE.filter((item) => item.name.toLowerCase().includes(query)).slice(0, 7);
   }, [foodSearch]);
+
+  const frequentFoods = useMemo(() => {
+    const seen = new Set<string>();
+
+    return mealLogs
+      .filter((meal) => meal.name.trim())
+      .map((meal) => {
+        const template = findFoodTemplateByName(meal.name);
+        return {
+          id: meal.id,
+          name: meal.name,
+          carbs: template?.carbs ?? meal.carbs,
+          serving: template?.serving ?? meal.servingLabel ?? 'מהארוחות האחרונות שלך',
+          category: template?.category ?? 'היסטוריה',
+          fiber: template?.fiber ?? 0,
+          note: template?.note ?? 'בחירה מהירה מההיסטוריה שלך',
+          icon: template?.icon ?? meal.icon,
+        };
+      })
+      .filter((item) => {
+        const key = item.name.toLowerCase();
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      })
+      .slice(0, 4);
+  }, [mealLogs]);
 
   const handleImageUpload = async (file: File) => {
     setLoading(true);
@@ -138,8 +168,8 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
         setErrorMessage(
           genderedText(
             gender,
-            'לא הצלחנו לזהות מזון בתמונה. אפשר להוסיף פריטים ידנית או מהמאגר.',
-            'לא הצלחנו לזהות מזון בתמונה. אפשר להוסיף פריטים ידנית או מהמאגר.'
+            'לא הצלחנו לזהות מזון בתמונה. אפשר להוסיף פריטים ידנית או מתוך המאגר.',
+            'לא הצלחנו לזהות מזון בתמונה. אפשר להוסיף פריטים ידנית או מתוך המאגר.'
           )
         );
       }
@@ -148,8 +178,8 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
       setErrorMessage(
         genderedText(
           gender,
-          'יש בעיה בזיהוי התמונה כרגע. אפשר להוסיף פריטים ידנית ולהמשיך.',
-          'יש בעיה בזיהוי התמונה כרגע. אפשר להוסיף פריטים ידנית ולהמשיך.'
+          'יש בעיה בזיהוי התמונה כרגע. אפשר להמשיך ידנית בלי להיתקע.',
+          'יש בעיה בזיהוי התמונה כרגע. אפשר להמשיך ידנית בלי להיתקע.'
         )
       );
       setStep(2);
@@ -160,7 +190,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
 
   const addManualFood = () => {
     if (!newFoodName.trim()) {
-      setErrorMessage(genderedText(gender, 'אנא הזיני שם מזון', 'אנא הזן שם מזון'));
+      setErrorMessage(genderedText(gender, 'אנא הזיני שם מזון.', 'אנא הזן שם מזון.'));
       return;
     }
 
@@ -186,7 +216,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
         name: item.name,
         carbs,
         source: 'database',
-        servingLabel: servings === 1 ? item.serving : `${servings} מנות • ${item.serving}`,
+        servingLabel: servings === 1 ? item.serving : `${servings} מנות · ${item.serving}`,
         note: item.note,
       },
       ...prev,
@@ -246,50 +276,48 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
         }}
       >
         <div
-          className="sticky top-0 z-10 px-5 pt-5 pb-4 rounded-t-[28px]"
-          style={{
-            background: 'rgba(255,255,255,0.9)',
-            borderBottom: `1px solid ${theme.primaryBorder}`,
-            backdropFilter: 'blur(10px)',
-          }}
+          className="sticky top-0 z-10 rounded-t-[28px] overflow-hidden"
+          style={{ background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(10px)' }}
         >
-          <div className="flex items-center justify-between gap-4">
-            <button
-              onClick={onClose}
-              className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-95"
-              style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
-            >
-              <X size={20} />
-            </button>
+          <OverlayHeader
+            title="רישום ארוחה חכם"
+            subtitle="צילום, זיהוי, מאגר מזון וסיכום פחמימות במקום אחד"
+            theme={theme}
+            onBack={() => {
+              if (step > 0) {
+                setStep((current) => Math.max(0, current - 1));
+                return;
+              }
 
-            <div className="text-center flex-1">
-              <h2 style={{ fontWeight: 900, fontSize: 22, color: '#0F172A' }}>רישום ארוחה חכמה</h2>
-              <p style={{ color: '#64748B', fontWeight: 500, fontSize: 13 }}>
-                צילום, זיהוי, מאגר מזון וסיכום פחמימות במקום אחד
-              </p>
-            </div>
-
-            <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center"
-              style={{ background: theme.gradientCard, color: 'white' }}
-            >
-              <Sparkles size={18} />
-            </div>
-          </div>
-
-          <div className="flex gap-2 mt-4">
-            {[0, 1, 2].map((index) => (
+              onClose();
+            }}
+            onClose={onClose}
+            backLabel={step > 0 ? 'חזרה' : 'סגור'}
+            rightSlot={
               <div
-                key={index}
-                className="h-2 rounded-full flex-1 transition-all"
-                style={{
-                  background:
-                    index <= step
-                      ? theme.gradientCard
-                      : 'linear-gradient(90deg, #E2E8F0, #F1F5F9)',
-                }}
-              />
-            ))}
+                className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                style={{ background: theme.gradientCard, color: 'white' }}
+              >
+                <Sparkles size={18} />
+              </div>
+            }
+          />
+
+          <div className="px-5 pb-4">
+            <div className="flex gap-2">
+              {[0, 1, 2].map((index) => (
+                <div
+                  key={index}
+                  className="h-2 rounded-full flex-1 transition-all"
+                  style={{
+                    background:
+                      index <= step
+                        ? theme.gradientCard
+                        : 'linear-gradient(90deg, #E2E8F0, #F1F5F9)',
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
 
@@ -310,8 +338,8 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 style={{ background: theme.gradientCard, color: 'white' }}
               >
                 <p style={{ fontWeight: 800, fontSize: 22 }}>איזו ארוחה זו?</p>
-                <p style={{ opacity: 0.85, marginTop: 6 }}>
-                  בחירה נכונה תעזור לנו לשמור היסטוריה מדויקת ולהבין טוב יותר את היום שלך.
+                <p style={{ opacity: 0.85, marginTop: 6, lineHeight: 1.7 }}>
+                  בחירה נכונה תעזור לנו לשמור היסטוריה מדויקת ולהבין טוב יותר איך היום שלך נראה.
                 </p>
               </div>
 
@@ -333,7 +361,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                       <div className="text-3xl">{meta.icon}</div>
                       <p style={{ fontWeight: 800, marginTop: 8, color: '#0F172A' }}>{meta.label}</p>
                       <p style={{ color: '#64748B', fontSize: 13, marginTop: 4 }}>
-                        תיעוד מותאם לארוחה {meta.label}
+                        תיעוד מותאם לארוחת {meta.label}
                       </p>
                     </button>
                   );
@@ -365,8 +393,8 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 <p style={{ fontWeight: 800, fontSize: 20, marginTop: 16, color: '#0F172A' }}>
                   צלמו את הצלחת או העלו תמונה
                 </p>
-                <p style={{ color: '#64748B', marginTop: 6 }}>
-                  ננסה לזהות את המזון, להעריך פחמימות, ואז תוכלו לתקן הכל ידנית בקלות.
+                <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.7 }}>
+                  ננסה לזהות את המזון, להעריך פחמימות, ואז תוכלו לתקן הכול ידנית בקלות.
                 </p>
 
                 <label
@@ -392,7 +420,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                 >
                   <p style={{ color: '#0F172A', fontWeight: 800, fontSize: 18 }}>מנתחים את הארוחה...</p>
                   <p style={{ color: '#64748B', marginTop: 8 }}>
-                    מזהים מזונות, בודקים פחמימות ומכינים מסך עריכה.
+                    מזהים מזונות, בודקים פחמימות ומכינים מסך עריכה ברור ונוח.
                   </p>
                 </div>
               )}
@@ -404,20 +432,12 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
               >
                 דלגי לעריכה ידנית
               </button>
-
-              <button
-                onClick={() => setStep(0)}
-                className="w-full h-11 rounded-2xl text-sm"
-                style={{ backgroundColor: 'transparent', color: '#64748B', fontWeight: 700 }}
-              >
-                חזרה לשלב הקודם
-              </button>
             </div>
           )}
 
           {step === 2 && (
             <div className="space-y-5">
-              <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="grid gap-4 lg:grid-cols-[1.08fr_0.92fr]">
                 <div className="space-y-4">
                   <div
                     className="rounded-3xl overflow-hidden"
@@ -441,7 +461,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                       />
                     ) : (
                       <div className="p-6 text-center" style={{ color: '#64748B' }}>
-                        לא הועלתה תמונה. אפשר עדיין לבנות ארוחה מדויקת ידנית.
+                        לא הועלתה תמונה. אפשר עדיין לבנות ארוחה מדויקת ידנית בלי להיתקע.
                       </div>
                     )}
                   </div>
@@ -461,7 +481,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                           className="rounded-2xl p-4 text-sm text-center"
                           style={{ backgroundColor: '#F8FAFC', color: '#64748B' }}
                         >
-                          עדיין לא נוספו מזונות. אפשר להוסיף ידנית או מתוך המאגר.
+                          עדיין לא נוספו מזונות. בחרו מהמאגר או הוסיפו ידנית.
                         </div>
                       )}
 
@@ -475,7 +495,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                             className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
                             style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}
                           >
-                            {food.source === 'vision' ? '📷' : food.source === 'database' ? '📚' : '✍️'}
+                            {food.source === 'vision' ? '📷' : food.source === 'database' ? '🗂️' : '✍️'}
                           </div>
 
                           <div className="flex-1 text-right">
@@ -484,6 +504,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                                 onClick={() => removeFood(index)}
                                 className="w-8 h-8 rounded-xl flex items-center justify-center"
                                 style={{ backgroundColor: '#FFFFFF', color: '#EF4444', border: '1px solid #FECACA' }}
+                                aria-label="מחק פריט"
                               >
                                 <Trash2 size={15} />
                               </button>
@@ -492,6 +513,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                                 <p style={{ color: '#475569', fontSize: 14 }}>{food.carbs} גרם פחמימות</p>
                               </div>
                             </div>
+
                             {(food.servingLabel || food.note) && (
                               <div className="mt-2 text-xs" style={{ color: '#64748B' }}>
                                 {food.servingLabel && <div>{food.servingLabel}</div>}
@@ -520,7 +542,7 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                         className="rounded-2xl p-3 text-center"
                         style={{ backgroundColor: '#FFFFFF', border: `1px solid ${mealInsight.border}` }}
                       >
-                        <p style={{ color: '#64748B', fontSize: 12, fontWeight: 700 }}>סה״כ פחמימות</p>
+                        <p style={{ color: '#64748B', fontSize: 12, fontWeight: 700 }}>סך פחמימות</p>
                         <p style={{ color: mealInsight.color, fontWeight: 900, fontSize: 24 }}>{totalCarbs}</p>
                       </div>
                       <div
@@ -537,48 +559,46 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                     className="rounded-3xl p-4"
                     style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}
                   >
-                    <p style={{ fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>הוספה ידנית מהירה</p>
-                    <div className="space-y-2">
-                      <input
-                        type="text"
-                        value={newFoodName}
-                        onChange={(event) => setNewFoodName(event.target.value)}
-                        placeholder="שם המזון"
-                        dir="rtl"
-                        className="w-full h-12 rounded-2xl px-4 outline-none"
-                        style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
-                      />
-                      <div className="flex gap-2">
-                        <button
-                          onClick={addManualFood}
-                          className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                          style={{ background: theme.gradientCard, color: 'white' }}
-                        >
-                          <Plus size={18} />
-                        </button>
-                        <input
-                          type="number"
-                          value={newFoodCarbs}
-                          onChange={(event) =>
-                            setNewFoodCarbs(event.target.value ? Number(event.target.value) : '')
-                          }
-                          placeholder="גרם פחמימות"
-                          dir="rtl"
-                          className="flex-1 h-12 rounded-2xl px-4 outline-none"
-                          style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <div
-                    className="rounded-3xl p-4"
-                    style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}
-                  >
                     <div className="flex items-center justify-between mb-3">
                       <Search size={16} style={{ color: theme.primary }} />
                       <p style={{ fontWeight: 800, color: '#0F172A' }}>מאגר מזון לחולי סוכרת</p>
                     </div>
+
+                    {frequentFoods.length > 0 && (
+                      <div className="mb-3">
+                        <p style={{ color: '#64748B', fontSize: 12, fontWeight: 700, marginBottom: 10 }}>
+                          בחירות מהירות מההיסטוריה שלך
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {frequentFoods.map((item) => (
+                            <button
+                              key={item.id}
+                              onClick={() =>
+                                addDatabaseFood({
+                                  id: item.id,
+                                  name: item.name,
+                                  carbs: item.carbs,
+                                  serving: item.serving,
+                                  category: item.category,
+                                  fiber: item.fiber,
+                                  note: item.note,
+                                  icon: item.icon,
+                                })
+                              }
+                              className="px-3 py-2 rounded-2xl text-sm transition-all active:scale-[0.98]"
+                              style={{
+                                backgroundColor: theme.primaryBg,
+                                color: theme.primary,
+                                border: `1px solid ${theme.primaryBorder}`,
+                                fontWeight: 700,
+                              }}
+                            >
+                              {item.icon} {item.name}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     <input
                       type="text"
@@ -638,6 +658,45 @@ export function SmartMealLogger({ onClose }: { onClose: () => void }) {
                           </div>
                         </button>
                       ))}
+                    </div>
+                  </div>
+
+                  <div
+                    className="rounded-3xl p-4"
+                    style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}
+                  >
+                    <p style={{ fontWeight: 800, color: '#0F172A', marginBottom: 12 }}>הוספה ידנית מהירה</p>
+                    <div className="space-y-2">
+                      <input
+                        type="text"
+                        value={newFoodName}
+                        onChange={(event) => setNewFoodName(event.target.value)}
+                        placeholder="שם המזון"
+                        dir="rtl"
+                        className="w-full h-12 rounded-2xl px-4 outline-none"
+                        style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
+                      />
+                      <div className="flex gap-2">
+                        <button
+                          onClick={addManualFood}
+                          className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                          style={{ background: theme.gradientCard, color: 'white' }}
+                          aria-label="הוסף ידנית"
+                        >
+                          <Plus size={18} />
+                        </button>
+                        <input
+                          type="number"
+                          value={newFoodCarbs}
+                          onChange={(event) =>
+                            setNewFoodCarbs(event.target.value ? Number(event.target.value) : '')
+                          }
+                          placeholder="גרם פחמימות"
+                          dir="rtl"
+                          className="flex-1 h-12 rounded-2xl px-4 outline-none"
+                          style={{ backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0' }}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>

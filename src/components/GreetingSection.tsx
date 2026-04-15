@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Siren } from 'lucide-react';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { useAppContext, genderedText } from '../context/AppContext';
 
@@ -8,7 +9,11 @@ function isWithinLastDays(isoDate: string, days: number) {
   return targetTime >= minTime;
 }
 
-export function GreetingSection() {
+interface GreetingSectionProps {
+  onSOSClick?: () => void;
+}
+
+export function GreetingSection({ onSOSClick }: GreetingSectionProps) {
   const { timeString, greeting, dateString } = useCurrentTime();
   const {
     userProfile,
@@ -217,6 +222,35 @@ export function GreetingSection() {
             </p>
             <p style={{ color: 'white', fontWeight: 900, fontSize: 24 }}>{todayMeals.length}</p>
           </div>
+        </div>
+
+        <div className="mt-4 flex items-center gap-3">
+          <div
+            className="rounded-2xl px-4 py-3 flex-1"
+            style={{ backgroundColor: 'rgba(255,255,255,0.12)' }}
+          >
+            <p style={{ color: 'rgba(255,255,255,0.72)', fontSize: 12, fontWeight: 700 }}>
+              לחצן חירום
+            </p>
+            <p style={{ color: 'white', fontWeight: 700, marginTop: 4, lineHeight: 1.6 }}>
+              נגיש תמיד, אבל כבר לא מפריע לצ׳אט, לטפסים או ללחצנים אחרים.
+            </p>
+          </div>
+
+          <button
+            onClick={onSOSClick}
+            className="h-[60px] px-5 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-95"
+            style={{
+              background: 'linear-gradient(135deg, #EF4444, #B91C1C)',
+              color: '#FFFFFF',
+              fontWeight: 900,
+              boxShadow: '0 12px 24px rgba(185, 28, 28, 0.24)',
+            }}
+            aria-label="SOS"
+          >
+            <Siren size={18} strokeWidth={1.9} />
+            <span>SOS</span>
+          </button>
         </div>
       </div>
     </div>

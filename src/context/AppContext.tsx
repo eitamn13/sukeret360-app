@@ -377,6 +377,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, [medicationLogs]);
 
   useEffect(() => {
+    if (typeof Notification === 'undefined') return;
+
+    const syncNotificationPermission = () => {
+      setNotificationPermission(Notification.permission);
+    };
+
+    syncNotificationPermission();
+    window.addEventListener('focus', syncNotificationPermission);
+    document.addEventListener('visibilitychange', syncNotificationPermission);
+
+    return () => {
+      window.removeEventListener('focus', syncNotificationPermission);
+      document.removeEventListener('visibilitychange', syncNotificationPermission);
+    };
+  }, []);
+
+  useEffect(() => {
     writeJson('meal_logs', mealLogs);
     writeJson('todayMeals', todayMeals);
   }, [mealLogs, todayMeals]);
@@ -538,13 +555,6 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const clearSugarLogs = () => {
     setSugarLogs([]);
   };
-
-  useEffect(() => {
-    if (typeof Notification === 'undefined') return;
-    if (Notification.permission === 'default') {
-      void requestBrowserNotificationPermission();
-    }
-  }, []);
 
   useEffect(() => {
     const todayKey = getTodayKey();

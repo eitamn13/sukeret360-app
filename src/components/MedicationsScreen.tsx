@@ -57,6 +57,31 @@ function buildMedicationAlertMessage(
   return `${displayName} עדיין לא סימנ/ה שלקח/ה את ${medication.name}${appearance} של ${medication.period}, שנקבעה לשעה ${medication.time}.`;
 }
 
+function getNotificationEnvironmentMessage() {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  if (typeof Notification === 'undefined') {
+    return '׳”׳“׳₪׳“׳₪׳ ׳”׳ ׳•׳›׳—׳™ ׳׳ ׳×׳•׳׳ ׳‘׳”׳×׳¨׳׳•׳× ׳“׳₪׳“׳₪׳.';
+  }
+
+  if (!window.isSecureContext) {
+    return '׳›׳“׳™ ׳׳”׳₪׳¢׳™׳ ׳”׳×׳¨׳׳•׳×, ׳¦׳¨׳™׳ ׳׳₪׳×׳•׳— ׳׳× ׳”׳׳ª׳¨ ׳‘׳—׳™׳‘׳•׳¨ ׳׳׳•׳‘׳˜׳—.';
+  }
+
+  const nav = navigator as Navigator & { standalone?: boolean };
+  const isIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
+  const isStandalone =
+    window.matchMedia?.('(display-mode: standalone)')?.matches || nav.standalone === true;
+
+  if (isIOS && !isStandalone) {
+    return '׳‘׳׳™׳™׳₪׳•׳ ׳›׳“׳׳™ ׳׳”׳•׳¡׳™׳£ ׳׳× ׳”׳׳₪׳׳™׳§׳¦׳™׳” ׳׳׳¡׳ ׳”׳‘׳™׳×, ׳׳׳– ׳׳₪׳©׳¨ ׳׳§׳‘׳ ׳”׳×׳¨׳׳•׳×.';
+  }
+
+  return null;
+}
+
 function downloadMedicationCalendar(schedule: MedicationScheduleItem[]) {
   const endDate = new Date();
   endDate.setDate(endDate.getDate() + 30);
@@ -121,6 +146,8 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
   const [editableSchedule, setEditableSchedule] = useState<MedicationScheduleItem[]>(medicationSchedule);
   const [editingEnabled, setEditingEnabled] = useState(false);
   const [savedSchedule, setSavedSchedule] = useState(false);
+  const [notificationFeedback, setNotificationFeedback] = useState('');
+  const notificationEnvironmentMessage = useMemo(() => getNotificationEnvironmentMessage(), []);
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -208,7 +235,27 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
   };
 
   const requestNotifications = async () => {
-    await requestBrowserNotificationPermission();
+    if (notificationEnvironmentMessage) {
+      setNotificationFeedback(notificationEnvironmentMessage);
+      return;
+    }
+
+    const permission = await requestBrowserNotificationPermission();
+
+    if (permission === 'granted' && typeof Notification !== 'undefined') {
+      new Notification('׳”׳×׳¨׳׳•׳× ׳₪׳¢׳™׳׳•׳×', {
+        body: '׳׳¢׳•׳׳”. ׳׳¢׳›׳©׳™׳• ׳ ׳©׳׳— ׳×׳–׳›׳•׳¨׳•׳× ׳×׳¨׳•׳₪׳•׳× ׳‘׳–׳׳.',
+      });
+      setNotificationFeedback('׳׳×׳¨׳׳•׳× ׳׳•׳₪׳¢׳׳• ׳‘׳”׳¦׳׳—׳”.');
+      return;
+    }
+
+    if (permission === 'denied') {
+      setNotificationFeedback('׳”׳“׳₪׳“׳₪׳ ׳—׳¡׳ ׳׳× ׳”׳×׳¨׳׳•׳×. ׳׳₪׳©׳¨ ׳׳©׳ ׳•׳× ׳–׳׳× ׳‘׳”׳’׳“׳¨׳•׳× ׳”׳“׳₪׳“׳₪׳.');
+      return;
+    }
+
+    setNotificationFeedback('׳׳ ׳ ׳™׳×׳ ׳׳™׳ ׳׳׳©׳׳™׳ ׳׳× ׳׳₪׳¢׳׳× ׳׳×׳¨׳׳•׳× ׳›׳¨׳’׳¢.');
   };
 
   return (
@@ -316,6 +363,54 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
             >
               אפשר התראות עכשיו
             </button>
+          </div>
+        )}
+
+        {notificationPermission !== 'granted' && (notificationEnvironmentMessage || notificationFeedback) && (
+          <div
+            className="rounded-2xl p-4"
+            style={{ backgroundColor: '#FFFFFF', border: '1.5px solid #BFDBFE' }}
+          >
+            <p style={{ color: '#1D4ED8', lineHeight: 1.7, fontWeight: 700 }}>
+              {notificationFeedback || notificationEnvironmentMessage}
+            </p>
+          </div>
+        )}
+
+        {notificationPermission === 'granted' && (
+          <div
+            className="rounded-2xl p-4"
+            style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #BBF7D0' }}
+          >
+            <div className="flex items-center justify-end gap-2 mb-2">
+              <p style={{ color: '#15803D', fontWeight: 800 }}>׳”׳×׳¨׳׳•׳× ׳₪׳¢׳™׳׳•׳×</p>
+              <Bell size={18} strokeWidth={1.8} style={{ color: '#15803D' }} />
+            </div>
+            <p style={{ color: '#166534', lineHeight: 1.7 }}>
+              ׳׳¢׳•׳׳”. ׳׳׳₪׳׳™׳§׳¦׳™׳” ׳׳›׳•׳׳ה ׳׳”׳¦׳™׳’ ׳ת׳–׳›׳•׳¨׳•׳ª ׳×׳¨׳•׳₪׳•׳× ׳‘׳“׳₪׳“׳₪׳.
+            </p>
+            <button
+              onClick={() => {
+                if (typeof Notification === 'undefined') return;
+                new Notification('׳׳×׳¨׳׳ת ׳‘׳“׳™׳§׳ה', {
+                  body: '׳׳›׳ ׳¢׳•׳‘׳“. ׳׳©׳ª׳”׳™׳ה ׳ת׳–׳›׳•׳¨׳ת ׳×׳¨׳•׳₪׳ה ׳¢׳ª׳™׳“׳™׳ת, ׳ ׳¨׳׳ה ׳׳ג׳ ׳׳•׳ת׳ה.',
+                });
+                setNotificationFeedback('׳ ׳©׳׳—׳ה ׳׳×׳¨׳׳ת ׳‘׳“׳™׳§׳ה ׳׳“׳₪׳“׳₪׳.');
+              }}
+              className="mt-3 h-11 px-4 rounded-2xl"
+              style={{ backgroundColor: '#16A34A', color: 'white', fontWeight: 700 }}
+            >
+              ׳©׳׳—׳• ׳׳×׳¨׳׳ת ׳‘׳“׳™׳§׳ה
+            </button>
+
+            {notificationFeedback && (
+              <div
+                className="rounded-2xl p-3 mt-3 text-sm"
+                style={{ backgroundColor: '#FFFFFF', color: '#166534', border: '1px solid #BBF7D0', lineHeight: 1.6 }}
+              >
+                {notificationFeedback}
+              </div>
+            )}
           </div>
         )}
 

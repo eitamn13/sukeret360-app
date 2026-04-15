@@ -1,6 +1,5 @@
-import SOSButton from "./components/SOSButton";
-import SOSModal from "./components/SOSModal";
 import { useState } from 'react';
+import SOSModal from './components/SOSModal';
 import { AppProvider, useAppContext } from './context/AppContext';
 import { Header } from './components/Header';
 import { GreetingSection } from './components/GreetingSection';
@@ -17,6 +16,9 @@ import { DoctorConsultScreen } from './components/DoctorConsultScreen';
 import { OnboardingScreen } from './components/OnboardingScreen';
 import { MealSuggestionsScreen } from './components/MealSuggestionsScreen';
 import { ProfileSettingsModal } from './components/ProfileSettingsModal';
+import { NotificationCenterModal } from './components/NotificationCenterModal';
+
+type CommunityView = 'community' | 'forum' | 'support' | 'challenges';
 
 function AppInner() {
   const { onboardingDone, theme, logSugar } = useAppContext();
@@ -31,13 +33,19 @@ function AppInner() {
   const [showMeals, setShowMeals] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSOS, setShowSOS] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [communityTab, setCommunityTab] = useState<CommunityView>('community');
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
   if (!onboardingDone) {
     return <OnboardingScreen />;
   }
 
-  const handleSugarSave = (value: number, contextLabel: string, context: 'fasting' | 'before_meal' | 'after_meal' | 'bedtime' | 'exercise' | 'custom') => {
+  const handleSugarSave = (
+    value: number,
+    contextLabel: string,
+    context: 'fasting' | 'before_meal' | 'after_meal' | 'bedtime' | 'exercise' | 'custom'
+  ) => {
     logSugar({
       level: value,
       context,
@@ -75,7 +83,13 @@ function AppInner() {
     setComingSoon(label);
   };
 
-  const handleCommunityItemClick = (label: string) => {
+  const handleCommunityItemClick = (id: string, label: string) => {
+    if (id === 'forum' || id === 'support' || id === 'challenges') {
+      setCommunityTab(id);
+      setShowCommunity(true);
+      return;
+    }
+
     setComingSoon(label);
   };
 
@@ -85,10 +99,13 @@ function AppInner() {
       style={{ background: theme.gradientFull }}
     >
       <div className="max-w-md mx-auto">
-        <Header onSettingsClick={() => setShowSettings(true)} />
+        <Header
+          onSettingsClick={() => setShowSettings(true)}
+          onNotificationsClick={() => setShowNotifications(true)}
+        />
 
-        <main className="pb-8">
-          <GreetingSection />
+        <main className="pb-28">
+          <GreetingSection onSOSClick={() => setShowSOS(true)} />
 
           <ActionGrid
             onMealLoggerClick={() => setShowMealLogger(true)}
@@ -97,7 +114,10 @@ function AppInner() {
           />
 
           <CommunitySection
-            onCommunityClick={() => setShowCommunity(true)}
+            onCommunityClick={() => {
+              setCommunityTab('community');
+              setShowCommunity(true);
+            }}
             onItemClick={handleCommunityItemClick}
           />
         </main>
@@ -114,7 +134,10 @@ function AppInner() {
       />
 
       {showCommunity && (
-        <CommunityScreen onClose={() => setShowCommunity(false)} />
+        <CommunityScreen
+          initialTab={communityTab}
+          onClose={() => setShowCommunity(false)}
+        />
       )}
 
       {showMedications && (
@@ -143,13 +166,20 @@ function AppInner() {
         onClose={() => setShowSettings(false)}
       />
 
+      <NotificationCenterModal
+        isOpen={showNotifications}
+        onClose={() => setShowNotifications(false)}
+        onOpenMedications={() => {
+          setShowNotifications(false);
+          setShowMedications(true);
+        }}
+      />
+
       <ComingSoonModal
         isOpen={comingSoon !== null}
         featureName={comingSoon ?? ''}
         onClose={() => setComingSoon(null)}
       />
-
-      <SOSButton onClick={() => setShowSOS(true)} />
 
       <SOSModal
         isOpen={showSOS}
