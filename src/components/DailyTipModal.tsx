@@ -7,9 +7,10 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { OverlayHeader } from './OverlayHeader';
+import { cancelHebrewSpeech, preloadSpeechVoices, speakHebrewText } from '../utils/speech';
 
 interface DailyTipModalProps {
   isOpen: boolean;
@@ -20,28 +21,28 @@ const TIPS = [
   {
     category: 'איזון יומי',
     title: 'ארוחה עם חלבון וירק יכולה לעזור ליציבות טובה יותר',
-    text: 'כשמשלבים פחמימה עם חלבון או ירקות, קצב העלייה של הסוכר אחרי האוכל לרוב מתון יותר ונעים יותר לגוף.',
-    todayAction: 'בארוחה הבאה נסי או נסה להוסיף מקור חלבון אחד וירק אחד.',
+    text: 'כשמשלבים פחמימה עם חלבון או ירקות, העלייה של הסוכר אחרי האוכל לרוב מתונה ונעימה יותר.',
+    todayAction: 'בארוחה הבאה נסו להוסיף מקור חלבון אחד וירק אחד.',
     author: 'העוזר הרפואי שלי',
   },
   {
     category: 'תרופות',
     title: 'שגרה קבועה מקלה מאוד על לזכור לקחת תרופות',
-    text: 'כשנוטלים תרופה באותה שעה ובאותו הקשר יומי, כמו אחרי ארוחת הבוקר, קל יותר להתמיד ולהרגיש בשליטה.',
-    todayAction: 'חברו כל תרופה לפעולה קבועה ביום כמו צחצוח שיניים או קפה של בוקר.',
+    text: 'כשנוטלים תרופה באותה שעה ובאותו הקשר יומי, קל יותר להתמיד ולהרגיש בשליטה.',
+    todayAction: 'חברו כל תרופה לפעולה קבועה ביום כמו קפה של בוקר או ארוחת ערב.',
     author: 'העוזר הרפואי שלי',
   },
   {
     category: 'תנועה',
     title: 'הליכה קצרה אחרי אוכל יכולה לעזור',
-    text: 'גם 10 עד 15 דקות של הליכה רגועה אחרי ארוחה עשויות לעזור לתחושה כללית טובה יותר ולפעמים גם לסוכר יציב יותר.',
+    text: 'גם עשר עד חמש עשרה דקות של הליכה רגועה אחרי ארוחה עשויות לעזור לתחושה כללית טובה יותר ולסוכר יציב יותר.',
     todayAction: 'בחרו ארוחה אחת היום ואחריה נסו הליכה קצרה ונעימה.',
     author: 'העוזר הרפואי שלי',
   },
   {
     category: 'בדיקות',
     title: 'הקשר המדידה חשוב לא פחות מהמספר',
-    text: 'כשמסמנים אם המדידה הייתה לפני אוכל, אחרי אוכל או לפני שינה, הרבה יותר קל להבין דפוסים ולהסיק מסקנות אמיתיות.',
+    text: 'כשמסמנים אם המדידה הייתה לפני אוכל, אחרי אוכל או לפני שינה, הרבה יותר קל להבין דפוסים.',
     todayAction: 'במדידה הבאה סמנו גם את ההקשר שלה ולא רק את המספר.',
     author: 'העוזר הרפואי שלי',
   },
@@ -63,62 +64,69 @@ const ARTICLES = [
 ];
 
 export function DailyTipModal({ isOpen, onClose }: DailyTipModalProps) {
-  const { theme } = useAppContext();
+  const { theme, userProfile } = useAppContext();
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioDone, setAudioDone] = useState(false);
   const [tipIndex, setTipIndex] = useState(() => new Date().getDate() % TIPS.length);
 
   const currentTip = TIPS[tipIndex];
 
-  useEffect(() => {
-    if (!isOpen) {
-      window.speechSynthesis.cancel();
-      setIsPlaying(false);
-      setAudioDone(false);
-    }
-  }, [isOpen]);
-
-  useEffect(() => {
-    return () => {
-      window.speechSynthesis.cancel();
-    };
+  const stopAudio = useCallback(() => {
+    cancelHebrewSpeech();
+    setIsPlaying(false);
   }, []);
 
-  if (!isOpen) return null;
-
-  const stopAudio = () => {
-    window.speechSynthesis.cancel();
-    setIsPlaying(false);
-  };
-
-  const handleClose = () => {
-    stopAudio();
-    setAudioDone(false);
-    onClose();
-  };
-
-  const handlePlay = () => {
+  const handlePlay = useCallback(() => {
     if (isPlaying) {
       stopAudio();
       return;
     }
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(
-      `${currentTip.title}. ${currentTip.text}. ${currentTip.todayAction}`
-    );
-    utterance.lang = 'he-IL';
-    utterance.rate = 0.9;
+    stopAudio();
     setIsPlaying(true);
     setAudioDone(false);
-    utterance.onend = () => {
-      setIsPlaying(false);
-      setAudioDone(true);
+
+    speakHebrewText(`${currentTip.title}. ${currentTip.text}. ${currentTip.todayAction}`, {
+      gender: userProfile.gender,
+      rate: 0.9,
+      pitch: userProfile.gender === 'male' ? 0.96 : 1.02,
+      onEnd: () => {
+        setIsPlaying(false);
+        setAudioDone(true);
+      },
+      onError: () => {
+        setIsPlaying(false);
+      },
+    });
+  }, [currentTip.text, currentTip.title, currentTip.todayAction, isPlaying, stopAudio, userProfile.gender]);
+
+  useEffect(() => {
+    preloadSpeechVoices();
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) {
+      stopAudio();
+      setAudioDone(false);
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      handlePlay();
+    }, 180);
+
+    return () => {
+      window.clearTimeout(timer);
+      stopAudio();
     };
-    utterance.onerror = () => {
-      setIsPlaying(false);
-    };
-    window.speechSynthesis.speak(utterance);
+  }, [handlePlay, isOpen, stopAudio]);
+
+  if (!isOpen) return null;
+
+  const handleClose = () => {
+    stopAudio();
+    setAudioDone(false);
+    onClose();
   };
 
   const goNext = () => {
@@ -144,7 +152,7 @@ export function DailyTipModal({ isOpen, onClose }: DailyTipModalProps) {
         rightSlot={
           <button
             onClick={handlePlay}
-            className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-2xl transition-all active:scale-95"
             style={{
               backgroundColor: isPlaying ? '#FEF3C7' : audioDone ? '#F0FDF4' : '#FFFFFF',
               border: `1px solid ${isPlaying ? '#FCD34D' : audioDone ? '#BBF7D0' : theme.primaryBorder}`,
@@ -159,16 +167,20 @@ export function DailyTipModal({ isOpen, onClose }: DailyTipModalProps) {
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         <div
-          className="rounded-3xl p-5 relative overflow-hidden"
-          style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}`, boxShadow: `0 18px 36px ${theme.primaryShadow}` }}
+          className="relative overflow-hidden rounded-3xl p-5"
+          style={{
+            backgroundColor: '#FFFFFF',
+            border: `1px solid ${theme.primaryBorder}`,
+            boxShadow: `0 18px 36px ${theme.primaryShadow}`,
+          }}
         >
           <div className="absolute top-4 left-4 opacity-10">
             <Quote size={64} style={{ color: theme.primary }} />
           </div>
 
-          <div className="flex items-center justify-start gap-2 mb-3">
+          <div className="mb-3 flex flex-row-reverse items-center justify-end gap-2">
             <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl"
               style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
             >
               <Stethoscope size={18} strokeWidth={1.8} />
@@ -185,7 +197,7 @@ export function DailyTipModal({ isOpen, onClose }: DailyTipModalProps) {
           </p>
 
           <div
-            className="rounded-3xl p-4 mt-5"
+            className="mt-5 rounded-3xl p-4"
             style={{ backgroundColor: theme.primaryBg, border: `1px solid ${theme.primaryBorder}` }}
           >
             <p style={{ color: theme.primary, fontWeight: 900, fontSize: 13 }}>מה לעשות היום</p>
@@ -194,9 +206,9 @@ export function DailyTipModal({ isOpen, onClose }: DailyTipModalProps) {
             </p>
           </div>
 
-          <div className="mt-5 flex items-center justify-start gap-2">
+          <div className="mt-5 flex flex-row-reverse items-center justify-end gap-2">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
+              className="flex h-8 w-8 items-center justify-center rounded-full"
               style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
             >
               <Stethoscope size={14} strokeWidth={1.8} />
@@ -210,7 +222,7 @@ export function DailyTipModal({ isOpen, onClose }: DailyTipModalProps) {
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={goNext}
-            className="h-12 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+            className="flex h-12 items-center justify-center gap-2 rounded-2xl transition-all active:scale-[0.98]"
             style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}`, color: theme.primary, fontWeight: 800 }}
           >
             <ChevronRight size={18} strokeWidth={2} />
@@ -218,7 +230,7 @@ export function DailyTipModal({ isOpen, onClose }: DailyTipModalProps) {
           </button>
           <button
             onClick={goPrev}
-            className="h-12 rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+            className="flex h-12 items-center justify-center gap-2 rounded-2xl transition-all active:scale-[0.98]"
             style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}`, color: theme.primary, fontWeight: 800 }}
           >
             <ChevronLeft size={18} strokeWidth={2} />
@@ -230,14 +242,14 @@ export function DailyTipModal({ isOpen, onClose }: DailyTipModalProps) {
           className="rounded-3xl p-4"
           style={{ backgroundColor: '#FFFFFF', border: `1px solid ${theme.primaryBorder}` }}
         >
-          <div className="flex items-center justify-start gap-2 mb-3">
+          <div className="mb-3 flex flex-row-reverse items-center justify-end gap-2">
             <div
-              className="w-10 h-10 rounded-2xl flex items-center justify-center"
+              className="flex h-10 w-10 items-center justify-center rounded-2xl"
               style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
             >
               <BookOpen size={18} strokeWidth={1.8} />
             </div>
-            <p style={{ color: '#1F2937', fontWeight: 900 }}>מאמרים קצרים להמשך קריאה</p>
+            <p style={{ color: '#1F2937', fontWeight: 900 }}>עוד מידע קצר ושימושי</p>
           </div>
 
           <div className="space-y-3">

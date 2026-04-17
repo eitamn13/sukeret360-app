@@ -1,7 +1,12 @@
 import { Droplets, Heart, MessageCircle, Pill, Siren, UtensilsCrossed } from 'lucide-react';
 import { useMemo } from 'react';
 import { useCurrentTime } from '../hooks/useCurrentTime';
-import { genderedText, useAppContext } from '../context/AppContext';
+import {
+  genderedText,
+  getDiabetesTypeLabel,
+  isLifestyleFocusedProfile,
+  useAppContext,
+} from '../context/AppContext';
 
 function formatClock(time: string) {
   return time || '--:--';
@@ -25,7 +30,7 @@ export function GreetingSection({
   const { timeString, greeting, dateString } = useCurrentTime();
   const { userProfile, theme, sugarLogs, todayMeals, medicationSchedule } = useAppContext();
   const isMale = userProfile.gender === 'male';
-
+  const lifestyleFocused = isLifestyleFocusedProfile(userProfile.diabetesType, userProfile.treatmentType);
   const displayName = userProfile.name || genderedText(userProfile.gender, 'יקרה', 'יקר');
   const latestSugar = sugarLogs[0];
 
@@ -45,9 +50,34 @@ export function GreetingSection({
     );
   }, [medicationSchedule]);
 
+  const recommendation = useMemo(() => {
+    const targetLow = Number(userProfile.targetLow || 80);
+    const targetHigh = Number(userProfile.targetHigh || 140);
+
+    if (latestSugar) {
+      if (latestSugar.level < targetLow) {
+        return 'כדאי לקחת משהו קטן עם פחמימה מהירה ולבדוק שוב בקרוב.';
+      }
+
+      if (latestSugar.level > targetHigh) {
+        return 'כדאי לשתות מים, לזוז קצת ולעקוב שוב בהמשך.';
+      }
+    }
+
+    if (lifestyleFocused) {
+      return 'היום המוקד הוא אוכל רגוע, הליכה קצרה ומעקב מסודר.';
+    }
+
+    if (nextMedication) {
+      return `השלב הבא הוא לזכור את ${nextMedication.name} בשעה ${formatClock(nextMedication.time)}.`;
+    }
+
+    return 'הכול נראה רגוע. ממשיכים בשגרה פשוטה וברורה.';
+  }, [latestSugar, lifestyleFocused, nextMedication, userProfile.targetHigh, userProfile.targetLow]);
+
   const quickActions = [
     {
-      label: 'בדיקת סוכר',
+      label: lifestyleFocused ? 'מעקב סוכר' : 'בדיקת סוכר',
       note: latestSugar ? `אחרון ${latestSugar.level}` : 'מדידה חדשה',
       icon: <Droplets size={18} strokeWidth={1.9} />,
       onClick: onSugarClick,
@@ -60,13 +90,13 @@ export function GreetingSection({
     },
     {
       label: 'תרופות',
-      note: nextMedication ? formatClock(nextMedication.time) : 'לוח יומי',
+      note: nextMedication ? formatClock(nextMedication.time) : lifestyleFocused ? 'רק אם הוגדר' : 'לוח יומי',
       icon: <Pill size={18} strokeWidth={1.9} />,
       onClick: onMedicationsClick,
     },
     {
       label: 'העוזר הרפואי שלי',
-      note: 'שאלה רפואית קצרה',
+      note: 'שיחה קולית קצרה',
       icon: <MessageCircle size={18} strokeWidth={1.9} />,
       onClick: onDoctorClick,
     },
@@ -112,7 +142,7 @@ export function GreetingSection({
 
   return (
     <section
-      className="relative overflow-hidden rounded-[34px] mx-4 mt-3 p-4"
+      className="relative mx-4 mt-3 overflow-hidden rounded-[34px] p-4"
       dir="rtl"
       style={{
         background: theme.gradientCard,
@@ -121,13 +151,13 @@ export function GreetingSection({
       }}
     >
       <div className="absolute inset-0 opacity-90" style={{ background: heroGlow }} />
-      <div className="absolute -left-8 bottom-[-18px] w-40 h-40 rounded-full" style={{ background: orbGlow }} />
+      <div className="absolute -left-8 bottom-[-18px] h-40 w-40 rounded-full" style={{ background: orbGlow }} />
 
       <div className="relative z-10">
         <div className="flex items-start justify-between gap-4">
           <button
             onClick={onSOSClick}
-            className="h-12 min-w-[108px] px-5 rounded-[20px] flex items-center justify-center gap-2 transition-all active:scale-95"
+            className="flex h-12 min-w-[108px] items-center justify-center gap-2 rounded-[20px] px-5 transition-all active:scale-95"
             style={{ ...sosButton, fontWeight: 900 }}
             aria-label="SOS"
           >
@@ -139,17 +169,20 @@ export function GreetingSection({
             <p className="text-[28px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
               {timeString}
             </p>
-            <p className="text-sm mt-1" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
+            <p className="mt-1 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
               {dateString}
             </p>
           </div>
         </div>
 
         <div className="mt-5 text-right">
-          <div className="flex items-center justify-start gap-2">
+          <div className="flex flex-row-reverse items-center justify-end gap-2">
             <div
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: isMale ? 'rgba(210, 225, 248, 0.72)' : 'rgba(246, 211, 221, 0.66)', color: theme.primaryDark }}
+              className="flex h-8 w-8 items-center justify-center rounded-full"
+              style={{
+                backgroundColor: isMale ? 'rgba(210, 225, 248, 0.72)' : 'rgba(246, 211, 221, 0.66)',
+                color: theme.primaryDark,
+              }}
             >
               <Heart size={16} strokeWidth={2} />
             </div>
@@ -158,15 +191,32 @@ export function GreetingSection({
             </p>
           </div>
 
-          <h2
-            className="text-[28px] leading-tight mt-2.5 text-right"
-            style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
-          >
-            {genderedText(userProfile.gender, 'איך את מרגישה היום?', 'איך אתה מרגיש היום?')}
-          </h2>
+          <div className="mt-3 flex flex-row-reverse items-center justify-between gap-3">
+            <span
+              className="rounded-full px-3 py-1 text-xs"
+              style={{
+                backgroundColor: isMale ? 'rgba(219, 233, 251, 0.88)' : 'rgba(250, 223, 231, 0.9)',
+                color: theme.primaryDark,
+                fontWeight: 800,
+              }}
+            >
+              {getDiabetesTypeLabel(userProfile.diabetesType)}
+            </span>
+
+            <h2
+              className="text-[28px] leading-tight text-right"
+              style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
+            >
+              מבט מהיר להיום
+            </h2>
+          </div>
+
+          <p className="mt-2 text-sm leading-7" style={{ color: '#8A756C', fontWeight: 700 }}>
+            {recommendation}
+          </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-4">
+        <div className="mt-4 grid grid-cols-2 gap-3">
           {quickActions.map((action, index) => {
             const accent = index === 1 || index === 3;
 
@@ -182,9 +232,9 @@ export function GreetingSection({
                   boxShadow: accent ? accentCard.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
                 }}
               >
-                <div className="flex h-full flex-col items-start text-right">
+                <div className="flex h-full flex-col items-end text-right">
                   <div
-                    className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl"
                     style={{
                       background: accent ? accentCard.iconBg : theme.primaryBg,
                       color: accent ? accentCard.iconColor : theme.primaryDark,
@@ -193,7 +243,7 @@ export function GreetingSection({
                     {action.icon}
                   </div>
 
-                  <div className="text-right mt-auto w-full">
+                  <div className="mt-auto w-full text-right">
                     <p style={{ color: '#5A4740', fontWeight: 900 }}>{action.label}</p>
                     <p style={{ color: '#947D74', fontSize: 12, marginTop: 4, fontWeight: 700 }}>
                       {action.note}
@@ -205,15 +255,21 @@ export function GreetingSection({
           })}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mt-3">
+        <div className="mt-3 grid grid-cols-2 gap-3">
           <CompactStatus
-            label="סוכר אחרון"
+            label={lifestyleFocused ? 'המדידה האחרונה' : 'סוכר אחרון'}
             value={latestSugar ? `${latestSugar.level} mg/dL` : 'עוד לא נמדד'}
             theme={theme}
           />
           <CompactStatus
-            label="התרופה הבאה"
-            value={nextMedication ? `${nextMedication.name} · ${formatClock(nextMedication.time)}` : 'לא הוגדרה'}
+            label={lifestyleFocused ? 'המוקד היום' : 'התרופה הבאה'}
+            value={
+              lifestyleFocused
+                ? 'אוכל, הליכה ומעקב'
+                : nextMedication
+                  ? `${nextMedication.name} · ${formatClock(nextMedication.time)}`
+                  : 'עוד לא הוגדרה'
+            }
             theme={theme}
           />
         </div>

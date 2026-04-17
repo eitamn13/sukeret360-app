@@ -10,6 +10,7 @@ import {
 export type Gender = 'female' | 'male' | '';
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
 export type TreatmentType = 'insulin' | 'pills' | 'combined' | 'lifestyle' | '';
+export type DiabetesType = '1' | '2' | 'prediabetes' | 'monitoring' | '';
 export type MedicationVisual = 'blue-pill' | 'white-pill' | 'pink-pill' | 'insulin-pen';
 export type SugarContext = 'fasting' | 'before_meal' | 'after_meal' | 'bedtime' | 'exercise' | 'custom';
 
@@ -17,10 +18,32 @@ export function genderedText(gender: Gender, femaleText: string, maleText: strin
   return gender === 'male' ? maleText : femaleText;
 }
 
+export function getDiabetesTypeLabel(diabetesType: DiabetesType): string {
+  switch (diabetesType) {
+    case '1':
+      return 'סוכרת סוג 1';
+    case '2':
+      return 'סוכרת סוג 2';
+    case 'prediabetes':
+      return 'טרום סוכרת';
+    case 'monitoring':
+      return 'עדיין בבדיקה';
+    default:
+      return 'עדיין לא הוגדר';
+  }
+}
+
+export function isLifestyleFocusedProfile(
+  diabetesType: DiabetesType,
+  treatmentType: TreatmentType
+) {
+  return diabetesType === 'prediabetes' || diabetesType === 'monitoring' || treatmentType === 'lifestyle';
+}
+
 export interface UserProfile {
   name: string;
   age: string;
-  diabetesType: '1' | '2' | '';
+  diabetesType: DiabetesType;
   gender: Gender;
   diagnosisYear: string;
   treatmentType: TreatmentType;

@@ -5,10 +5,8 @@ import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Header } from './components/Header';
 import { GreetingSection } from './components/GreetingSection';
 import { ActionGrid } from './components/ActionGrid';
-import { CommunitySection } from './components/CommunitySection';
 import { SmartMealLogger } from './components/SmartMealLogger';
 import { SugarModal } from './components/SugarModal';
-import CommunityScreen from './components/CommunityScreen';
 import { ComingSoonModal } from './components/ComingSoonModal';
 import { MedicationsScreen } from './components/MedicationsScreen';
 import { DailyTipModal } from './components/DailyTipModal';
@@ -22,8 +20,6 @@ import { WelcomeIntroScreen } from './components/WelcomeIntroScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { AdminUsersScreen } from './components/AdminUsersScreen';
 
-type CommunityView = 'community' | 'forum' | 'support' | 'challenges';
-
 function AppInner() {
   const { onboardingDone, theme, logSugar, remoteReady } = useAppContext();
   const [showWelcomeIntro, setShowWelcomeIntro] = useState<boolean>(() => {
@@ -33,7 +29,6 @@ function AppInner() {
 
   const [showMealLogger, setShowMealLogger] = useState(false);
   const [showSugarModal, setShowSugarModal] = useState(false);
-  const [showCommunity, setShowCommunity] = useState(false);
   const [showMedications, setShowMedications] = useState(false);
   const [showDailyTip, setShowDailyTip] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -43,7 +38,6 @@ function AppInner() {
   const [showSOS, setShowSOS] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAdminUsers, setShowAdminUsers] = useState(false);
-  const [communityTab, setCommunityTab] = useState<CommunityView>('community');
   const [comingSoon, setComingSoon] = useState<string | null>(null);
 
   useEffect(() => {
@@ -150,16 +144,6 @@ function AppInner() {
     setComingSoon(label);
   };
 
-  const handleCommunityItemClick = (id: string, label: string) => {
-    if (id === 'forum' || id === 'support' || id === 'challenges') {
-      setCommunityTab(id);
-      setShowCommunity(true);
-      return;
-    }
-
-    setComingSoon(label);
-  };
-
   return (
     <div
       className="min-h-[100svh] transition-all duration-500 overflow-x-hidden app-shell"
@@ -190,14 +174,6 @@ function AppInner() {
             onSugarClick={() => setShowSugarModal(true)}
             onActionClick={handleActionClick}
           />
-
-          <CommunitySection
-            onCommunityClick={() => {
-              setCommunityTab('community');
-              setShowCommunity(true);
-            }}
-            onItemClick={handleCommunityItemClick}
-          />
         </main>
       </div>
 
@@ -210,13 +186,6 @@ function AppInner() {
         onClose={() => setShowSugarModal(false)}
         onSave={handleSugarSave}
       />
-
-      {showCommunity && (
-        <CommunityScreen
-          initialTab={communityTab}
-          onClose={() => setShowCommunity(false)}
-        />
-      )}
 
       {showMedications && (
         <MedicationsScreen onClose={() => setShowMedications(false)} />

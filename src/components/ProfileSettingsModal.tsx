@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from 'react';
+import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import {
   BellRing,
   Check,
@@ -12,7 +12,13 @@ import {
   UserX,
 } from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
-import { Gender, TreatmentType, UserProfile, useAppContext } from '../context/AppContext';
+import {
+  type DiabetesType,
+  type Gender,
+  type TreatmentType,
+  type UserProfile,
+  useAppContext,
+} from '../context/AppContext';
 import { OverlayHeader } from './OverlayHeader';
 
 interface ProfileSettingsModalProps {
@@ -27,6 +33,24 @@ type EmergencyContactDraft = {
   message: string;
 };
 
+const DIABETES_TYPE_OPTIONS: Array<{
+  value: DiabetesType;
+  label: string;
+  description: string;
+}> = [
+  { value: 'prediabetes', label: 'טרום סוכרת', description: 'מעקב עדין, תזונה, הליכה ושגרה בריאה' },
+  { value: 'monitoring', label: 'עדיין בבדיקה', description: 'למי שנמצא במעקב ועדיין אין אבחון סופי' },
+  { value: '2', label: 'סוג 2', description: 'לרוב משלב כדורים, שגרה ואיזון יומיומי' },
+  { value: '1', label: 'סוג 1', description: 'לרוב תלוי באינסולין ומעקב תכוף יותר' },
+];
+
+const TREATMENT_OPTIONS: Array<{ value: TreatmentType; label: string }> = [
+  { value: 'insulin', label: 'אינסולין' },
+  { value: 'pills', label: 'כדורים' },
+  { value: 'combined', label: 'משולב' },
+  { value: 'lifestyle', label: 'אורח חיים' },
+];
+
 const DEFAULT_EMERGENCY_CONTACT: EmergencyContactDraft = {
   name: '',
   phone: '',
@@ -40,7 +64,7 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
   const [name, setName] = useState(userProfile.name);
   const [age, setAge] = useState(userProfile.age);
   const [gender, setGender] = useState<Gender>(userProfile.gender);
-  const [diabetesType, setDiabetesType] = useState<'1' | '2' | ''>(userProfile.diabetesType);
+  const [diabetesType, setDiabetesType] = useState<DiabetesType>(userProfile.diabetesType);
   const [diagnosisYear, setDiagnosisYear] = useState(userProfile.diagnosisYear);
   const [treatmentType, setTreatmentType] = useState<TreatmentType>(userProfile.treatmentType);
   const [targetLow, setTargetLow] = useState(userProfile.targetLow);
@@ -96,11 +120,16 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
     }
   }, [isOpen, userProfile]);
 
-  const isValid =
-    name.trim().length > 0 &&
-    Number(age) > 0 &&
-    Number(targetLow) > 0 &&
-    Number(targetHigh) > Number(targetLow);
+  const isValid = useMemo(() => {
+    return (
+      name.trim().length > 0 &&
+      Number(age) > 0 &&
+      diabetesType !== '' &&
+      treatmentType !== '' &&
+      Number(targetLow) > 0 &&
+      Number(targetHigh) > Number(targetLow)
+    );
+  }, [age, diabetesType, name, targetHigh, targetLow, treatmentType]);
 
   const handleSave = () => {
     const updated: UserProfile = {
@@ -133,7 +162,7 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
   const handleDeleteAccount = async () => {
     if (!session?.access_token) return;
 
-    const confirmed = window.confirm('האם למחוק את החשבון וכל הנתונים השמורים שלו?');
+    const confirmed = window.confirm('האם למחוק את החשבון ואת כל הנתונים השמורים שלו?');
     if (!confirmed) return;
 
     try {
@@ -164,6 +193,7 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
     <div
       className="fixed inset-0 z-[80] flex flex-col animate-slide-in-right overflow-hidden"
       style={{ background: theme.gradientFull, height: '100dvh', minHeight: '100dvh' }}
+      dir="rtl"
     >
       <OverlayHeader
         title="הגדרות ופרופיל"
@@ -257,7 +287,7 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
                         boxShadow: selected ? `0 10px 22px ${accent.shadow}` : 'none',
                       }}
                     >
-                      <p className="text-2xl mb-2">{option.emoji}</p>
+                      <p className="mb-2 text-2xl">{option.emoji}</p>
                       <p style={{ color: selected ? accent.text : '#334155', fontWeight: 800 }}>
                         {option.label}
                       </p>
@@ -278,21 +308,27 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
           <div className="space-y-3">
             <LabeledField label="סוג סוכרת">
               <div className="grid grid-cols-2 gap-3">
-                {(['1', '2'] as const).map((type) => (
+                {DIABETES_TYPE_OPTIONS.map((type) => (
                   <button
-                    key={type}
-                    onClick={() => setDiabetesType(type)}
+                    key={type.value}
+                    onClick={() => setDiabetesType(type.value)}
                     className="rounded-2xl p-4 text-right transition-all active:scale-[0.98]"
                     style={{
-                      border: `2px solid ${diabetesType === type ? theme.primary : '#E2E8F0'}`,
-                      backgroundColor: diabetesType === type ? theme.primaryBg : '#FFFFFF',
+                      border: `2px solid ${diabetesType === type.value ? theme.primary : '#E2E8F0'}`,
+                      backgroundColor: diabetesType === type.value ? theme.primaryBg : '#FFFFFF',
                     }}
                   >
-                    <p style={{ color: diabetesType === type ? theme.primary : '#0F172A', fontWeight: 900, fontSize: 18 }}>
-                      סוג {type}
+                    <p
+                      style={{
+                        color: diabetesType === type.value ? theme.primary : '#0F172A',
+                        fontWeight: 900,
+                        fontSize: 18,
+                      }}
+                    >
+                      {type.label}
                     </p>
                     <p style={{ color: '#64748B', fontSize: 13, marginTop: 5 }}>
-                      {type === '1' ? 'לרוב תלוי באינסולין' : 'לרוב משלב כדורים ואורח חיים'}
+                      {type.description}
                     </p>
                   </button>
                 ))}
@@ -301,12 +337,7 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
 
             <LabeledField label="סוג טיפול">
               <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: 'insulin' as TreatmentType, label: 'אינסולין' },
-                  { value: 'pills' as TreatmentType, label: 'כדורים' },
-                  { value: 'combined' as TreatmentType, label: 'משולב' },
-                  { value: 'lifestyle' as TreatmentType, label: 'אורח חיים' },
-                ].map((option) => (
+                {TREATMENT_OPTIONS.map((option) => (
                   <button
                     key={option.value}
                     onClick={() => setTreatmentType(option.value)}
@@ -431,7 +462,6 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
             </LabeledField>
           </div>
         </SectionCard>
-
       </div>
 
       <div
@@ -471,7 +501,7 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
           )}
 
           {authEnabled && (
-            <div className="grid grid-cols-2 gap-3 mb-3">
+            <div className="mb-3 grid grid-cols-2 gap-3">
               <button
                 onClick={() => void signOut()}
                 className="h-[50px] rounded-2xl flex items-center justify-center gap-2 transition-all"
@@ -501,6 +531,7 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
               </button>
             </div>
           )}
+
           <button
             onClick={handleSave}
             disabled={!isValid}
@@ -514,20 +545,19 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
               color: '#FFFFFF',
               fontWeight: 900,
               boxShadow: isValid ? `0 20px 38px ${theme.primaryShadow}` : '0 14px 28px rgba(100, 116, 139, 0.22)',
-              opacity: 1,
             }}
           >
-          {saved ? (
-            <>
-              <Check size={18} strokeWidth={2.6} />
-              <span>נשמר בהצלחה</span>
-            </>
-          ) : (
-            <>
-              <Save size={18} strokeWidth={2.2} />
-              <span>שמור שינויים</span>
-            </>
-          )}
+            {saved ? (
+              <>
+                <Check size={18} strokeWidth={2.6} />
+                <span>נשמר בהצלחה</span>
+              </>
+            ) : (
+              <>
+                <Save size={18} strokeWidth={2.2} />
+                <span>שמור שינויים</span>
+              </>
+            )}
           </button>
         </div>
       </div>
@@ -557,7 +587,7 @@ function SectionCard({
         boxShadow: '0 10px 30px rgba(15, 23, 42, 0.05)',
       }}
     >
-      <div className="flex items-start justify-between gap-3 mb-4">
+      <div className="mb-4 flex flex-row-reverse items-start justify-end gap-3">
         <div
           className="w-11 h-11 rounded-2xl flex items-center justify-center"
           style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
@@ -565,7 +595,7 @@ function SectionCard({
           {icon}
         </div>
 
-        <div className="text-right flex-1">
+        <div className="flex-1 text-right">
           <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 17 }}>{title}</h3>
           <p style={{ color: '#64748B', fontSize: 13, lineHeight: 1.7, marginTop: 4 }}>{subtitle}</p>
         </div>
@@ -576,13 +606,7 @@ function SectionCard({
   );
 }
 
-function LabeledField({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+function LabeledField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div>
       <label className="block text-sm text-right mb-2" style={{ color: '#475569', fontWeight: 800 }}>

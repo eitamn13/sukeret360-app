@@ -1,15 +1,6 @@
-import {
-  BookOpen,
-  Droplets,
-  Pill,
-  Search,
-  Sparkles,
-  Stethoscope,
-  UtensilsCrossed,
-  Video,
-} from 'lucide-react';
+import { BookOpen, Sparkles, Stethoscope, UtensilsCrossed } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useAppContext } from '../context/AppContext';
+import { isLifestyleFocusedProfile, useAppContext } from '../context/AppContext';
 
 interface ActionItem {
   icon: ReactNode;
@@ -25,19 +16,32 @@ interface ActionGridProps {
   onActionClick?: (id: string, label: string) => void;
 }
 
-const PRIMARY_ACTIONS: ActionItem[] = [
-  { icon: <Search size={24} strokeWidth={1.7} />, label: 'רישום ארוחה', hint: 'צילום או חיפוש', accent: true, id: 'meal-logger' },
-  { icon: <Droplets size={24} strokeWidth={1.7} />, label: 'רישום סוכר', hint: 'מדידה חדשה', id: 'sugar' },
-  { icon: <Pill size={24} strokeWidth={1.7} />, label: 'תרופות', hint: 'לוח ותזכורות', id: 'medications' },
-  { icon: <UtensilsCrossed size={24} strokeWidth={1.7} />, label: 'ארוחות', hint: 'רעיונות מהירים', id: 'meals' },
-  { icon: <Stethoscope size={24} strokeWidth={1.7} />, label: 'טיפ יומי', hint: 'קצר וברור', id: 'tip' },
-  { icon: <BookOpen size={24} strokeWidth={1.7} />, label: 'היסטוריה', hint: 'מה קרה השבוע', id: 'history' },
-  { icon: <Video size={24} strokeWidth={1.7} />, label: 'העוזר הרפואי שלי', hint: 'שאלה רפואית קצרה', accent: true, id: 'doctor' },
-];
-
-export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: ActionGridProps) {
+export function ActionGrid({ onActionClick }: ActionGridProps) {
   const { theme, userProfile } = useAppContext();
   const isMale = userProfile.gender === 'male';
+  const lifestyleFocused = isLifestyleFocusedProfile(userProfile.diabetesType, userProfile.treatmentType);
+
+  const secondaryActions: ActionItem[] = [
+    {
+      icon: <UtensilsCrossed size={24} strokeWidth={1.7} />,
+      label: 'הצעות ארוחה',
+      hint: lifestyleFocused ? 'בחירות קלות ליום רגוע' : 'רעיונות פשוטים לאיזון',
+      accent: true,
+      id: 'meals',
+    },
+    {
+      icon: <Stethoscope size={24} strokeWidth={1.7} />,
+      label: 'טיפ יומי',
+      hint: 'קצר, ברור ובקול',
+      id: 'tip',
+    },
+    {
+      icon: <BookOpen size={24} strokeWidth={1.7} />,
+      label: 'היסטוריה',
+      hint: 'מה קרה השבוע',
+      id: 'history',
+    },
+  ];
 
   const accentSurface = isMale
     ? {
@@ -61,31 +65,25 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
         plainIconBg: 'linear-gradient(135deg, #FFF5EF 0%, #FBF0E8 100%)',
       };
 
-  const handleClick = (id: string, label: string) => {
-    if (id === 'meal-logger') return onMealLoggerClick?.();
-    if (id === 'sugar') return onSugarClick?.();
-    onActionClick?.(id, label);
-  };
-
   return (
-    <section className="px-4 mt-6" dir="rtl">
+    <section className="mt-5 px-4" dir="rtl">
       <div className="mb-3 flex flex-row-reverse items-center justify-end gap-2">
         <div
-          className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+          className="flex h-10 w-10 items-center justify-center rounded-2xl"
           style={{ background: accentSurface.headerBadge, color: theme.primaryDark }}
         >
           <Sparkles size={18} strokeWidth={1.9} />
         </div>
         <div className="text-right">
-          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>מה צריך עכשיו</h3>
+          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>עוד כלים שימושיים</h3>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {PRIMARY_ACTIONS.map((action) => (
+        {secondaryActions.map((action) => (
           <button
             key={action.id}
-            onClick={() => handleClick(action.id, action.label)}
+            onClick={() => onActionClick?.(action.id, action.label)}
             className="rounded-[26px] p-4 text-right transition-all active:scale-[0.98]"
             style={{
               minHeight: 118,
@@ -96,7 +94,7 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
           >
             <div className="flex h-full flex-col items-end text-right">
               <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center"
+                className="flex h-11 w-11 items-center justify-center rounded-2xl"
                 style={{
                   background: action.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
                   color: action.accent ? accentSurface.iconColor : theme.primaryDark,
@@ -109,7 +107,7 @@ export function ActionGrid({ onMealLoggerClick, onSugarClick, onActionClick }: A
                 <p className="text-[15px] leading-tight" style={{ color: '#5A4740', fontWeight: 900 }}>
                   {action.label}
                 </p>
-                <p className="text-xs mt-1" style={{ color: '#94817A', fontWeight: 700 }}>
+                <p className="mt-1 text-xs" style={{ color: '#94817A', fontWeight: 700 }}>
                   {action.hint}
                 </p>
               </div>
