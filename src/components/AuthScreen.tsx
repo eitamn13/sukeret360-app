@@ -1,4 +1,4 @@
-import { Heart, LogIn, ShieldCheck, UserPlus } from 'lucide-react';
+import { LogIn, ShieldCheck, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Logo } from './Logo';
 import { useAuthContext } from '../context/AuthContext';
@@ -53,14 +53,13 @@ export function AuthScreen() {
       className="min-h-[100dvh] px-4 py-8"
       dir="rtl"
       style={{
-        background:
-          'linear-gradient(180deg, #FFFDF8 0%, #F6FAFF 45%, #FFF8F4 100%)',
+        background: 'linear-gradient(180deg, #FFFDF8 0%, #F6FAFF 45%, #FFF8F4 100%)',
       }}
     >
-      <div className="max-w-md mx-auto">
-        <div className="flex justify-center mb-6">
+      <div className="mx-auto max-w-md">
+        <div className="mb-5 flex justify-center">
           <div
-            className="w-24 h-24 rounded-[32px] flex items-center justify-center"
+            className="flex h-24 w-24 items-center justify-center rounded-[32px]"
             style={{
               background: 'linear-gradient(145deg, #FFFFFF 0%, #FFF7F2 100%)',
               border: '1px solid #EBDDD4',
@@ -71,11 +70,10 @@ export function AuthScreen() {
           </div>
         </div>
 
-        <div className="text-center mb-6">
-          <p className="text-sm font-bold text-[#C88AA2]">חשבון אישי מאובטח</p>
-          <h1 className="mt-2 text-[34px] font-black text-[#4D5B73]">הסוכרת שלי</h1>
-          <p className="mt-3 text-sm leading-7 text-[#7A8698]">
-            הרשמה אמיתית לאפליקציה עם שמירה מאובטחת של הנתונים, גיבוי בענן וגישה מכל מכשיר.
+        <div className="mb-5 text-center">
+          <h1 className="text-[34px] font-black text-[#4D5B73]">הסוכרת שלי</h1>
+          <p className="mt-3 text-base leading-8 text-[#7A8698]">
+            כניסה פשוטה, שמירה מאובטחת וגישה נוחה מכל מכשיר.
           </p>
         </div>
 
@@ -87,34 +85,29 @@ export function AuthScreen() {
             boxShadow: '0 24px 54px rgba(116, 131, 157, 0.12)',
           }}
         >
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <button
-              onClick={() => setMode('signup')}
-              className="h-12 rounded-[20px] font-extrabold transition-all"
-              style={{
-                background:
-                  mode === 'signup'
-                    ? 'linear-gradient(135deg, #D49BB0 0%, #8EADE4 100%)'
-                    : '#FFFFFF',
-                color: mode === 'signup' ? '#FFFFFF' : '#5F6D84',
-                border: `1px solid ${mode === 'signup' ? 'transparent' : '#E3E8F1'}`,
-              }}
-            >
-              יצירת חשבון
-            </button>
+          <div className="mb-5 grid grid-cols-2 gap-3">
             <button
               onClick={() => setMode('signin')}
               className="h-12 rounded-[20px] font-extrabold transition-all"
               style={{
-                background:
-                  mode === 'signin'
-                    ? 'linear-gradient(135deg, #8EADE4 0%, #5D79AE 100%)'
-                    : '#FFFFFF',
+                background: mode === 'signin' ? 'linear-gradient(135deg, #8EADE4 0%, #5D79AE 100%)' : '#FFFFFF',
                 color: mode === 'signin' ? '#FFFFFF' : '#5F6D84',
                 border: `1px solid ${mode === 'signin' ? 'transparent' : '#E3E8F1'}`,
               }}
             >
               כניסה
+            </button>
+
+            <button
+              onClick={() => setMode('signup')}
+              className="h-12 rounded-[20px] font-extrabold transition-all"
+              style={{
+                background: mode === 'signup' ? 'linear-gradient(135deg, #D49BB0 0%, #8EADE4 100%)' : '#FFFFFF',
+                color: mode === 'signup' ? '#FFFFFF' : '#5F6D84',
+                border: `1px solid ${mode === 'signup' ? 'transparent' : '#E3E8F1'}`,
+              }}
+            >
+              הרשמה
             </button>
           </div>
 
@@ -123,8 +116,8 @@ export function AuthScreen() {
               <input
                 value={name}
                 onChange={(event) => setName(event.target.value)}
-                placeholder="איך קוראים לך?"
-                className="w-full h-14 rounded-[22px] px-4 text-right outline-none"
+                placeholder="שם מלא"
+                className="h-14 w-full rounded-[22px] px-4 text-right outline-none"
                 style={{
                   border: '1.5px solid #DFE6F2',
                   backgroundColor: '#FFFFFF',
@@ -137,9 +130,9 @@ export function AuthScreen() {
             <input
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="כתובת מייל"
+              placeholder="מייל"
               type="email"
-              className="w-full h-14 rounded-[22px] px-4 text-right outline-none"
+              className="h-14 w-full rounded-[22px] px-4 text-right outline-none"
               style={{
                 border: '1.5px solid #DFE6F2',
                 backgroundColor: '#FFFFFF',
@@ -151,9 +144,9 @@ export function AuthScreen() {
             <input
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="סיסמה של לפחות 6 תווים"
+              placeholder="סיסמה"
               type="password"
-              className="w-full h-14 rounded-[22px] px-4 text-right outline-none"
+              className="h-14 w-full rounded-[22px] px-4 text-right outline-none"
               style={{
                 border: '1.5px solid #DFE6F2',
                 backgroundColor: '#FFFFFF',
@@ -194,7 +187,7 @@ export function AuthScreen() {
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || busy}
-            className="w-full h-14 rounded-[24px] mt-5 flex items-center justify-center gap-2 disabled:opacity-60"
+            className="mt-5 flex h-14 w-full items-center justify-center gap-2 rounded-[24px] disabled:opacity-60"
             style={{
               background: 'linear-gradient(135deg, #D49BB0 0%, #7EA6E5 100%)',
               color: '#FFFFFF',
@@ -203,25 +196,15 @@ export function AuthScreen() {
             }}
           >
             {mode === 'signup' ? <UserPlus size={18} /> : <LogIn size={18} />}
-            <span>{busy ? 'רגע קטן...' : mode === 'signup' ? 'יצירת חשבון' : 'כניסה לאפליקציה'}</span>
+            <span>{busy ? 'רגע קטן...' : mode === 'signup' ? 'יוצרים חשבון' : 'נכנסים'}</span>
           </button>
 
-          <div className="grid grid-cols-3 gap-3 mt-5">
-            {[
-              { icon: <ShieldCheck size={17} />, title: 'מאובטח', text: 'הרשמה אמיתית למשתמשים' },
-              { icon: <Heart size={17} />, title: 'אישי', text: 'נתונים נשמרים בענן' },
-              { icon: <ShieldCheck size={17} />, title: 'מוכן לחנויות', text: 'דפי פרטיות ומחיקה' },
-            ].map((item) => (
-              <div
-                key={item.title}
-                className="rounded-[22px] p-3 text-center"
-                style={{ background: '#FFFFFF', border: '1px solid #E7E4DF' }}
-              >
-                <div className="flex justify-center mb-2 text-[#8DA8D6]">{item.icon}</div>
-                <p className="text-sm font-black text-[#4D5B73]">{item.title}</p>
-                <p className="mt-1 text-[11px] leading-5 text-[#8C97A8]">{item.text}</p>
-              </div>
-            ))}
+          <div
+            className="mt-5 flex items-center justify-center gap-2 rounded-[22px] px-4 py-3 text-center"
+            style={{ background: '#FFFFFF', border: '1px solid #E7E4DF' }}
+          >
+            <ShieldCheck size={17} className="text-[#8DA8D6]" />
+            <p className="text-sm font-bold text-[#6D7A8D]">הנתונים נשמרים בצורה מאובטחת</p>
           </div>
 
           <div className="mt-5 text-center text-xs leading-6 text-[#8C97A8]">

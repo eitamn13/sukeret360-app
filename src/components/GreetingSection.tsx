@@ -50,31 +50,6 @@ export function GreetingSection({
     );
   }, [medicationSchedule]);
 
-  const recommendation = useMemo(() => {
-    const targetLow = Number(userProfile.targetLow || 80);
-    const targetHigh = Number(userProfile.targetHigh || 140);
-
-    if (latestSugar) {
-      if (latestSugar.level < targetLow) {
-        return 'כדאי לקחת משהו קטן עם פחמימה מהירה ולבדוק שוב בקרוב.';
-      }
-
-      if (latestSugar.level > targetHigh) {
-        return 'כדאי לשתות מים, לזוז קצת ולעקוב שוב בהמשך.';
-      }
-    }
-
-    if (lifestyleFocused) {
-      return 'היום המוקד הוא אוכל רגוע, הליכה קצרה ומעקב מסודר.';
-    }
-
-    if (nextMedication) {
-      return `השלב הבא הוא לזכור את ${nextMedication.name} בשעה ${formatClock(nextMedication.time)}.`;
-    }
-
-    return 'הכול נראה רגוע. ממשיכים בשגרה פשוטה וברורה.';
-  }, [latestSugar, lifestyleFocused, nextMedication, userProfile.targetHigh, userProfile.targetLow]);
-
   const quickActions = [
     {
       label: lifestyleFocused ? 'מעקב סוכר' : 'בדיקת סוכר',
@@ -90,13 +65,13 @@ export function GreetingSection({
     },
     {
       label: 'תרופות',
-      note: nextMedication ? formatClock(nextMedication.time) : lifestyleFocused ? 'רק אם הוגדר' : 'לוח יומי',
+      note: nextMedication ? formatClock(nextMedication.time) : lifestyleFocused ? 'לפי צורך' : 'לוח יומי',
       icon: <Pill size={18} strokeWidth={1.9} />,
       onClick: onMedicationsClick,
     },
     {
       label: 'העוזר הרפואי שלי',
-      note: 'שיחה קולית קצרה',
+      note: 'שאלה קצרה בקול',
       icon: <MessageCircle size={18} strokeWidth={1.9} />,
       onClick: onDoctorClick,
     },
@@ -154,7 +129,16 @@ export function GreetingSection({
       <div className="absolute -left-8 bottom-[-18px] h-40 w-40 rounded-full" style={{ background: orbGlow }} />
 
       <div className="relative z-10">
-        <div className="flex items-start justify-between gap-4">
+        <div className="flex flex-row-reverse items-start justify-between gap-4">
+          <div className="text-right">
+            <p className="text-[28px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
+              {timeString}
+            </p>
+            <p className="mt-1 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
+              {dateString}
+            </p>
+          </div>
+
           <button
             onClick={onSOSClick}
             className="flex h-12 min-w-[108px] items-center justify-center gap-2 rounded-[20px] px-5 transition-all active:scale-95"
@@ -164,15 +148,6 @@ export function GreetingSection({
             <Siren size={18} strokeWidth={1.9} />
             <span>SOS</span>
           </button>
-
-          <div className="text-right">
-            <p className="text-[28px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
-              {timeString}
-            </p>
-            <p className="mt-1 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
-              {dateString}
-            </p>
-          </div>
         </div>
 
         <div className="mt-5 text-right">
@@ -210,10 +185,6 @@ export function GreetingSection({
               מבט מהיר להיום
             </h2>
           </div>
-
-          <p className="mt-2 text-sm leading-7" style={{ color: '#8A756C', fontWeight: 700 }}>
-            {recommendation}
-          </p>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
@@ -257,15 +228,15 @@ export function GreetingSection({
 
         <div className="mt-3 grid grid-cols-2 gap-3">
           <CompactStatus
-            label={lifestyleFocused ? 'המדידה האחרונה' : 'סוכר אחרון'}
+            label="סוכר אחרון"
             value={latestSugar ? `${latestSugar.level} mg/dL` : 'עוד לא נמדד'}
             theme={theme}
           />
           <CompactStatus
-            label={lifestyleFocused ? 'המוקד היום' : 'התרופה הבאה'}
+            label={lifestyleFocused ? 'להמשך היום' : 'התרופה הבאה'}
             value={
               lifestyleFocused
-                ? 'אוכל, הליכה ומעקב'
+                ? 'ארוחה רגועה והליכה קצרה'
                 : nextMedication
                   ? `${nextMedication.name} · ${formatClock(nextMedication.time)}`
                   : 'עוד לא הוגדרה'

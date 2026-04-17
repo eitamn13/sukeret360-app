@@ -19,7 +19,7 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
         <div
           className="w-full rounded-[36px] p-7 text-right"
           style={{
-            background: 'rgba(255,255,255,0.92)',
+            background: 'rgba(255,255,255,0.94)',
             border: '1px solid rgba(228, 221, 205, 0.92)',
             boxShadow: '0 30px 70px rgba(132, 109, 98, 0.14)',
             backdropFilter: 'blur(18px)',
@@ -63,11 +63,11 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
             >
               <Heart size={18} strokeWidth={2} />
             </div>
-            <p style={{ color: '#5A4740', fontWeight: 900, fontSize: 20 }}>
-              נבנתה עבור סבתא שלי לאה
+            <p style={{ color: '#5A4740', fontWeight: 900, fontSize: 22 }}>
+              מוקדשת לסבתא שלי לאה
             </p>
             <p className="mt-2" style={{ color: '#8D7A73', fontWeight: 700, lineHeight: 1.8 }}>
-              ולכל מי שצריך מעקב סוכר רגוע, ברור ונגיש.
+              מעקב סוכר פשוט, ברור ונגיש.
             </p>
           </div>
 
@@ -82,7 +82,7 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
             }}
           >
             <Sparkles size={18} strokeWidth={2} />
-            <span>נתחיל להגדיר את האפליקציה</span>
+            <span>נתחיל</span>
           </button>
         </div>
       </div>

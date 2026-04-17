@@ -75,7 +75,7 @@ export function ActionGrid({ onActionClick }: ActionGridProps) {
           <Sparkles size={18} strokeWidth={1.9} />
         </div>
         <div className="text-right">
-          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>עוד כלים שימושיים</h3>
+          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>כלים נוספים</h3>
         </div>
       </div>
 
