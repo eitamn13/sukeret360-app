@@ -64,7 +64,7 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
               <Heart size={18} strokeWidth={2} />
             </div>
             <p style={{ color: '#5A4740', fontWeight: 900, fontSize: 20 }}>
-              מוקדשת לסבתא שלי לאה
+              נבנתה עבור סבתא שלי לאה
             </p>
             <p className="mt-2" style={{ color: '#8D7A73', fontWeight: 700, lineHeight: 1.8 }}>
               ולכל מי שצריך מעקב סוכר רגוע, ברור ונגיש.

@@ -1,4 +1,4 @@
-﻿import { ChevronLeft, Clock3, Pill, Plus, Shield, Sparkles, Trash2 } from 'lucide-react';
+import { ChevronLeft, Clock3, Pill, Plus, Shield, Sparkles, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Logo } from './Logo';
 import {
@@ -50,10 +50,10 @@ const MED_VISUALS: Array<{
   symbol: string;
   color: string;
 }> = [
-  { value: 'blue-pill', label: '׳›׳“׳•׳¨ ׳›׳—׳•׳', symbol: 'נ’', color: '#5B8ED8' },
-  { value: 'white-pill', label: '׳›׳“׳•׳¨ ׳׳‘׳', symbol: 'ג×', color: '#D8D1C8' },
-  { value: 'pink-pill', label: '׳›׳“׳•׳¨ ׳•׳¨׳•׳“', symbol: 'נ©·', color: '#D591A9' },
-  { value: 'insulin-pen', label: '׳¢׳˜ ׳׳™׳ ׳¡׳•׳׳™׳', symbol: 'נ’‰', color: '#6FA56E' },
+  { value: 'blue-pill', label: 'כדור כחול', symbol: '💊', color: '#5B8ED8' },
+  { value: 'white-pill', label: 'כדור לבן', symbol: '⚪', color: '#D8D1C8' },
+  { value: 'pink-pill', label: 'כדור ורוד', symbol: '🩷', color: '#D591A9' },
+  { value: 'insulin-pen', label: 'עט אינסולין', symbol: '💉', color: '#6FA56E' },
 ];
 
 const DIABETES_TYPE_OPTIONS: Array<{
@@ -61,10 +61,10 @@ const DIABETES_TYPE_OPTIONS: Array<{
   label: string;
   description: string;
 }> = [
-  { value: 'prediabetes', label: '׳˜׳¨׳•׳ ׳¡׳•׳›׳¨׳×', description: '׳׳¢׳§׳‘ ׳¢׳“׳™׳, ׳×׳–׳•׳ ׳”, ׳”׳׳™׳›׳” ׳•׳©׳’׳¨׳” ׳‘׳¨׳™׳׳”' },
-  { value: 'monitoring', label: '׳¢׳“׳™׳™׳ ׳‘׳‘׳“׳™׳§׳”', description: '׳׳׳™ ׳©׳ ׳׳¦׳ ׳‘׳׳¢׳§׳‘ ׳•׳¢׳“׳™׳™׳ ׳׳™׳ ׳׳‘׳—׳•׳ ׳¡׳•׳₪׳™' },
-  { value: '2', label: '׳¡׳•׳’ 2', description: '׳׳¨׳•׳‘ ׳׳©׳׳‘ ׳›׳“׳•׳¨׳™׳, ׳©׳’׳¨׳” ׳•׳׳™׳–׳•׳ ׳™׳•׳׳™׳•׳׳™' },
-  { value: '1', label: '׳¡׳•׳’ 1', description: '׳׳¨׳•׳‘ ׳×׳׳•׳™ ׳‘׳׳™׳ ׳¡׳•׳׳™׳ ׳•׳׳¢׳§׳‘ ׳×׳›׳•׳£ ׳™׳•׳×׳¨' },
+  { value: 'prediabetes', label: 'טרום סוכרת', description: 'מעקב עדין, תזונה, הליכה ושגרה בריאה' },
+  { value: 'monitoring', label: 'עדיין בבדיקה', description: 'למי שנמצא במעקב ועדיין אין אבחון סופי' },
+  { value: '2', label: 'סוג 2', description: 'לרוב טיפול בכדורים, שגרה ואיזון יומיומי' },
+  { value: '1', label: 'סוג 1', description: 'לרוב תלוי באינסולין ומעקב תכוף יותר' },
 ];
 
 function createMedicationDraft(): MedicationScheduleItem {
@@ -73,21 +73,21 @@ function createMedicationDraft(): MedicationScheduleItem {
     name: '',
     dosage: '',
     time: '08:00',
-    period: '׳‘׳•׳§׳¨',
+    period: 'בוקר',
     type: 'pill',
-    image: 'ג×',
-    appearanceLabel: '׳›׳“׳•׳¨ ׳׳‘׳',
+    image: '⚪',
+    appearanceLabel: 'כדור לבן',
     notes: '',
     notifyEmergencyAfterMinutes: 45,
   };
 }
 
 function getTreatmentLabel(treatmentType: TreatmentType) {
-  if (treatmentType === 'insulin') return '׳׳™׳ ׳¡׳•׳׳™׳';
-  if (treatmentType === 'pills') return '׳›׳“׳•׳¨׳™׳';
-  if (treatmentType === 'combined') return '׳©׳™׳׳•׳‘';
-  if (treatmentType === 'lifestyle') return '׳׳•׳¨׳— ׳—׳™׳™׳';
-  return '׳˜׳¨׳ ׳”׳•׳’׳“׳¨';
+  if (treatmentType === 'insulin') return 'אינסולין';
+  if (treatmentType === 'pills') return 'כדורים';
+  if (treatmentType === 'combined') return 'שילוב';
+  if (treatmentType === 'lifestyle') return 'אורח חיים';
+  return 'טרם הוגדר';
 }
 
 export function OnboardingScreen() {
@@ -112,7 +112,7 @@ export function OnboardingScreen() {
   const [medications, setMedications] = useState<MedicationScheduleItem[]>([createMedicationDraft()]);
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
-  const [emergencyMessage, setEmergencyMessage] = useState('׳׳ ׳™ ׳¦׳¨׳™׳/׳” ׳¢׳–׳¨׳” ׳“׳—׳•׳₪׳”. ׳–׳” ׳”׳׳™׳§׳•׳ ׳©׳׳™:');
+  const [emergencyMessage, setEmergencyMessage] = useState('אני צריך/ה עזרה דחופה. זה המיקום שלי:');
 
   const totalSteps = 5;
   const brand = gender === 'male' ? MALE_BRAND : FEMALE_BRAND;
@@ -135,7 +135,7 @@ export function OnboardingScreen() {
 
   const finish = () => {
     const profile: UserProfile = {
-      name: name.trim() || '׳׳©׳×׳׳©/׳×',
+      name: name.trim() || 'משתמש/ת',
       age,
       diabetesType,
       gender,
@@ -151,7 +151,7 @@ export function OnboardingScreen() {
     saveEmergencyContact({
       name: emergencyName.trim(),
       phone: emergencyPhone.trim(),
-      message: emergencyMessage.trim() || '׳׳ ׳™ ׳¦׳¨׳™׳/׳” ׳¢׳–׳¨׳” ׳“׳—׳•׳₪׳”. ׳–׳” ׳”׳׳™׳§׳•׳ ׳©׳׳™:',
+      message: emergencyMessage.trim() || 'אני צריך/ה עזרה דחופה. זה המיקום שלי:',
     });
 
     saveMedicationSchedule(
@@ -210,7 +210,7 @@ export function OnboardingScreen() {
 
         <div className="text-center mb-6">
           <h1 className="text-[30px]" style={{ color: brand.text, fontWeight: 900, letterSpacing: '-0.03em' }}>
-            ׳”׳¡׳•׳›׳¨׳× ׳©׳׳™
+            הסוכרת שלי
           </h1>
           <p className="mt-2 text-sm" style={{ color: brand.muted, fontWeight: 700 }}>
             נגדיר את האפליקציה כך שתתאים בדיוק לך
@@ -243,24 +243,24 @@ export function OnboardingScreen() {
             <div className="space-y-4">
               <SectionHeader
                 brand={brand}
-                eyebrow="׳©׳׳‘ ׳¨׳׳©׳•׳"
-                title="׳›׳׳” ׳₪׳¨׳˜׳™׳ ׳§׳¦׳¨׳™׳"
-                subtitle="׳©׳ ׳•׳׳’׳“׳¨ ׳›׳“׳™ ׳©׳”׳׳₪׳׳™׳§׳¦׳™׳” ׳×׳“׳‘׳¨ ׳•׳×׳™׳¨׳׳” ׳ ׳›׳•׳ ׳›׳‘׳¨ ׳׳”׳”׳×׳—׳׳”."
+                eyebrow="שלב ראשון"
+                title="כמה פרטים קצרים"
+                subtitle="שם ומגדר כדי שהאפליקציה תדבר ותיראה נכון כבר מההתחלה."
               />
 
-              <FieldLabel text="׳׳™׳ ׳§׳•׳¨׳׳™׳ ׳׳?" brand={brand} />
+              <FieldLabel text="איך קוראים לך?" brand={brand} />
               <TextInput
                 value={name}
                 onChange={setName}
-                placeholder="׳׳׳©׳: ׳¨׳•׳×, ׳“׳•׳“, ׳׳¨׳™׳"
+                placeholder="למשל: רות, דוד, מרים"
                 brand={brand}
               />
 
-              <FieldLabel text="׳׳’׳“׳¨" brand={brand} />
+              <FieldLabel text="מגדר" brand={brand} />
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { value: 'female' as Gender, label: '׳׳™׳©׳”', emoji: 'נ‘©' },
-                  { value: 'male' as Gender, label: '׳’׳‘׳¨', emoji: 'נ‘¨' },
+                  { value: 'female' as Gender, label: 'אישה', emoji: '👩' },
+                  { value: 'male' as Gender, label: 'גבר', emoji: '👨' },
                 ].map((item) => {
                   const active = gender === item.value;
 
@@ -288,20 +288,20 @@ export function OnboardingScreen() {
             <div className="space-y-4">
               <SectionHeader
                 brand={brand}
-                eyebrow="׳©׳׳‘ ׳©׳ ׳™"
-                title="׳”׳׳¦׳‘ ׳”׳¨׳₪׳•׳׳™ ׳©׳׳"
-                subtitle="׳¨׳§ ׳׳” ׳©׳—׳©׳•׳‘ ׳›׳“׳™ ׳׳‘׳ ׳•׳× ׳׳¡׳ ׳‘׳™׳× ׳•׳×׳–׳›׳•׳¨׳•׳× ׳©׳׳×׳׳™׳׳™׳ ׳׳."
+                eyebrow="שלב שני"
+                title="המצב הרפואי שלך"
+                subtitle="רק מה שחשוב כדי לבנות מסך בית ותזכורות שמתאימים לך."
               />
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <FieldLabel text="׳’׳™׳" brand={brand} />
+                  <FieldLabel text="גיל" brand={brand} />
                   <TextInput value={age} onChange={setAge} placeholder="62" type="number" brand={brand} />
                 </div>
                 <div>
-                  <FieldLabel text="׳©׳ ׳× ׳׳‘׳—׳•׳" brand={brand} />
+                  <FieldLabel text="שנת אבחון" brand={brand} />
                   <SelectInput value={diagnosisYear} onChange={setDiagnosisYear} brand={brand}>
-                    <option value="">׳׳ ׳—׳•׳‘׳”</option>
+                    <option value="">לא חובה</option>
                     {yearOptions.map((year) => (
                       <option key={year} value={year}>
                         {year}
@@ -311,7 +311,7 @@ export function OnboardingScreen() {
                 </div>
               </div>
 
-              <FieldLabel text="׳¡׳•׳’ ׳¡׳•׳›׳¨׳×" brand={brand} />
+              <FieldLabel text="סוג סוכרת" brand={brand} />
               <div className="grid grid-cols-2 gap-3">
                 {DIABETES_TYPE_OPTIONS.map((type) => (
                   <button
@@ -331,13 +331,13 @@ export function OnboardingScreen() {
                 ))}
               </div>
 
-              <FieldLabel text="׳¡׳•׳’ ׳˜׳™׳₪׳•׳ ׳¢׳™׳§׳¨׳™" brand={brand} />
+              <FieldLabel text="סוג טיפול עיקרי" brand={brand} />
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { value: 'insulin' as TreatmentType, label: '׳׳™׳ ׳¡׳•׳׳™׳' },
-                  { value: 'pills' as TreatmentType, label: '׳›׳“׳•׳¨׳™׳' },
-                  { value: 'combined' as TreatmentType, label: '׳©׳™׳׳•׳‘' },
-                  { value: 'lifestyle' as TreatmentType, label: '׳׳•׳¨׳— ׳—׳™׳™׳' },
+                  { value: 'insulin' as TreatmentType, label: 'אינסולין' },
+                  { value: 'pills' as TreatmentType, label: 'כדורים' },
+                  { value: 'combined' as TreatmentType, label: 'שילוב' },
+                  { value: 'lifestyle' as TreatmentType, label: 'אורח חיים' },
                 ].map((item) => (
                   <ChoiceChip
                     key={item.value}
@@ -355,18 +355,18 @@ export function OnboardingScreen() {
             <div className="space-y-4">
               <SectionHeader
                 brand={brand}
-                eyebrow="׳©׳׳‘ ׳©׳׳™׳©׳™"
-                title="׳™׳¢׳“׳™׳ ׳•׳©׳’׳¨׳”"
-                subtitle="׳™׳¢׳“׳™ ׳¡׳•׳›׳¨ ׳•׳©׳¢׳•׳× ׳”׳™׳•׳ ׳©׳׳ ׳›׳“׳™ ׳©׳”׳×׳–׳›׳•׳¨׳•׳× ׳™׳”׳™׳• ׳₪׳©׳•׳˜׳•׳× ׳•׳‘׳¨׳•׳¨׳•׳×."
+                eyebrow="שלב שלישי"
+                title="יעדים ושגרה"
+                subtitle="יעדי סוכר ושעות היום שלך כדי שהתזכורות יהיו פשוטות וברורות."
               />
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <FieldLabel text="׳™׳¢׳“ ׳ ׳׳•׳" brand={brand} />
+                  <FieldLabel text="יעד נמוך" brand={brand} />
                   <TextInput value={targetLow} onChange={setTargetLow} type="number" brand={brand} />
                 </div>
                 <div>
-                  <FieldLabel text="׳™׳¢׳“ ׳’׳‘׳•׳”" brand={brand} />
+                  <FieldLabel text="יעד גבוה" brand={brand} />
                   <TextInput value={targetHigh} onChange={setTargetHigh} type="number" brand={brand} />
                 </div>
               </div>
@@ -379,15 +379,15 @@ export function OnboardingScreen() {
                 }}
               >
                 <div className="text-right mb-3">
-                  <p style={{ color: brand.text, fontWeight: 900 }}>׳”׳©׳’׳¨׳” ׳©׳׳</p>
+                  <p style={{ color: brand.text, fontWeight: 900 }}>השגרה שלך</p>
                   <p className="mt-1 text-sm" style={{ color: brand.muted, lineHeight: 1.7 }}>
                     נשתמש בשעות האלה לתזכורות ולסדר היום באפליקציה.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
-                  <TimeFieldCard label="׳©׳¢׳× ׳§׳™׳׳”" value={wakeTime} onChange={setWakeTime} brand={brand} />
-                  <TimeFieldCard label="׳©׳¢׳× ׳©׳™׳ ׳”" value={sleepTime} onChange={setSleepTime} brand={brand} />
+                  <TimeFieldCard label="שעת קימה" value={wakeTime} onChange={setWakeTime} brand={brand} />
+                  <TimeFieldCard label="שעת שינה" value={sleepTime} onChange={setSleepTime} brand={brand} />
                 </div>
               </div>
             </div>
@@ -397,9 +397,9 @@ export function OnboardingScreen() {
             <div className="space-y-4">
               <SectionHeader
                 brand={brand}
-                eyebrow="׳©׳׳‘ ׳¨׳‘׳™׳¢׳™"
-                title="׳”׳×׳¨׳•׳₪׳•׳× ׳©׳׳"
-                subtitle="׳©׳, ׳©׳¢׳” ׳•׳׳¨׳׳”, ׳›׳“׳™ ׳©׳™׳”׳™׳” ׳§׳ ׳׳–׳”׳•׳× ׳•׳׳¡׳׳ ׳׳§׳™׳—׳”."
+                eyebrow="שלב רביעי"
+                title="התרופות שלך"
+                subtitle="שם, שעה ומראה, כדי שיהיה קל לזהות ולסמן לקיחה."
               />
 
               <div className="space-y-3">
@@ -419,13 +419,13 @@ export function OnboardingScreen() {
                           color: medications.length === 1 ? '#D6CBBF' : '#CC6677',
                           border: `1px solid ${medications.length === 1 ? '#EEE5DB' : '#F2C8CE'}`,
                         }}
-                        aria-label="׳׳—׳§ ׳×׳¨׳•׳₪׳”"
+                        aria-label="מחק תרופה"
                       >
                         <Trash2 size={16} />
                       </button>
 
                       <div className="text-right">
-                        <p style={{ color: brand.text, fontWeight: 900 }}>׳×׳¨׳•׳₪׳” {index + 1}</p>
+                        <p style={{ color: brand.text, fontWeight: 900 }}>תרופה {index + 1}</p>
                         <p className="text-sm" style={{ color: brand.muted }}>{medication.period}</p>
                       </div>
                     </div>
@@ -434,7 +434,7 @@ export function OnboardingScreen() {
                       <TextInput
                         value={medication.name}
                         onChange={(value) => updateMedication(medication.id, { name: value })}
-                        placeholder="׳©׳ ׳”׳×׳¨׳•׳₪׳”"
+                        placeholder="שם התרופה"
                         brand={brand}
                       />
 
@@ -447,25 +447,25 @@ export function OnboardingScreen() {
                         <TextInput
                           value={medication.dosage}
                           onChange={(value) => updateMedication(medication.id, { dosage: value })}
-                          placeholder="׳׳™׳ ׳•׳"
+                          placeholder="מינון"
                           brand={brand}
                         />
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <ChoiceChip
-                          label="׳›׳“׳•׳¨"
+                          label="כדור"
                           active={medication.type === 'pill'}
                           brand={brand}
                           icon={<Pill size={16} />}
                           onClick={() => updateMedication(medication.id, { type: 'pill' })}
                         />
                         <ChoiceChip
-                          label="׳–׳¨׳™׳§׳”"
+                          label="זריקה"
                           active={medication.type === 'injection'}
                           brand={brand}
                           icon={<Shield size={16} />}
-                          onClick={() => updateMedication(medication.id, { type: 'injection', image: 'נ’‰', appearanceLabel: '׳¢׳˜ ׳׳™׳ ׳¡׳•׳׳™׳' })}
+                          onClick={() => updateMedication(medication.id, { type: 'injection', image: '💉', appearanceLabel: 'עט אינסולין' })}
                         />
                       </div>
 
@@ -496,7 +496,7 @@ export function OnboardingScreen() {
                       <textarea
                         value={medication.notes || ''}
                         onChange={(event) => updateMedication(medication.id, { notes: event.target.value })}
-                        placeholder="׳”׳¢׳¨׳” ׳§׳¦׳¨׳”, ׳׳׳©׳: ׳׳§׳—׳× ׳¢׳ ׳׳•׳›׳"
+                        placeholder="הערה קצרה, למשל: לקחת עם אוכל"
                         dir="rtl"
                         className="w-full px-4 py-3 rounded-[22px] text-right outline-none"
                         style={{
@@ -532,20 +532,20 @@ export function OnboardingScreen() {
             <div className="space-y-4">
               <SectionHeader
                 brand={brand}
-                eyebrow="׳©׳׳‘ ׳—׳׳™׳©׳™"
-                title="׳׳™׳© ׳§׳©׳¨ ׳׳—׳™׳¨׳•׳"
-                subtitle="׳›׳“׳™ ׳©׳ ׳•׳›׳ ׳׳¢׳–׳•׳¨ ׳׳”׳¨ ׳™׳•׳×׳¨ ׳‘׳׳¦׳‘ ׳“׳—׳•׳£."
+                eyebrow="שלב חמישי"
+                title="איש קשר לחירום"
+                subtitle="כדי שנוכל לעזור מהר יותר במצב דחוף."
               />
 
-              <FieldLabel text="׳©׳ ׳׳™׳© ׳§׳©׳¨" brand={brand} />
+              <FieldLabel text="שם איש קשר" brand={brand} />
               <TextInput
                 value={emergencyName}
                 onChange={setEmergencyName}
-                placeholder="׳׳׳, ׳‘׳ ׳–׳•׳’, ׳ ׳›׳“/׳”..."
+                placeholder="אמא, בן זוג, נכד/ה..."
                 brand={brand}
               />
 
-              <FieldLabel text="׳˜׳׳₪׳•׳ ׳׳™׳© ׳§׳©׳¨" brand={brand} />
+              <FieldLabel text="טלפון איש קשר" brand={brand} />
               <TextInput
                 value={emergencyPhone}
                 onChange={setEmergencyPhone}
@@ -554,7 +554,7 @@ export function OnboardingScreen() {
                 brand={brand}
               />
 
-              <FieldLabel text="׳”׳•׳“׳¢׳× ׳‘׳¡׳™׳¡ ׳׳—׳™׳¨׳•׳" brand={brand} />
+              <FieldLabel text="הודעת בסיס לחירום" brand={brand} />
               <textarea
                 value={emergencyMessage}
                 onChange={(event) => setEmergencyMessage(event.target.value)}
@@ -574,7 +574,7 @@ export function OnboardingScreen() {
                 className="rounded-[28px] p-4"
                 style={{ background: brand.soft, border: `1px solid ${brand.border}` }}
               >
-                <p style={{ color: brand.primaryDark, fontWeight: 900 }}>׳¡׳™׳›׳•׳ ׳§׳¦׳¨</p>
+                <p style={{ color: brand.primaryDark, fontWeight: 900 }}>סיכום קצר</p>
                 <p className="mt-2 text-sm leading-7" style={{ color: brand.muted }}>
                   {getDiabetesTypeLabel(diabetesType)} · {getTreatmentLabel(treatmentType)} · יעד {targetLow}-{targetHigh}
                 </p>
@@ -607,7 +607,7 @@ export function OnboardingScreen() {
               </>
             ) : (
               <>
-                <span>׳”׳׳©׳</span>
+                <span>המשך</span>
                 <ChevronLeft size={18} strokeWidth={2.5} />
               </>
             )}
@@ -619,7 +619,7 @@ export function OnboardingScreen() {
               className="w-full mt-3 h-10 text-sm transition-colors"
               style={{ color: brand.muted, fontWeight: 800 }}
             >
-              ׳—׳–׳¨׳” ׳׳©׳׳‘ ׳”׳§׳•׳“׳
+              חזרה לשלב הקודם
             </button>
           )}
         </div>
