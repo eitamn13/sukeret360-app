@@ -9,9 +9,24 @@ create table if not exists public.app_users (
   user_id uuid primary key references auth.users(id) on delete cascade,
   email text not null unique,
   full_name text not null default '',
+  auth_provider text not null default 'email',
+  subscription_status text not null default 'free',
+  subscription_plan text not null default 'free',
+  subscription_updated_at timestamptz,
+  billing_provider text,
+  stripe_customer_id text,
+  is_admin_managed boolean not null default false,
   created_at timestamptz not null default now(),
   last_seen_at timestamptz not null default now()
 );
+
+alter table public.app_users add column if not exists auth_provider text not null default 'email';
+alter table public.app_users add column if not exists subscription_status text not null default 'free';
+alter table public.app_users add column if not exists subscription_plan text not null default 'free';
+alter table public.app_users add column if not exists subscription_updated_at timestamptz;
+alter table public.app_users add column if not exists billing_provider text;
+alter table public.app_users add column if not exists stripe_customer_id text;
+alter table public.app_users add column if not exists is_admin_managed boolean not null default false;
 
 alter table public.user_app_state enable row level security;
 alter table public.app_users enable row level security;

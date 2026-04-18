@@ -1,24 +1,13 @@
+import { BellRing, CreditCard, LogOut, Save, ShieldCheck, UserRound, UserX } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
-import {
-  BellRing,
-  Check,
-  Clock3,
-  HeartHandshake,
-  LogOut,
-  Phone,
-  Save,
-  ShieldCheck,
-  UserRound,
-  UserX,
-} from 'lucide-react';
 import { useAuthContext } from '../context/AuthContext';
-import {
-  type DiabetesType,
-  type Gender,
-  type TreatmentType,
-  type UserProfile,
-  useAppContext,
+import type {
+  DiabetesType,
+  Gender,
+  TreatmentType,
+  UserProfile,
 } from '../context/AppContext';
+import { useAppContext } from '../context/AppContext';
 import { OverlayHeader } from './OverlayHeader';
 
 interface ProfileSettingsModalProps {
@@ -33,32 +22,32 @@ type EmergencyContactDraft = {
   message: string;
 };
 
-const DIABETES_TYPE_OPTIONS: Array<{
-  value: DiabetesType;
-  label: string;
-  description: string;
-}> = [
-  { value: 'prediabetes', label: 'טרום סוכרת', description: 'מעקב עדין, תזונה, הליכה ושגרה בריאה' },
-  { value: 'monitoring', label: 'עדיין בבדיקה', description: 'למי שנמצא במעקב ועדיין אין אבחון סופי' },
-  { value: '2', label: 'סוג 2', description: 'לרוב משלב כדורים, שגרה ואיזון יומיומי' },
-  { value: '1', label: 'סוג 1', description: 'לרוב תלוי באינסולין ומעקב תכוף יותר' },
+const DIABETES_TYPE_OPTIONS: Array<{ value: DiabetesType; label: string }> = [
+  { value: 'prediabetes', label: 'טרום סוכרת' },
+  { value: 'monitoring', label: 'עדיין בבדיקה' },
+  { value: '2', label: 'סוג 2' },
+  { value: '1', label: 'סוג 1' },
 ];
 
 const TREATMENT_OPTIONS: Array<{ value: TreatmentType; label: string }> = [
-  { value: 'insulin', label: 'אינסולין' },
-  { value: 'pills', label: 'כדורים' },
-  { value: 'combined', label: 'משולב' },
   { value: 'lifestyle', label: 'אורח חיים' },
+  { value: 'pills', label: 'כדורים' },
+  { value: 'insulin', label: 'אינסולין' },
+  { value: 'combined', label: 'משולב' },
 ];
 
 const DEFAULT_EMERGENCY_CONTACT: EmergencyContactDraft = {
   name: '',
   phone: '',
-  message: 'אני צריך/ה עזרה דחופה. זה המיקום שלי:',
+  message: 'אני צריכה עזרה דחופה. זה המיקום שלי:',
 };
 
-export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: ProfileSettingsModalProps) {
-  const { userProfile, saveUserProfile, saveEmergencyContact, theme } = useAppContext();
+export function ProfileSettingsModal({
+  isOpen,
+  onClose,
+  onOpenAdminUsers,
+}: ProfileSettingsModalProps) {
+  const { userProfile, saveEmergencyContact, saveUserProfile, theme } = useAppContext();
   const { authEnabled, isAdmin, session, signOut } = useAuthContext();
 
   const [name, setName] = useState(userProfile.name);
@@ -71,15 +60,15 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
   const [targetHigh, setTargetHigh] = useState(userProfile.targetHigh);
   const [wakeTime, setWakeTime] = useState(userProfile.wakeTime);
   const [sleepTime, setSleepTime] = useState(userProfile.sleepTime);
-  const [saved, setSaved] = useState(false);
-
-  const [emergencyName, setEmergencyName] = useState(DEFAULT_EMERGENCY_CONTACT.name);
-  const [emergencyPhone, setEmergencyPhone] = useState(DEFAULT_EMERGENCY_CONTACT.phone);
+  const [emergencyName, setEmergencyName] = useState('');
+  const [emergencyPhone, setEmergencyPhone] = useState('');
   const [emergencyMessage, setEmergencyMessage] = useState(DEFAULT_EMERGENCY_CONTACT.message);
+  const [busy, setBusy] = useState<'checkout' | 'portal' | null>(null);
+  const [notice, setNotice] = useState('');
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return undefined;
-
     document.body.style.overflow = 'hidden';
     return () => {
       document.body.style.overflow = '';
@@ -121,23 +110,26 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
   }, [isOpen, userProfile]);
 
   const isValid = useMemo(() => {
-    return (
-      name.trim().length > 0 &&
-      Number(age) > 0 &&
-      diabetesType !== '' &&
-      treatmentType !== '' &&
-      Number(targetLow) > 0 &&
-      Number(targetHigh) > Number(targetLow)
+    return Boolean(
+      name.trim() &&
+        age.trim() &&
+        gender &&
+        diabetesType &&
+        treatmentType &&
+        Number(targetLow) > 0 &&
+        Number(targetHigh) > Number(targetLow)
     );
-  }, [age, diabetesType, name, targetHigh, targetLow, treatmentType]);
+  }, [age, diabetesType, gender, name, targetHigh, targetLow, treatmentType]);
 
   const handleSave = () => {
+    if (!isValid) return;
+
     const updated: UserProfile = {
-      name: name.trim() || userProfile.name,
-      age,
+      name: name.trim(),
+      age: age.trim(),
       gender,
       diabetesType,
-      diagnosisYear,
+      diagnosisYear: diagnosisYear.trim(),
       treatmentType,
       targetLow,
       targetHigh,
@@ -153,6 +145,8 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
     });
 
     setSaved(true);
+    setNotice('השינויים נשמרו בהצלחה.');
+
     window.setTimeout(() => {
       setSaved(false);
       onClose();
@@ -183,7 +177,71 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
       window.location.reload();
     } catch (error) {
       console.error('Failed to delete account', error);
-      window.alert('לא הצלחנו למחוק את החשבון כרגע. נסה שוב בעוד רגע.');
+      window.alert('לא הצלחנו למחוק את החשבון כרגע. אפשר לנסות שוב בעוד רגע.');
+    }
+  };
+
+  const launchCheckout = async (plan: 'monthly' | 'yearly') => {
+    if (!session?.access_token) return;
+
+    setBusy('checkout');
+    setNotice('');
+
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ plan }),
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { url?: string; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.url) {
+        throw new Error(payload?.error || 'Checkout failed');
+      }
+
+      window.location.href = payload.url;
+    } catch (error) {
+      console.error('Failed to start checkout', error);
+      setNotice('לא הצלחנו לפתוח את המנוי כרגע.');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const launchCustomerPortal = async () => {
+    if (!session?.access_token) return;
+
+    setBusy('portal');
+    setNotice('');
+
+    try {
+      const response = await fetch('/api/customer-portal', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      const payload = (await response.json().catch(() => null)) as
+        | { url?: string; error?: string }
+        | null;
+
+      if (!response.ok || !payload?.url) {
+        throw new Error(payload?.error || 'Portal failed');
+      }
+
+      window.location.href = payload.url;
+    } catch (error) {
+      console.error('Failed to open customer portal', error);
+      setNotice('לא הצלחנו לפתוח את אזור החיוב כרגע.');
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -197,7 +255,7 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
     >
       <OverlayHeader
         title="הגדרות ופרופיל"
-        subtitle="פרטים, יעדים וקשר חירום"
+        subtitle="פרטים, יעדים, מנוי וקשר חירום"
         theme={theme}
         onBack={onClose}
         onClose={onClose}
@@ -206,377 +264,287 @@ export function ProfileSettingsModal({ isOpen, onClose, onOpenAdminUsers }: Prof
 
       <div
         className="flex-1 overflow-y-auto px-4 py-4 space-y-4 overscroll-contain"
-        style={{ paddingBottom: 'calc(12rem + env(safe-area-inset-bottom, 0px))' }}
+        style={{ paddingBottom: 'calc(13rem + env(safe-area-inset-bottom, 0px))' }}
       >
-        <SectionCard
-          title="פרטים"
-          subtitle="שם, גיל ומגדר"
-          icon={<UserRound size={18} />}
-          theme={theme}
-        >
+        <SectionCard title="פרטים אישיים" icon={<UserRound size={18} />} theme={theme}>
           <div className="space-y-3">
-            <LabeledField label="שם מלא">
-              <input
-                type="text"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                dir="rtl"
-                className="w-full h-14 px-4 rounded-2xl text-right outline-none"
-                style={fieldStyle(Boolean(name.trim()), theme.primaryBorder)}
-              />
-            </LabeledField>
+            <FieldLabel label="שם מלא" />
+            <LargeInput value={name} onChange={setName} placeholder="שם מלא" theme={theme} />
 
-            <div className="grid grid-cols-2 gap-3 items-end">
-              <LabeledField label="גיל">
-                <input
-                  type="number"
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <FieldLabel label="גיל" />
+                <LargeInput
                   value={age}
-                  onChange={(event) => setAge(event.target.value)}
-                  min="1"
-                  max="120"
-                  dir="rtl"
-                  className="w-full h-14 px-4 rounded-2xl text-right outline-none"
-                  style={fieldStyle(Boolean(age), theme.primaryBorder)}
-                />
-              </LabeledField>
-
-              <LabeledField label="שנת אבחון">
-                <input
+                  onChange={setAge}
+                  placeholder="גיל"
+                  theme={theme}
                   type="number"
+                />
+              </div>
+              <div>
+                <FieldLabel label="שנת אבחון" optional />
+                <LargeInput
                   value={diagnosisYear}
-                  onChange={(event) => setDiagnosisYear(event.target.value)}
-                  min="1970"
-                  max={String(new Date().getFullYear())}
-                  dir="rtl"
-                  className="w-full h-14 px-4 rounded-2xl text-right outline-none"
-                  style={fieldStyle(Boolean(diagnosisYear), theme.primaryBorder)}
+                  onChange={setDiagnosisYear}
+                  placeholder="שנת אבחון"
+                  theme={theme}
+                  type="number"
                 />
-              </LabeledField>
+              </div>
             </div>
 
-            <LabeledField label="מגדר">
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: 'female' as Gender, label: 'אישה', emoji: '👩' },
-                  { value: 'male' as Gender, label: 'גבר', emoji: '👨' },
-                ].map((option) => {
-                  const selected = gender === option.value;
-                  const accent =
-                    option.value === 'male'
-                      ? {
-                          border: '#2563EB',
-                          background: '#EFF6FF',
-                          text: '#1D4ED8',
-                          shadow: 'rgba(37,99,235,0.14)',
-                        }
-                      : {
-                          border: '#EC4899',
-                          background: '#FFF1F7',
-                          text: '#BE185D',
-                          shadow: 'rgba(236,72,153,0.14)',
-                        };
-
-                  return (
-                    <button
-                      key={option.value}
-                      onClick={() => setGender(option.value)}
-                      className="rounded-2xl p-4 text-center transition-all active:scale-[0.98]"
-                      style={{
-                        border: `2px solid ${selected ? accent.border : '#E2E8F0'}`,
-                        backgroundColor: selected ? accent.background : '#FFFFFF',
-                        boxShadow: selected ? `0 10px 22px ${accent.shadow}` : 'none',
-                      }}
-                    >
-                      <p className="mb-2 text-2xl">{option.emoji}</p>
-                      <p style={{ color: selected ? accent.text : '#334155', fontWeight: 800 }}>
-                        {option.label}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-            </LabeledField>
-          </div>
-        </SectionCard>
-
-        <SectionCard
-          title="יעדים"
-          subtitle="סוג סוכרת, טיפול ושעות"
-          icon={<BellRing size={18} />}
-          theme={theme}
-        >
-          <div className="space-y-3">
-            <LabeledField label="סוג סוכרת">
-              <div className="grid grid-cols-2 gap-3">
-                {DIABETES_TYPE_OPTIONS.map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => setDiabetesType(type.value)}
-                    className="rounded-2xl p-4 text-right transition-all active:scale-[0.98]"
-                    style={{
-                      border: `2px solid ${diabetesType === type.value ? theme.primary : '#E2E8F0'}`,
-                      backgroundColor: diabetesType === type.value ? theme.primaryBg : '#FFFFFF',
-                    }}
-                  >
-                    <p
-                      style={{
-                        color: diabetesType === type.value ? theme.primary : '#0F172A',
-                        fontWeight: 900,
-                        fontSize: 18,
-                      }}
-                    >
-                      {type.label}
-                    </p>
-                    <p style={{ color: '#64748B', fontSize: 13, marginTop: 5 }}>
-                      {type.description}
-                    </p>
-                  </button>
-                ))}
-              </div>
-            </LabeledField>
-
-            <LabeledField label="סוג טיפול">
-              <div className="grid grid-cols-2 gap-3">
-                {TREATMENT_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => setTreatmentType(option.value)}
-                    className="rounded-2xl py-3.5 text-center transition-all active:scale-[0.98]"
-                    style={{
-                      border: `2px solid ${treatmentType === option.value ? theme.primary : '#E2E8F0'}`,
-                      backgroundColor: treatmentType === option.value ? theme.primaryBg : '#FFFFFF',
-                      color: treatmentType === option.value ? theme.primary : '#334155',
-                      fontWeight: 800,
-                    }}
-                  >
-                    {option.label}
-                  </button>
-                ))}
-              </div>
-            </LabeledField>
-
+            <FieldLabel label="מגדר" />
             <div className="grid grid-cols-2 gap-3">
-              <LabeledField label="יעד נמוך">
-                <input
-                  type="number"
-                  value={targetLow}
-                  onChange={(event) => setTargetLow(event.target.value)}
-                  dir="rtl"
-                  className="w-full h-14 px-4 rounded-2xl text-right outline-none"
-                  style={fieldStyle(Boolean(targetLow), theme.primaryBorder)}
-                />
-              </LabeledField>
-              <LabeledField label="יעד גבוה">
-                <input
-                  type="number"
-                  value={targetHigh}
-                  onChange={(event) => setTargetHigh(event.target.value)}
-                  dir="rtl"
-                  className="w-full h-14 px-4 rounded-2xl text-right outline-none"
-                  style={fieldStyle(Boolean(targetHigh), theme.primaryBorder)}
-                />
-              </LabeledField>
+              <ChoiceButton
+                active={gender === 'female'}
+                label="אישה"
+                onClick={() => setGender('female')}
+                theme={theme}
+              />
+              <ChoiceButton
+                active={gender === 'male'}
+                label="גבר"
+                onClick={() => setGender('male')}
+                theme={theme}
+              />
             </div>
 
+            <FieldLabel label="מצב רפואי" />
             <div className="grid grid-cols-2 gap-3">
-              <LabeledField label="שעת קימה">
-                <TimeField
-                  value={wakeTime}
-                  onChange={setWakeTime}
-                  active={Boolean(wakeTime)}
-                  borderColor={theme.primaryBorder}
+              {DIABETES_TYPE_OPTIONS.map((option) => (
+                <ChoiceButton
+                  key={option.value}
+                  active={diabetesType === option.value}
+                  label={option.label}
+                  onClick={() => setDiabetesType(option.value)}
+                  theme={theme}
                 />
-              </LabeledField>
-              <LabeledField label="שעת שינה">
-                <TimeField
-                  value={sleepTime}
-                  onChange={setSleepTime}
-                  active={Boolean(sleepTime)}
-                  borderColor={theme.primaryBorder}
+              ))}
+            </div>
+
+            <FieldLabel label="סוג טיפול" />
+            <div className="grid grid-cols-2 gap-3">
+              {TREATMENT_OPTIONS.map((option) => (
+                <ChoiceButton
+                  key={option.value}
+                  active={treatmentType === option.value}
+                  label={option.label}
+                  onClick={() => setTreatmentType(option.value)}
+                  theme={theme}
                 />
-              </LabeledField>
+              ))}
             </div>
           </div>
         </SectionCard>
 
-        <SectionCard
-          title="חירום"
-          subtitle="איש קשר להודעה מהירה"
-          icon={<HeartHandshake size={18} />}
-          theme={theme}
-        >
+        <SectionCard title="יעדים יומיים" icon={<BellRing size={18} />} theme={theme}>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <FieldLabel label="יעד נמוך" />
+              <LargeInput
+                value={targetLow}
+                onChange={setTargetLow}
+                placeholder="80"
+                theme={theme}
+                type="number"
+              />
+            </div>
+            <div>
+              <FieldLabel label="יעד גבוה" />
+              <LargeInput
+                value={targetHigh}
+                onChange={setTargetHigh}
+                placeholder="140"
+                theme={theme}
+                type="number"
+              />
+            </div>
+          </div>
+
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <div>
+              <FieldLabel label="שעת קימה" />
+              <TimeInput value={wakeTime} onChange={setWakeTime} theme={theme} />
+            </div>
+            <div>
+              <FieldLabel label="שעת שינה" />
+              <TimeInput value={sleepTime} onChange={setSleepTime} theme={theme} />
+            </div>
+          </div>
+        </SectionCard>
+
+        <SectionCard title="קשר חירום" icon={<ShieldCheck size={18} />} theme={theme}>
           <div className="space-y-3">
-            <LabeledField label="שם איש קשר">
-              <input
-                type="text"
-                value={emergencyName}
-                onChange={(event) => setEmergencyName(event.target.value)}
-                placeholder="אמא, בן זוג, אח, בת..."
-                dir="rtl"
-                className="w-full h-14 px-4 rounded-2xl text-right outline-none"
-                style={fieldStyle(Boolean(emergencyName.trim()), theme.primaryBorder)}
-              />
-            </LabeledField>
+            <FieldLabel label="שם איש קשר" optional />
+            <LargeInput
+              value={emergencyName}
+              onChange={setEmergencyName}
+              placeholder="שם מלא"
+              theme={theme}
+            />
 
-            <LabeledField label="טלפון">
-              <div className="relative">
-                <Phone
-                  size={16}
-                  style={{
-                    position: 'absolute',
-                    right: 14,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    color: '#64748B',
-                    pointerEvents: 'none',
-                  }}
-                />
-                <input
-                  type="tel"
-                  value={emergencyPhone}
-                  onChange={(event) => setEmergencyPhone(event.target.value)}
-                  placeholder="0501234567"
-                  dir="rtl"
-                  className="w-full h-14 rounded-2xl text-right outline-none"
-                  style={{
-                    ...fieldStyle(Boolean(emergencyPhone.trim()), theme.primaryBorder),
-                    paddingRight: '2.85rem',
-                    paddingLeft: '1rem',
-                  }}
-                />
-              </div>
-            </LabeledField>
+            <FieldLabel label="טלפון" optional />
+            <LargeInput
+              value={emergencyPhone}
+              onChange={setEmergencyPhone}
+              placeholder="טלפון"
+              theme={theme}
+              type="tel"
+            />
 
-            <LabeledField label="נוסח הודעת חירום">
-              <textarea
-                value={emergencyMessage}
-                onChange={(event) => setEmergencyMessage(event.target.value)}
-                dir="rtl"
-                className="w-full px-4 py-3.5 rounded-2xl text-right outline-none"
-                style={{
-                  ...fieldStyle(Boolean(emergencyMessage.trim()), theme.primaryBorder),
-                  minHeight: 104,
-                  resize: 'none',
-                }}
+            <FieldLabel label="נוסח הודעת חירום" optional />
+            <textarea
+              value={emergencyMessage}
+              onChange={(event) => setEmergencyMessage(event.target.value)}
+              className="min-h-[110px] w-full rounded-[22px] px-4 py-4 text-right text-base font-bold text-[#4D5B73] outline-none"
+              style={{
+                background: '#FFFFFF',
+                border: `1.5px solid ${theme.primaryBorder}`,
+                boxShadow: '0 10px 22px rgba(122, 146, 182, 0.08)',
+              }}
+            />
+          </div>
+        </SectionCard>
+
+        {authEnabled ? (
+          <SectionCard title="מנוי" icon={<CreditCard size={18} />} theme={theme}>
+            <div className="grid grid-cols-2 gap-3">
+              <ActionButton
+                label="חודשי · 19 ₪"
+                onClick={() => void launchCheckout('monthly')}
+                busy={busy === 'checkout'}
+                theme={theme}
+                tone="primary"
               />
-            </LabeledField>
+              <ActionButton
+                label="שנתי · 149 ₪"
+                onClick={() => void launchCheckout('yearly')}
+                busy={busy === 'checkout'}
+                theme={theme}
+                tone="secondary"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => void launchCustomerPortal()}
+              disabled={busy !== null}
+              className="mt-3 h-12 w-full rounded-[22px] font-extrabold"
+              style={{
+                background: '#FFFFFF',
+                color: theme.primaryDark,
+                border: `1.5px solid ${theme.primaryBorder}`,
+              }}
+            >
+              {busy === 'portal' ? 'פותחים...' : 'אזור חיוב ומנויים'}
+            </button>
+          </SectionCard>
+        ) : null}
+
+        {isAdmin ? (
+          <SectionCard title="ניהול" icon={<ShieldCheck size={18} />} theme={theme}>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                onOpenAdminUsers?.();
+              }}
+              className="h-12 w-full rounded-[22px] font-extrabold"
+              style={{
+                background: theme.primaryBg,
+                color: theme.primaryDark,
+                border: `1.5px solid ${theme.primaryBorder}`,
+              }}
+            >
+              מסך מנהל משתמשים
+            </button>
+          </SectionCard>
+        ) : null}
+
+        <SectionCard title="חשבון" icon={<UserX size={18} />} theme={theme}>
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => void signOut()}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-[22px] font-extrabold"
+              style={{
+                background: '#FFFFFF',
+                color: '#475569',
+                border: '1.5px solid #E2E8F0',
+              }}
+            >
+              <LogOut size={16} />
+              <span>התנתקות</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => void handleDeleteAccount()}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-[22px] font-extrabold"
+              style={{
+                background: '#FFF5F5',
+                color: '#B91C1C',
+                border: '1.5px solid #FECACA',
+              }}
+            >
+              <UserX size={16} />
+              <span>מחיקת חשבון</span>
+            </button>
           </div>
         </SectionCard>
       </div>
 
       <div
-        className="flex-shrink-0 px-4 pt-3"
+        className="border-t px-4 pb-4 pt-3"
         style={{
-          paddingBottom: 'max(5rem, calc(env(safe-area-inset-bottom, 0px) + 2rem))',
-          background: 'rgba(255,255,255,0.96)',
-          backdropFilter: 'blur(14px)',
-          WebkitBackdropFilter: 'blur(14px)',
-          borderTop: `1px solid ${theme.primaryBorder}`,
+          background: 'rgba(255,255,255,0.98)',
+          borderColor: theme.primaryBorder,
+          paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 1rem)',
         }}
       >
-        <div
-          className="rounded-[28px] bg-white p-3.5"
-          style={{
-            border: `1px solid ${theme.primaryBorder}`,
-            boxShadow: `0 -14px 38px ${theme.primary}22`,
-          }}
-        >
-          {authEnabled && isAdmin && (
-            <button
-              onClick={() => {
-                onClose();
-                onOpenAdminUsers?.();
-              }}
-              className="mb-3 h-[50px] w-full rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
-              style={{
-                background: theme.gradientCard,
-                border: `1px solid ${theme.primaryBorder}`,
-                color: theme.primaryDark,
-                fontWeight: 900,
-              }}
-            >
-              <ShieldCheck size={17} strokeWidth={2.2} />
-              <span>ניהול משתמשים</span>
-            </button>
-          )}
-
-          {authEnabled && (
-            <div className="mb-3 grid grid-cols-2 gap-3">
-              <button
-                onClick={() => void signOut()}
-                className="h-[50px] rounded-2xl flex items-center justify-center gap-2 transition-all"
-                style={{
-                  backgroundColor: '#FFFFFF',
-                  border: `1px solid ${theme.primaryBorder}`,
-                  color: theme.primaryDark,
-                  fontWeight: 900,
-                }}
-              >
-                <LogOut size={17} strokeWidth={2.2} />
-                <span>התנתקות</span>
-              </button>
-
-              <button
-                onClick={() => void handleDeleteAccount()}
-                className="h-[50px] rounded-2xl flex items-center justify-center gap-2 transition-all"
-                style={{
-                  backgroundColor: '#FFF3F3',
-                  border: '1px solid #F2C7CD',
-                  color: '#A63A4B',
-                  fontWeight: 900,
-                }}
-              >
-                <UserX size={17} strokeWidth={2.2} />
-                <span>מחיקת חשבון</span>
-              </button>
-            </div>
-          )}
-
-          <button
-            onClick={handleSave}
-            disabled={!isValid}
-            className="w-full h-[58px] rounded-2xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
+        {notice ? (
+          <div
+            className="mb-3 rounded-[20px] px-4 py-3 text-sm font-bold"
             style={{
-              background: saved
-                ? 'linear-gradient(135deg, #16A34A, #15803D)'
-                : isValid
-                  ? `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%)`
-                  : 'linear-gradient(135deg, #A8B6CB 0%, #7B8AA3 100%)',
-              color: '#FFFFFF',
-              fontWeight: 900,
-              boxShadow: isValid ? `0 20px 38px ${theme.primaryShadow}` : '0 14px 28px rgba(100, 116, 139, 0.22)',
+              background: saved ? '#ECFDF5' : '#FFF7ED',
+              color: saved ? '#047857' : '#C2410C',
+              border: `1px solid ${saved ? '#A7F3D0' : '#FED7AA'}`,
             }}
           >
-            {saved ? (
-              <>
-                <Check size={18} strokeWidth={2.6} />
-                <span>נשמר בהצלחה</span>
-              </>
-            ) : (
-              <>
-                <Save size={18} strokeWidth={2.2} />
-                <span>שמור שינויים</span>
-              </>
-            )}
-          </button>
-        </div>
+            {notice}
+          </div>
+        ) : null}
+
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={!isValid}
+          className="flex h-14 w-full items-center justify-center gap-2 rounded-[24px] text-white disabled:opacity-60"
+          style={{
+            background: 'linear-gradient(135deg, #8EADE4 0%, #D49BB0 100%)',
+            fontWeight: 900,
+            boxShadow: isValid ? '0 18px 36px rgba(114, 138, 180, 0.18)' : 'none',
+          }}
+        >
+          <Save size={18} />
+          <span>שמור שינויים</span>
+        </button>
       </div>
     </div>
   );
 }
 
 function SectionCard({
-  title,
-  subtitle,
+  children,
   icon,
   theme,
-  children,
+  title,
 }: {
-  title: string;
-  subtitle: string;
+  children: ReactNode;
   icon: ReactNode;
   theme: ReturnType<typeof useAppContext>['theme'];
-  children: ReactNode;
+  title: string;
 }) {
   return (
     <div
@@ -584,92 +552,142 @@ function SectionCard({
       style={{
         backgroundColor: '#FFFFFF',
         border: `1px solid ${theme.primaryBorder}`,
-        boxShadow: '0 10px 30px rgba(15, 23, 42, 0.05)',
+        boxShadow: '0 12px 28px rgba(122, 146, 182, 0.08)',
       }}
     >
-      <div className="mb-4 flex flex-row-reverse items-start justify-end gap-3">
+      <div className="mb-4 flex items-center justify-between gap-3">
         <div
-          className="w-11 h-11 rounded-2xl flex items-center justify-center"
-          style={{ backgroundColor: theme.primaryBg, color: theme.primary }}
+          className="flex h-11 w-11 items-center justify-center rounded-2xl"
+          style={{ background: theme.primaryBg, color: theme.primaryDark }}
         >
           {icon}
         </div>
-
-        <div className="flex-1 text-right">
-          <h3 style={{ color: '#0F172A', fontWeight: 900, fontSize: 17 }}>{title}</h3>
-          <p style={{ color: '#64748B', fontSize: 13, lineHeight: 1.7, marginTop: 4 }}>{subtitle}</p>
-        </div>
+        <h3 className="text-right text-[18px] font-black text-[#4D5B73]">{title}</h3>
       </div>
-
       {children}
     </div>
   );
 }
 
-function LabeledField({ label, children }: { label: string; children: ReactNode }) {
+function FieldLabel({ label, optional = false }: { label: string; optional?: boolean }) {
   return (
-    <div>
-      <label className="block text-sm text-right mb-2" style={{ color: '#475569', fontWeight: 800 }}>
-        {label}
-      </label>
-      {children}
+    <div className="mb-2 flex items-center justify-between">
+      {optional ? <span className="text-xs font-bold text-[#9AA7B8]">לא חובה</span> : <span />}
+      <p className="text-sm font-black text-[#5F6D84]">{label}</p>
     </div>
   );
 }
 
-function fieldStyle(active: boolean, borderColor: string) {
-  return {
-    border: `2px solid ${active ? borderColor : '#E2E8F0'}`,
-    backgroundColor: active ? '#F8FCFD' : '#FFFFFF',
-    color: '#0F172A',
-    fontWeight: 700,
-  };
-}
-
-function TimeField({
+function LargeInput({
   value,
   onChange,
-  active,
-  borderColor,
+  placeholder,
+  theme,
+  type = 'text',
 }: {
   value: string;
   onChange: (value: string) => void;
-  active: boolean;
-  borderColor: string;
+  placeholder: string;
+  theme: ReturnType<typeof useAppContext>['theme'];
+  type?: string;
 }) {
   return (
-    <div className="relative">
-      <Clock3
-        size={16}
-        style={{
-          position: 'absolute',
-          right: 14,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          color: '#64748B',
-          pointerEvents: 'none',
-        }}
-      />
-      <input
-        type="time"
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="w-full h-14 rounded-[20px] outline-none"
-        style={{
-          ...fieldStyle(active, borderColor),
-          textAlign: 'center',
-          direction: 'ltr',
-          paddingRight: '2.7rem',
-          paddingLeft: '1rem',
-          WebkitAppearance: 'none',
-          appearance: 'none',
-          letterSpacing: '0.06em',
-          fontSize: '1rem',
-          fontWeight: 800,
-          fontVariantNumeric: 'tabular-nums',
-          boxShadow: active ? '0 10px 22px rgba(148, 163, 184, 0.08)' : 'none',
-        }}
-      />
-    </div>
+    <input
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      placeholder={placeholder}
+      type={type}
+      dir="rtl"
+      className="h-14 w-full rounded-[22px] px-4 text-right text-base font-bold text-[#4D5B73] outline-none"
+      style={{
+        background: '#FFFFFF',
+        border: `1.5px solid ${theme.primaryBorder}`,
+        boxShadow: '0 10px 22px rgba(122, 146, 182, 0.08)',
+      }}
+    />
+  );
+}
+
+function TimeInput({
+  value,
+  onChange,
+  theme,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+  theme: ReturnType<typeof useAppContext>['theme'];
+}) {
+  return (
+    <input
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      type="time"
+      dir="rtl"
+      className="h-14 w-full rounded-[22px] px-4 text-right text-base font-bold text-[#4D5B73] outline-none"
+      style={{
+        background: '#FFFFFF',
+        border: `1.5px solid ${theme.primaryBorder}`,
+        boxShadow: '0 10px 22px rgba(122, 146, 182, 0.08)',
+      }}
+    />
+  );
+}
+
+function ChoiceButton({
+  active,
+  label,
+  onClick,
+  theme,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  theme: ReturnType<typeof useAppContext>['theme'];
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="min-h-[62px] rounded-[22px] px-4 text-right font-extrabold transition-all"
+      style={{
+        background: active ? theme.primaryBg : '#FFFFFF',
+        border: `2px solid ${active ? theme.primary : '#E2E8F0'}`,
+        color: active ? theme.primaryDark : '#475569',
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+function ActionButton({
+  label,
+  onClick,
+  busy,
+  theme,
+  tone,
+}: {
+  label: string;
+  onClick: () => void;
+  busy: boolean;
+  theme: ReturnType<typeof useAppContext>['theme'];
+  tone: 'primary' | 'secondary';
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={busy}
+      className="h-12 rounded-[22px] font-extrabold text-white disabled:opacity-60"
+      style={{
+        background:
+          tone === 'primary'
+            ? 'linear-gradient(135deg, #8EADE4 0%, #6B97D6 100%)'
+            : 'linear-gradient(135deg, #D49BB0 0%, #8EADE4 100%)',
+        boxShadow: `0 12px 24px ${theme.primaryShadow}`,
+      }}
+    >
+      {busy ? 'פותחים...' : label}
+    </button>
   );
 }

@@ -1,40 +1,36 @@
-import { Chrome, LockKeyhole, LogIn, Mail, ShieldCheck, UserPlus } from 'lucide-react';
+import { Chrome, Facebook, LockKeyhole, LogIn, Mail, ShieldCheck, UserPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Logo } from './Logo';
 import { useAuthContext } from '../context/AuthContext';
 
 const COPY = {
-  appName: '\u05d4\u05e1\u05d5\u05db\u05e8\u05ea \u05e9\u05dc\u05d9',
-  subtitle: '\u05db\u05e0\u05d9\u05e1\u05d4 \u05e7\u05dc\u05d4, \u05de\u05d0\u05d5\u05d1\u05d8\u05d7\u05ea \u05d5\u05de\u05e7\u05e6\u05d5\u05e2\u05d9\u05ea.',
-  google: '\u05db\u05e0\u05d9\u05e1\u05d4 \u05e2\u05dd Google',
-  orEmail: '\u05d0\u05d5 \u05e2\u05dd \u05de\u05d9\u05d9\u05dc',
-  signIn: '\u05db\u05e0\u05d9\u05e1\u05d4',
-  signUp: '\u05d4\u05e8\u05e9\u05de\u05d4',
-  fullName: '\u05e9\u05dd \u05de\u05dc\u05d0',
-  email: '\u05de\u05d9\u05d9\u05dc',
-  password: '\u05e1\u05d9\u05e1\u05de\u05d4',
-  signInBusy: '\u05e8\u05d2\u05e2 \u05e7\u05d8\u05df...',
-  signInAction: '\u05e0\u05db\u05e0\u05e1\u05d9\u05dd',
-  signUpAction: '\u05d9\u05d5\u05e6\u05e8\u05d9\u05dd \u05d7\u05e9\u05d1\u05d5\u05df',
-  secured: '\u05d4\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd \u05e0\u05e9\u05de\u05e8\u05d9\u05dd \u05d1\u05e6\u05d5\u05e8\u05d4 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7\u05ea',
-  privacy: '\u05de\u05d3\u05d9\u05e0\u05d9\u05d5\u05ea \u05e4\u05e8\u05d8\u05d9\u05d5\u05ea',
-  deleteAccount: '\u05de\u05d7\u05d9\u05e7\u05ea \u05d7\u05e9\u05d1\u05d5\u05df',
-  serverSetup:
-    '\u05db\u05d3\u05d9 \u05dc\u05d4\u05e4\u05e2\u05d9\u05dc \u05db\u05e0\u05d9\u05e1\u05d4 \u05e2\u05dd Google \u05e6\u05e8\u05d9\u05da \u05dc\u05d7\u05d1\u05e8 \u05d0\u05ea Supabase \u05d5\u05d0\u05ea \u05d4\u05de\u05e9\u05ea\u05e0\u05d9\u05dd \u05d1\u05e1\u05d1\u05d9\u05d1\u05d4.',
-  signInError:
-    '\u05dc\u05d0 \u05d4\u05e6\u05dc\u05d7\u05e0\u05d5 \u05dc\u05d4\u05ea\u05d7\u05d1\u05e8 \u05db\u05e8\u05d2\u05e2. \u05db\u05d3\u05d0\u05d9 \u05dc\u05d1\u05d3\u05d5\u05e7 \u05de\u05d9\u05d9\u05dc \u05d5\u05e1\u05d9\u05e1\u05de\u05d4 \u05d5\u05dc\u05e0\u05e1\u05d5\u05ea \u05e9\u05d5\u05d1.',
-  signUpError:
-    '\u05dc\u05d0 \u05d4\u05e6\u05dc\u05d7\u05e0\u05d5 \u05dc\u05d9\u05e6\u05d5\u05e8 \u05d7\u05e9\u05d1\u05d5\u05df \u05db\u05e8\u05d2\u05e2. \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e0\u05e1\u05d5\u05ea \u05e9\u05d5\u05d1 \u05e2\u05dd \u05de\u05d9\u05d9\u05dc \u05d0\u05d7\u05e8 \u05d0\u05d5 \u05e1\u05d9\u05e1\u05de\u05d4 \u05d7\u05d6\u05e7\u05d4 \u05d9\u05d5\u05ea\u05e8.',
-  signUpNotice:
-    '\u05e9\u05dc\u05d7\u05e0\u05d5 \u05de\u05d9\u05d9\u05dc \u05dc\u05d0\u05d9\u05e9\u05d5\u05e8 \u05d4\u05d7\u05e9\u05d1\u05d5\u05df. \u05d0\u05d7\u05e8\u05d9 \u05d4\u05d0\u05d9\u05e9\u05d5\u05e8 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05d9\u05db\u05e0\u05e1.',
-  signUpSuccess: '\u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05e0\u05d5\u05e6\u05e8 \u05d1\u05d4\u05e6\u05dc\u05d7\u05d4. \u05e2\u05d5\u05d3 \u05e8\u05d2\u05e2 \u05e0\u05de\u05e9\u05d9\u05da \u05e4\u05e0\u05d9\u05de\u05d4.',
-  googleError:
-    '\u05db\u05e8\u05d2\u05e2 \u05d0\u05d9 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05d9\u05db\u05e0\u05e1 \u05e2\u05dd Google. \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e0\u05e1\u05d5\u05ea \u05e9\u05d5\u05d1 \u05d1\u05e2\u05d5\u05d3 \u05e8\u05d2\u05e2.',
+  appName: 'הסוכרת שלי',
+  subtitle: 'כניסה פשוטה, בטוחה ונוחה לשימוש יומיומי.',
+  google: 'המשך עם Google',
+  facebook: 'המשך עם Facebook',
+  orEmail: 'או עם מייל וסיסמה',
+  signIn: 'כניסה',
+  signUp: 'הרשמה',
+  fullName: 'שם מלא',
+  email: 'מייל',
+  password: 'סיסמה',
+  busy: 'עוד רגע...',
+  signInAction: 'נכנסים לאפליקציה',
+  signUpAction: 'יוצרים חשבון חדש',
+  secured: 'הפרטים נשמרים בצורה מאובטחת',
+  privacy: 'מדיניות פרטיות',
+  deleteAccount: 'מחיקת חשבון',
+  serverSetup: 'כדי לאפשר כניסה עם Google או Facebook צריך לחבר Supabase בשרת.',
+  signInError: 'לא הצלחנו להתחבר כרגע. כדאי לבדוק מייל וסיסמה ולנסות שוב.',
+  signUpError: 'לא הצלחנו ליצור חשבון כרגע. אפשר לנסות שוב בעוד רגע.',
+  signUpNotice: 'שלחנו מייל לאישור החשבון. אחרי האישור אפשר להיכנס.',
+  signUpSuccess: 'החשבון נוצר בהצלחה. ממשיכים פנימה.',
+  oauthError: 'כרגע אי אפשר להשלים את הכניסה דרך הספק שבחרת. אפשר לנסות שוב.',
 } as const;
 
 export function AuthScreen() {
-  const { authEnabled, signIn, signInWithGoogle, signUp } = useAuthContext();
+  const { authEnabled, signIn, signInWithGoogle, signInWithFacebook, signUp } = useAuthContext();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -58,35 +54,37 @@ export function AuthScreen() {
 
     if (mode === 'signin') {
       const result = await signIn(email, password);
+      setBusy(false);
+
       if (result.error) {
         setError(COPY.signInError);
       }
-      setBusy(false);
       return;
     }
 
     const result = await signUp(email, password, name);
+    setBusy(false);
+
     if (result.error) {
       setError(COPY.signUpError);
-    } else if (result.needsEmailConfirmation) {
-      setNotice(COPY.signUpNotice);
-    } else {
-      setNotice(COPY.signUpSuccess);
+      return;
     }
 
-    setBusy(false);
+    setNotice(result.needsEmailConfirmation ? COPY.signUpNotice : COPY.signUpSuccess);
   };
 
-  const handleGoogleSignIn = async () => {
+  const handleOAuth = async (provider: 'google' | 'facebook') => {
     if (busy) return;
 
     setBusy(true);
     setError(null);
     setNotice(null);
 
-    const result = await signInWithGoogle();
+    const result =
+      provider === 'google' ? await signInWithGoogle() : await signInWithFacebook();
+
     if (result.error) {
-      setError(COPY.googleError);
+      setError(COPY.oauthError);
       setBusy(false);
     }
   };
@@ -96,7 +94,7 @@ export function AuthScreen() {
       className="min-h-[100dvh] px-4 py-8"
       dir="rtl"
       style={{
-        background: 'linear-gradient(180deg, #FFFDF8 0%, #F6FAFF 45%, #FFF8F4 100%)',
+        background: 'linear-gradient(180deg, #FFFDF8 0%, #F7FBFF 48%, #FFF8F1 100%)',
       }}
     >
       <div className="mx-auto max-w-md">
@@ -104,12 +102,12 @@ export function AuthScreen() {
           <div
             className="flex h-24 w-24 items-center justify-center rounded-[32px]"
             style={{
-              background: 'linear-gradient(145deg, #FFFFFF 0%, #FFF7F2 100%)',
-              border: '1px solid #EBDDD4',
-              boxShadow: '0 18px 36px rgba(139, 118, 106, 0.12)',
+              background: 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F2 100%)',
+              border: '1px solid #E9DED5',
+              boxShadow: '0 18px 40px rgba(136, 117, 106, 0.14)',
             }}
           >
-            <Logo size={56} />
+            <Logo size={58} />
           </div>
         </div>
 
@@ -126,21 +124,21 @@ export function AuthScreen() {
             boxShadow: '0 24px 54px rgba(116, 131, 157, 0.12)',
           }}
         >
-          <button
-            onClick={() => void handleGoogleSignIn()}
-            disabled={busy || !authEnabled}
-            className="flex h-14 w-full items-center justify-center gap-3 rounded-[24px] disabled:opacity-60"
-            style={{
-              background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FBFF 100%)',
-              border: '1.5px solid #DCE6F5',
-              color: '#48617F',
-              fontWeight: 900,
-              boxShadow: '0 14px 28px rgba(114, 138, 180, 0.1)',
-            }}
-          >
-            <Chrome size={18} />
-            <span>{COPY.google}</span>
-          </button>
+          <div className="space-y-3">
+            <SocialButton
+              onClick={() => void handleOAuth('google')}
+              disabled={busy || !authEnabled}
+              icon={<Chrome size={18} />}
+              label={COPY.google}
+            />
+
+            <SocialButton
+              onClick={() => void handleOAuth('facebook')}
+              disabled={busy || !authEnabled}
+              icon={<Facebook size={18} />}
+              label={COPY.facebook}
+            />
+          </div>
 
           <div className="my-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-[#E6E0D7]" />
@@ -149,35 +147,18 @@ export function AuthScreen() {
           </div>
 
           <div className="mb-5 grid grid-cols-2 gap-3">
-            <button
+            <ModeButton
+              active={mode === 'signin'}
+              label={COPY.signIn}
               onClick={() => setMode('signin')}
-              className="h-12 rounded-[20px] font-extrabold transition-all"
-              style={{
-                background:
-                  mode === 'signin'
-                    ? 'linear-gradient(135deg, #8EADE4 0%, #5D79AE 100%)'
-                    : '#FFFFFF',
-                color: mode === 'signin' ? '#FFFFFF' : '#5F6D84',
-                border: `1px solid ${mode === 'signin' ? 'transparent' : '#E3E8F1'}`,
-              }}
-            >
-              {COPY.signIn}
-            </button>
-
-            <button
+              tone="blue"
+            />
+            <ModeButton
+              active={mode === 'signup'}
+              label={COPY.signUp}
               onClick={() => setMode('signup')}
-              className="h-12 rounded-[20px] font-extrabold transition-all"
-              style={{
-                background:
-                  mode === 'signup'
-                    ? 'linear-gradient(135deg, #D49BB0 0%, #8EADE4 100%)'
-                    : '#FFFFFF',
-                color: mode === 'signup' ? '#FFFFFF' : '#5F6D84',
-                border: `1px solid ${mode === 'signup' ? 'transparent' : '#E3E8F1'}`,
-              }}
-            >
-              {COPY.signUp}
-            </button>
+              tone="rose"
+            />
           </div>
 
           <div className="space-y-3">
@@ -216,47 +197,9 @@ export function AuthScreen() {
             </FieldRow>
           </div>
 
-          {error ? (
-            <div
-              className="mt-4 rounded-[22px] p-4 text-sm leading-7"
-              style={{
-                background: '#FFF2F2',
-                border: '1px solid #F4C9CF',
-                color: '#9B4A57',
-                fontWeight: 700,
-              }}
-            >
-              {error}
-            </div>
-          ) : null}
-
-          {notice ? (
-            <div
-              className="mt-4 rounded-[22px] p-4 text-sm leading-7"
-              style={{
-                background: '#F1F8FF',
-                border: '1px solid #D6E7FF',
-                color: '#4A6487',
-                fontWeight: 700,
-              }}
-            >
-              {notice}
-            </div>
-          ) : null}
-
-          {!authEnabled ? (
-            <div
-              className="mt-4 rounded-[22px] p-4 text-sm leading-7"
-              style={{
-                background: '#FFF7ED',
-                border: '1px solid #FED7AA',
-                color: '#C2410C',
-                fontWeight: 700,
-              }}
-            >
-              {COPY.serverSetup}
-            </div>
-          ) : null}
+          {error ? <NoticeCard tone="error">{error}</NoticeCard> : null}
+          {notice ? <NoticeCard tone="info">{notice}</NoticeCard> : null}
+          {!authEnabled ? <NoticeCard tone="warn">{COPY.serverSetup}</NoticeCard> : null}
 
           <button
             onClick={() => void handleSubmit()}
@@ -270,7 +213,7 @@ export function AuthScreen() {
             }}
           >
             {mode === 'signup' ? <UserPlus size={18} /> : <LogIn size={18} />}
-            <span>{busy ? COPY.signInBusy : mode === 'signup' ? COPY.signUpAction : COPY.signInAction}</span>
+            <span>{busy ? COPY.busy : mode === 'signup' ? COPY.signUpAction : COPY.signInAction}</span>
           </button>
 
           <div
@@ -285,7 +228,7 @@ export function AuthScreen() {
             <a href="/privacy-policy.html" className="underline underline-offset-4">
               {COPY.privacy}
             </a>
-            {' \u00b7 '}
+            {' · '}
             <a href="/delete-account.html" className="underline underline-offset-4">
               {COPY.deleteAccount}
             </a>
@@ -293,6 +236,67 @@ export function AuthScreen() {
         </div>
       </div>
     </div>
+  );
+}
+
+function SocialButton({
+  disabled,
+  icon,
+  label,
+  onClick,
+}: {
+  disabled: boolean;
+  icon: ReactNode;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className="flex h-14 w-full items-center justify-center gap-3 rounded-[24px] disabled:opacity-60"
+      style={{
+        background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FBFF 100%)',
+        border: '1.5px solid #DCE6F5',
+        color: '#48617F',
+        fontWeight: 900,
+        boxShadow: '0 14px 28px rgba(114, 138, 180, 0.1)',
+      }}
+    >
+      {icon}
+      <span>{label}</span>
+    </button>
+  );
+}
+
+function ModeButton({
+  active,
+  label,
+  onClick,
+  tone,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+  tone: 'blue' | 'rose';
+}) {
+  const background =
+    tone === 'blue'
+      ? 'linear-gradient(135deg, #8EADE4 0%, #5D79AE 100%)'
+      : 'linear-gradient(135deg, #D49BB0 0%, #8EADE4 100%)';
+
+  return (
+    <button
+      onClick={onClick}
+      className="h-12 rounded-[20px] font-extrabold transition-all"
+      style={{
+        background: active ? background : '#FFFFFF',
+        color: active ? '#FFFFFF' : '#5F6D84',
+        border: `1px solid ${active ? 'transparent' : '#E3E8F1'}`,
+      }}
+    >
+      {label}
+    </button>
   );
 }
 
@@ -307,18 +311,57 @@ function FieldRow({
 }) {
   return (
     <div
-      className="flex h-14 items-center gap-3 rounded-[22px] px-4"
+      className="flex items-center gap-3 rounded-[22px] px-4"
       style={{
-        border: '1.5px solid #DFE6F2',
-        backgroundColor: '#FFFFFF',
-        color: '#4D5B73',
-        fontWeight: 700,
+        background: '#FFFFFF',
+        border: '1px solid #E4EAF4',
+        boxShadow: '0 10px 24px rgba(122, 146, 182, 0.08)',
+      }}
+      aria-label={placeholder}
+    >
+      <div className="text-[#89A3CC]">{icon}</div>
+      <div className="flex-1">{children}</div>
+    </div>
+  );
+}
+
+function NoticeCard({
+  children,
+  tone,
+}: {
+  children: ReactNode;
+  tone: 'error' | 'info' | 'warn';
+}) {
+  const styleMap = {
+    error: {
+      background: '#FEF2F2',
+      border: '#FECACA',
+      color: '#B91C1C',
+    },
+    info: {
+      background: '#EFF6FF',
+      border: '#BFDBFE',
+      color: '#1D4ED8',
+    },
+    warn: {
+      background: '#FFF7ED',
+      border: '#FED7AA',
+      color: '#C2410C',
+    },
+  } as const;
+
+  const style = styleMap[tone];
+
+  return (
+    <div
+      className="mt-4 rounded-[22px] px-4 py-3 text-sm font-bold leading-7"
+      style={{
+        backgroundColor: style.background,
+        border: `1px solid ${style.border}`,
+        color: style.color,
       }}
     >
-      <div className="text-[#8DA8D6]">{icon}</div>
-      <div className="flex-1 text-right text-[#4D5B73]" aria-label={placeholder}>
-        {children}
-      </div>
+      {children}
     </div>
   );
 }

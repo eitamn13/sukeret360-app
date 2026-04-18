@@ -1,7 +1,5 @@
-import type { ReactNode } from 'react';
-import { ChevronLeft, Clock3, Plus, Trash2 } from 'lucide-react';
+import { Check, ChevronLeft, Clock3, Pill, Plus, Trash2, UserRound } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { Logo } from './Logo';
 import type {
   DiabetesType,
   Gender,
@@ -9,84 +7,23 @@ import type {
   TreatmentType,
   UserProfile,
 } from '../context/AppContext';
-import { useAppContext } from '../context/AppContext';
-
-const COPY = {
-  title: 'הגדרה קצרה',
-  subtitle: 'נגדיר רק מה שחשוב כדי שהאפליקציה תהיה ברורה ונוחה מההתחלה.',
-  next: 'המשך',
-  back: 'חזרה',
-  finish: 'נכנסים לאפליקציה',
-  woman: 'אישה',
-  man: 'גבר',
-  name: 'שם',
-  optional: 'לא חובה',
-  age: 'גיל',
-  diagnosisYear: 'שנת אבחון',
-  diabetesType: 'מצב רפואי',
-  treatment: 'סוג טיפול',
-  lowTarget: 'יעד נמוך',
-  highTarget: 'יעד גבוה',
-  wakeTime: 'שעת קימה',
-  sleepTime: 'שעת שינה',
-  emergencyName: 'איש קשר',
-  emergencyPhone: 'טלפון',
-  quickDrugs: 'בחירת תרופות בלחיצה',
-  addDrug: 'הוספת תרופה',
-  noDrug: 'אין כרגע תרופה קבועה',
-} as const;
-
-const FEMALE_BRAND = {
-  primary: '#C9859F',
-  primaryDark: '#6F4C5A',
-  border: '#EAD8DC',
-  text: '#5A4740',
-  muted: '#8D7A73',
-  background: 'linear-gradient(180deg, #FFFDF8 0%, #FFF7F1 52%, #FFFDF9 100%)',
-  card: 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F4 100%)',
-  strong: 'linear-gradient(135deg, #D89CB3 0%, #A86B83 100%)',
-  soft: 'linear-gradient(135deg, rgba(248,218,226,0.95) 0%, rgba(255,247,244,0.96) 100%)',
-  shadow: 'rgba(174, 133, 148, 0.18)',
-};
-
-const MALE_BRAND = {
-  primary: '#6B97D6',
-  primaryDark: '#4A6587',
-  border: '#DBE6F4',
-  text: '#41566F',
-  muted: '#73879F',
-  background: 'linear-gradient(180deg, #FCFEFF 0%, #F3F8FF 52%, #FCFEFF 100%)',
-  card: 'linear-gradient(145deg, #FFFFFF 0%, #F6FAFF 100%)',
-  strong: 'linear-gradient(135deg, #7CA8E7 0%, #4E6F9D 100%)',
-  soft: 'linear-gradient(135deg, rgba(220,235,255,0.96) 0%, rgba(247,250,255,0.98) 100%)',
-  shadow: 'rgba(112, 148, 199, 0.18)',
-};
+import {
+  FEMALE_THEME,
+  MALE_THEME,
+  getPeriodFromTime,
+  useAppContext,
+} from '../context/AppContext';
+import { Logo } from './Logo';
 
 const DIABETES_TYPE_OPTIONS: Array<{
   value: DiabetesType;
   label: string;
   description: string;
 }> = [
-  {
-    value: 'prediabetes',
-    label: 'טרום סוכרת',
-    description: 'מעקב, תזונה והליכה',
-  },
-  {
-    value: 'monitoring',
-    label: 'עדיין בבדיקה',
-    description: 'כשעדיין אין אבחון סופי',
-  },
-  {
-    value: '2',
-    label: 'סוג 2',
-    description: 'כדורים, שגרה ואיזון',
-  },
-  {
-    value: '1',
-    label: 'סוג 1',
-    description: 'לרוב אינסולין ומעקב תכוף',
-  },
+  { value: 'prediabetes', label: 'טרום סוכרת', description: 'מעקב, תזונה ותנועה יומית' },
+  { value: 'monitoring', label: 'עדיין בבדיקה', description: 'כשעדיין אין אבחון סופי' },
+  { value: '2', label: 'סוכרת סוג 2', description: 'לרוב כדורים, שגרה ואיזון יומי' },
+  { value: '1', label: 'סוכרת סוג 1', description: 'לרוב אינסולין ומעקב צמוד' },
 ];
 
 const TREATMENT_OPTIONS: Array<{ value: TreatmentType; label: string }> = [
@@ -97,63 +34,64 @@ const TREATMENT_OPTIONS: Array<{ value: TreatmentType; label: string }> = [
 ];
 
 const MEDICATION_PRESETS: Array<{
+  key: string;
   name: string;
   dosage: string;
   type: 'pill' | 'injection';
   image: string;
   appearanceLabel: string;
+  time: string;
 }> = [
   {
+    key: 'metformin',
     name: 'מטפורמין',
     dosage: '500 מ"ג',
     type: 'pill',
     image: '💊',
     appearanceLabel: 'כדור לבן',
+    time: '08:00',
   },
   {
+    key: 'jardiance',
     name: 'ג׳רדיאנס',
     dosage: '10 מ"ג',
     type: 'pill',
     image: '💊',
     appearanceLabel: 'כדור לבן',
+    time: '08:00',
   },
   {
+    key: 'ozempic',
     name: 'אוזמפיק',
     dosage: 'פעם בשבוע',
     type: 'injection',
     image: '💉',
-    appearanceLabel: 'עט אינסולין',
+    appearanceLabel: 'עט זריקה',
+    time: '20:00',
   },
   {
+    key: 'insulin',
     name: 'אינסולין',
     dosage: '10 יחידות',
     type: 'injection',
     image: '💉',
     appearanceLabel: 'עט אינסולין',
+    time: '21:00',
   },
 ];
 
-function getPeriodFromTimeLocal(time: string) {
-  const [hours] = time.split(':').map(Number);
-  if (!Number.isFinite(hours)) return 'תרופה';
-  if (hours < 11) return 'בוקר';
-  if (hours < 16) return 'צהריים';
-  if (hours < 20) return 'אחר הצהריים';
-  return 'ערב';
-}
-
-function createMedicationDraft(
-  preset?: (typeof MEDICATION_PRESETS)[number]
+function createMedicationFromPreset(
+  preset: (typeof MEDICATION_PRESETS)[number]
 ): MedicationScheduleItem {
   return {
-    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-    name: preset?.name ?? '',
-    dosage: preset?.dosage ?? '',
-    time: '08:00',
-    period: 'בוקר',
-    type: preset?.type ?? 'pill',
-    image: preset?.image ?? '💊',
-    appearanceLabel: preset?.appearanceLabel ?? 'כדור',
+    id: `${preset.key}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+    name: preset.name,
+    dosage: preset.dosage,
+    time: preset.time,
+    period: getPeriodFromTime(preset.time),
+    type: preset.type,
+    image: preset.image,
+    appearanceLabel: preset.appearanceLabel,
     notes: '',
     notifyEmergencyAfterMinutes: 45,
   };
@@ -167,39 +105,75 @@ export function OnboardingScreen() {
   const [name, setName] = useState('');
   const [gender, setGender] = useState<Gender>('');
   const [age, setAge] = useState('');
-  const [diagnosisYear, setDiagnosisYear] = useState('');
   const [diabetesType, setDiabetesType] = useState<DiabetesType>('');
+  const [diagnosisYear, setDiagnosisYear] = useState('');
   const [treatmentType, setTreatmentType] = useState<TreatmentType>('');
   const [targetLow, setTargetLow] = useState('80');
   const [targetHigh, setTargetHigh] = useState('140');
   const [wakeTime, setWakeTime] = useState('07:00');
   const [sleepTime, setSleepTime] = useState('22:00');
   const [medications, setMedications] = useState<MedicationScheduleItem[]>([]);
+  const [noMedicationSelected, setNoMedicationSelected] = useState(false);
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
 
+  const theme = gender === 'male' ? MALE_THEME : FEMALE_THEME;
   const totalSteps = 3;
-  const brand = gender === 'male' ? MALE_BRAND : FEMALE_BRAND;
+  const lifestyleFocused = diabetesType === 'prediabetes' || diabetesType === 'monitoring';
 
-  const yearOptions = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    return Array.from({ length: 35 }, (_, index) => String(currentYear - index));
-  }, []);
+  const selectedMedicationKeys = useMemo(
+    () =>
+      new Set(
+        medications.map((medication) =>
+          MEDICATION_PRESETS.find((preset) => preset.name === medication.name)?.key ?? medication.id
+        )
+      ),
+    [medications]
+  );
 
   const canContinue =
     step === 0
-      ? gender !== '' && age.trim().length > 0
+      ? Boolean(gender && age.trim() && diabetesType)
       : step === 1
-        ? diabetesType !== '' &&
-          treatmentType !== '' &&
-          Number(targetLow) > 0 &&
-          Number(targetHigh) > Number(targetLow)
-        : true;
+        ? Boolean(treatmentType)
+        : Number(targetLow) > 0 && Number(targetHigh) > Number(targetLow);
 
-  const updateMedication = (
-    medicationId: string,
-    patch: Partial<MedicationScheduleItem>
-  ) => {
+  const toggleMedicationPreset = (preset: (typeof MEDICATION_PRESETS)[number]) => {
+    setNoMedicationSelected(false);
+    setMedications((prev) => {
+      const exists = prev.some((item) => item.name === preset.name);
+      if (exists) {
+        return prev.filter((item) => item.name !== preset.name);
+      }
+      return [...prev, createMedicationFromPreset(preset)];
+    });
+  };
+
+  const markNoMedication = () => {
+    setNoMedicationSelected(true);
+    setMedications([]);
+  };
+
+  const addEmptyMedication = () => {
+    setNoMedicationSelected(false);
+    setMedications((prev) => [
+      ...prev,
+      {
+        id: `custom-${Date.now()}`,
+        name: '',
+        dosage: '',
+        time: '08:00',
+        period: 'בוקר',
+        type: 'pill',
+        image: '💊',
+        appearanceLabel: 'כדור',
+        notes: '',
+        notifyEmergencyAfterMinutes: 45,
+      },
+    ]);
+  };
+
+  const updateMedication = (medicationId: string, patch: Partial<MedicationScheduleItem>) => {
     setMedications((prev) =>
       prev.map((medication) =>
         medication.id === medicationId
@@ -207,34 +181,24 @@ export function OnboardingScreen() {
               ...medication,
               ...patch,
               period:
-                patch.time !== undefined
-                  ? getPeriodFromTimeLocal(patch.time)
-                  : medication.period,
+                patch.time !== undefined ? getPeriodFromTime(patch.time) : medication.period,
             }
           : medication
       )
     );
   };
 
-  const addMedicationFromPreset = (preset: (typeof MEDICATION_PRESETS)[number]) => {
-    setMedications((prev) => [...prev, createMedicationDraft(preset)]);
-  };
-
-  const addEmptyMedication = () => {
-    setMedications((prev) => [...prev, createMedicationDraft()]);
-  };
-
   const removeMedication = (medicationId: string) => {
     setMedications((prev) => prev.filter((item) => item.id !== medicationId));
   };
 
-  const finish = () => {
+  const handleFinish = () => {
     const profile: UserProfile = {
-      name: name.trim() || 'משתמש/ת',
-      age,
+      name: name.trim() || 'המשתמש/ת',
+      age: age.trim(),
       diabetesType,
       gender,
-      diagnosisYear,
+      diagnosisYear: diagnosisYear.trim(),
       treatmentType,
       targetLow,
       targetHigh,
@@ -246,434 +210,372 @@ export function OnboardingScreen() {
     saveEmergencyContact({
       name: emergencyName.trim(),
       phone: emergencyPhone.trim(),
-      message: 'אני צריך/ה עזרה דחופה. זה המיקום שלי:',
+      message: 'אני צריכה עזרה דחופה. זה המיקום שלי:',
     });
     saveMedicationSchedule(
-      medications
-        .filter((medication) => medication.name.trim())
-        .map((medication) => ({
-          ...medication,
-          period: medication.period || getPeriodFromTimeLocal(medication.time),
-        }))
+      noMedicationSelected
+        ? []
+        : medications
+            .filter((item) => item.name.trim())
+            .map((item) => ({
+              ...item,
+              period: getPeriodFromTime(item.time),
+            }))
     );
     completeOnboarding();
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 overflow-y-auto px-4 py-5"
+      className="min-h-[100dvh] px-4 py-6"
       dir="rtl"
-      style={{ background: brand.background }}
+      style={{ background: theme.gradientFull }}
     >
-      <div className="mx-auto w-full max-w-md">
-        <div className="mb-5 flex justify-center">
-          <div
-            className="flex h-24 w-24 items-center justify-center rounded-[32px]"
-            style={{
-              background: brand.card,
-              border: `1px solid ${brand.border}`,
-              boxShadow: `0 18px 38px ${brand.shadow}`,
-            }}
-          >
-            <Logo size={58} />
-          </div>
-        </div>
-
-        <div className="mb-5 text-center">
-          <h1
-            className="text-[30px]"
-            style={{ color: brand.text, fontWeight: 900, letterSpacing: '-0.03em' }}
-          >
-            {COPY.title}
-          </h1>
-          <p className="mt-2 text-sm" style={{ color: brand.muted, fontWeight: 700 }}>
-            {COPY.subtitle}
-          </p>
-        </div>
-
-        <div className="mb-5 flex items-center justify-center gap-2">
-          {Array.from({ length: totalSteps }).map((_, index) => (
-            <div
-              key={index}
-              className="rounded-full transition-all duration-300"
-              style={{
-                width: index === step ? 38 : 12,
-                height: 12,
-                background:
-                  index === step ? brand.strong : index < step ? brand.primary : '#E9E3DC',
-              }}
-            />
-          ))}
-        </div>
-
+      <div className="mx-auto max-w-md">
         <div
-          className="rounded-[34px] p-5"
+          className="rounded-[34px] p-6"
           style={{
-            background: brand.card,
-            border: `1px solid ${brand.border}`,
-            boxShadow: `0 24px 60px ${brand.shadow}`,
+            background: 'rgba(255,255,255,0.96)',
+            border: `1px solid ${theme.primaryBorder}`,
+            boxShadow: `0 24px 54px ${theme.primaryShadow}`,
           }}
         >
-          {step === 0 ? (
-            <div className="space-y-5">
-              <SectionTitle
-                brand={brand}
-                title="נתחיל בכמה פרטים"
-                subtitle="בחירה פשוטה, עם כמה שפחות הקלדה."
-              />
-
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: 'female' as Gender, label: COPY.woman, emoji: '👩' },
-                  { value: 'male' as Gender, label: COPY.man, emoji: '👨' },
-                ].map((item) => {
-                  const active = gender === item.value;
-                  return (
-                    <button
-                      key={item.value}
-                      onClick={() => setGender(item.value)}
-                      className="rounded-[28px] px-4 py-5 text-center transition-all active:scale-[0.98]"
-                      style={{
-                        minHeight: 144,
-                        border: `2px solid ${active ? brand.primary : '#E7DED3'}`,
-                        background: active ? brand.soft : '#FFFFFF',
-                        boxShadow: active ? `0 16px 30px ${brand.shadow}` : 'none',
-                      }}
-                    >
-                      <p className="mb-3 text-4xl">{item.emoji}</p>
-                      <p
-                        style={{
-                          color: active ? brand.primaryDark : brand.text,
-                          fontWeight: 900,
-                          fontSize: 20,
-                        }}
-                      >
-                        {item.label}
-                      </p>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="col-span-2">
-                  <FieldLabel text={COPY.name} brand={brand} />
-                  <TextInput
-                    value={name}
-                    onChange={setName}
-                    placeholder={COPY.optional}
-                    brand={brand}
-                    heightClass="h-16"
-                  />
-                </div>
-
-                <div>
-                  <FieldLabel text={COPY.age} brand={brand} />
-                  <TextInput
-                    value={age}
-                    onChange={setAge}
-                    type="number"
-                    placeholder="62"
-                    brand={brand}
-                    heightClass="h-16"
-                  />
-                </div>
-
-                <div>
-                  <FieldLabel text={COPY.diagnosisYear} brand={brand} />
-                  <SelectInput
-                    value={diagnosisYear}
-                    onChange={setDiagnosisYear}
-                    brand={brand}
-                    heightClass="h-16"
-                  >
-                    <option value="">{COPY.optional}</option>
-                    {yearOptions.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </SelectInput>
-                </div>
-              </div>
+          <div className="mb-5 flex justify-center">
+            <div
+              className="flex h-20 w-20 items-center justify-center rounded-[28px]"
+              style={{
+                background: 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F2 100%)',
+                border: `1px solid ${theme.primaryBorder}`,
+              }}
+            >
+              <Logo size={54} />
             </div>
-          ) : null}
+          </div>
 
-          {step === 1 ? (
-            <div className="space-y-5">
-              <SectionTitle
-                brand={brand}
-                title="מה מתאים לך?"
-                subtitle="נבחר מצב רפואי, סוג טיפול ויעדים ליום."
+          <div className="text-center">
+            <h1 className="text-[30px] font-black text-[#4D5B73]">כמה צעדים קצרים</h1>
+            <p className="mt-3 text-sm leading-7 text-[#7C889A]">
+              מגדירים רק מה שחשוב באמת, ונכנסים.
+            </p>
+          </div>
+
+          <div className="mt-5 flex items-center justify-center gap-2">
+            {Array.from({ length: totalSteps }).map((_, index) => (
+              <span
+                key={index}
+                className="h-2.5 rounded-full transition-all"
+                style={{
+                  width: step === index ? 30 : 10,
+                  background: step === index ? theme.primary : '#E3E8F1',
+                }}
               />
+            ))}
+          </div>
 
-              <div>
-                <FieldLabel text={COPY.diabetesType} brand={brand} />
+          <div className="mt-6">
+            {step === 0 ? (
+              <div className="space-y-4">
+                <SectionTitle title="פרטים בסיסיים" subtitle="בחירה גדולה וברורה" />
+
+                <FieldLabel label="שם פרטי או כינוי" optional />
+                <LargeInput
+                  value={name}
+                  onChange={setName}
+                  placeholder="אפשר גם להשאיר ריק"
+                  themeBorder={theme.primaryBorder}
+                />
+
+                <FieldLabel label="מגדר" />
                 <div className="grid grid-cols-2 gap-3">
-                  {DIABETES_TYPE_OPTIONS.map((type) => (
-                    <button
-                      key={type.value}
-                      onClick={() => setDiabetesType(type.value)}
-                      className="rounded-[24px] px-4 py-4 text-right transition-all active:scale-[0.98]"
-                      style={{
-                        minHeight: 122,
-                        border: `2px solid ${
-                          diabetesType === type.value ? brand.primary : '#E7DED3'
-                        }`,
-                        background: diabetesType === type.value ? brand.soft : '#FFFFFF',
-                      }}
-                    >
-                      <p style={{ color: brand.text, fontWeight: 900, fontSize: 18 }}>
-                        {type.label}
-                      </p>
-                      <p
-                        className="mt-2 text-sm"
-                        style={{ color: brand.muted, lineHeight: 1.7, fontWeight: 700 }}
-                      >
-                        {type.description}
-                      </p>
-                    </button>
-                  ))}
+                  <ChoiceButton
+                    active={gender === 'female'}
+                    label="אישה"
+                    hint="עיצוב נשי"
+                    onClick={() => setGender('female')}
+                    theme={theme}
+                  />
+                  <ChoiceButton
+                    active={gender === 'male'}
+                    label="גבר"
+                    hint="עיצוב גברי"
+                    onClick={() => setGender('male')}
+                    theme={theme}
+                  />
                 </div>
-              </div>
 
-              <div>
-                <FieldLabel text={COPY.treatment} brand={brand} />
                 <div className="grid grid-cols-2 gap-3">
-                  {TREATMENT_OPTIONS.map((item) => (
-                    <ChoiceChip
-                      key={item.value}
-                      label={item.label}
-                      active={treatmentType === item.value}
-                      brand={brand}
-                      onClick={() => setTreatmentType(item.value)}
-                      size="large"
+                  <div>
+                    <FieldLabel label="גיל" />
+                    <LargeInput
+                      value={age}
+                      onChange={setAge}
+                      placeholder="למשל 62"
+                      type="number"
+                      themeBorder={theme.primaryBorder}
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel label="שנת אבחון" optional />
+                    <LargeInput
+                      value={diagnosisYear}
+                      onChange={setDiagnosisYear}
+                      placeholder="למשל 2024"
+                      type="number"
+                      themeBorder={theme.primaryBorder}
+                    />
+                  </div>
+                </div>
+
+                <FieldLabel label="מצב רפואי" />
+                <div className="grid grid-cols-2 gap-3">
+                  {DIABETES_TYPE_OPTIONS.map((option) => (
+                    <ChoiceButton
+                      key={option.value}
+                      active={diabetesType === option.value}
+                      label={option.label}
+                      hint={option.description}
+                      onClick={() => setDiabetesType(option.value)}
+                      theme={theme}
                     />
                   ))}
                 </div>
               </div>
+            ) : null}
 
-              <div className="grid grid-cols-2 gap-3">
-                <ValueCard
-                  label={COPY.lowTarget}
-                  value={targetLow}
-                  onChange={setTargetLow}
-                  brand={brand}
-                />
-                <ValueCard
-                  label={COPY.highTarget}
-                  value={targetHigh}
-                  onChange={setTargetHigh}
-                  brand={brand}
-                />
-              </div>
+            {step === 1 ? (
+              <div className="space-y-4">
+                <SectionTitle title="טיפול ותרופות" subtitle="פחות כתיבה, יותר בחירה" />
 
-              <div className="grid grid-cols-2 gap-3">
-                <TimeCard label={COPY.wakeTime} value={wakeTime} onChange={setWakeTime} brand={brand} />
-                <TimeCard
-                  label={COPY.sleepTime}
-                  value={sleepTime}
-                  onChange={setSleepTime}
-                  brand={brand}
-                />
-              </div>
-            </div>
-          ) : null}
-
-          {step === 2 ? (
-            <div className="space-y-5">
-              <SectionTitle
-                brand={brand}
-                title="תרופות וקשר חירום"
-                subtitle="פחות לכתוב, יותר לבחור בלחיצה."
-              />
-
-              <div>
-                <FieldLabel text={COPY.quickDrugs} brand={brand} />
+                <FieldLabel label="סוג טיפול" />
                 <div className="grid grid-cols-2 gap-3">
-                  {MEDICATION_PRESETS.map((preset) => (
+                  {TREATMENT_OPTIONS.map((option) => (
+                    <ChoiceButton
+                      key={option.value}
+                      active={treatmentType === option.value}
+                      label={option.label}
+                      hint=""
+                      onClick={() => setTreatmentType(option.value)}
+                      theme={theme}
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={markNoMedication}
+                  className="flex min-h-[74px] w-full items-center justify-between rounded-[24px] px-5 text-right transition-all"
+                  style={{
+                    background: noMedicationSelected ? theme.primaryBg : '#FFFFFF',
+                    border: `2px solid ${noMedicationSelected ? theme.primary : '#E2E8F0'}`,
+                    color: noMedicationSelected ? theme.primaryDark : '#475569',
+                    fontWeight: 900,
+                  }}
+                >
+                  <span className="text-base">אין לי תרופה קבועה</span>
+                  {noMedicationSelected ? <Check size={18} /> : <Pill size={18} />}
+                </button>
+
+                {!noMedicationSelected ? (
+                  <>
+                    <FieldLabel
+                      label={lifestyleFocused ? 'אפשר לבחור גם תרופה אם יש' : 'בחירת תרופות מהירה'}
+                    />
+                    <div className="grid grid-cols-2 gap-3">
+                      {MEDICATION_PRESETS.map((preset) => (
+                        <button
+                          key={preset.key}
+                          type="button"
+                          onClick={() => toggleMedicationPreset(preset)}
+                          className="min-h-[92px] rounded-[24px] p-4 text-right transition-all"
+                          style={{
+                            background: selectedMedicationKeys.has(preset.key)
+                              ? theme.primaryBg
+                              : '#FFFFFF',
+                            border: `2px solid ${
+                              selectedMedicationKeys.has(preset.key) ? theme.primary : '#E2E8F0'
+                            }`,
+                          }}
+                        >
+                          <div className="flex items-start justify-between gap-3">
+                            <span className="text-2xl">{preset.image}</span>
+                            {selectedMedicationKeys.has(preset.key) ? (
+                              <span
+                                className="flex h-7 w-7 items-center justify-center rounded-full text-white"
+                                style={{ background: theme.primary }}
+                              >
+                                <Check size={15} />
+                              </span>
+                            ) : null}
+                          </div>
+                          <div className="mt-4">
+                            <p className="text-[15px] font-black text-[#4D5B73]">{preset.name}</p>
+                            <p className="mt-1 text-xs font-bold text-[#7F8CA0]">{preset.dosage}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+
                     <button
-                      key={preset.name}
-                      onClick={() => addMedicationFromPreset(preset)}
-                      className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
+                      type="button"
+                      onClick={addEmptyMedication}
+                      className="flex h-14 w-full items-center justify-center gap-2 rounded-[24px] font-extrabold"
                       style={{
-                        minHeight: 110,
                         background: '#FFFFFF',
-                        border: `1.5px solid ${brand.border}`,
+                        color: theme.primaryDark,
+                        border: `1.5px solid ${theme.primaryBorder}`,
                       }}
                     >
-                      <div className="flex items-start justify-between gap-3">
-                        <span className="text-3xl">{preset.image}</span>
-                        <div className="text-right">
-                          <p style={{ color: brand.text, fontWeight: 900, fontSize: 18 }}>
-                            {preset.name}
-                          </p>
-                          <p className="mt-2 text-sm" style={{ color: brand.muted, fontWeight: 700 }}>
-                            {preset.dosage}
-                          </p>
+                      <Plus size={18} />
+                      <span>הוספת תרופה ידנית</span>
+                    </button>
+
+                    {medications.map((medication) => (
+                      <div
+                        key={medication.id}
+                        className="rounded-[24px] border border-[#E5EAF4] bg-white p-4"
+                      >
+                        <div className="mb-3 flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => removeMedication(medication.id)}
+                            className="flex h-10 w-10 items-center justify-center rounded-2xl"
+                            style={{ color: '#EF4444', background: '#FFF5F5' }}
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                          <p className="text-sm font-black text-[#4D5B73]">תרופה</p>
+                        </div>
+
+                        <div className="space-y-3">
+                          <LargeInput
+                            value={medication.name}
+                            onChange={(value) => updateMedication(medication.id, { name: value })}
+                            placeholder="שם התרופה"
+                            themeBorder={theme.primaryBorder}
+                          />
+
+                          <div className="grid grid-cols-2 gap-3">
+                            <LargeInput
+                              value={medication.dosage}
+                              onChange={(value) =>
+                                updateMedication(medication.id, { dosage: value })
+                              }
+                              placeholder="מינון"
+                              themeBorder={theme.primaryBorder}
+                            />
+                            <TimeInput
+                              value={medication.time}
+                              onChange={(value) => updateMedication(medication.id, { time: value })}
+                              themeBorder={theme.primaryBorder}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </button>
-                  ))}
-                </div>
+                    ))}
+                  </>
+                ) : null}
               </div>
+            ) : null}
 
-              <div className="flex gap-3">
-                <button
-                  onClick={addEmptyMedication}
-                  className="flex h-14 flex-1 items-center justify-center gap-2 rounded-[22px]"
-                  style={{
-                    background: '#FFFFFF',
-                    border: `1.5px solid ${brand.border}`,
-                    color: brand.primaryDark,
-                    fontWeight: 900,
-                  }}
-                >
-                  <Plus size={18} />
-                  <span>{COPY.addDrug}</span>
-                </button>
+            {step === 2 ? (
+              <div className="space-y-4">
+                <SectionTitle title="יעדים וחירום" subtitle="עוד כמה פרטים ונכנסים" />
 
-                <button
-                  onClick={() => setMedications([])}
-                  className="flex h-14 items-center justify-center rounded-[22px] px-4"
-                  style={{
-                    background: '#FFFFFF',
-                    border: `1.5px solid ${brand.border}`,
-                    color: brand.muted,
-                    fontWeight: 900,
-                  }}
-                >
-                  {COPY.noDrug}
-                </button>
-              </div>
-
-              {medications.length > 0 ? (
-                <div className="space-y-3">
-                  {medications.map((medication, index) => (
-                    <div
-                      key={medication.id}
-                      className="rounded-[24px] p-4"
-                      style={{
-                        background: '#FFFFFF',
-                        border: `1.5px solid ${brand.border}`,
-                      }}
-                    >
-                      <div className="mb-3 flex items-center justify-between gap-3">
-                        <button
-                          onClick={() => removeMedication(medication.id)}
-                          className="flex h-10 w-10 items-center justify-center rounded-2xl"
-                          style={{ background: '#FFF1F2', color: '#E11D48' }}
-                          aria-label="מחק תרופה"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                        <p style={{ color: brand.text, fontWeight: 900 }}>
-                          {`תרופה ${index + 1}`}
-                        </p>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-3">
-                        <TextInput
-                          value={medication.name}
-                          onChange={(value) => updateMedication(medication.id, { name: value })}
-                          placeholder="שם התרופה"
-                          brand={brand}
-                        />
-                        <TextInput
-                          value={medication.dosage}
-                          onChange={(value) => updateMedication(medication.id, { dosage: value })}
-                          placeholder="מינון"
-                          brand={brand}
-                        />
-                      </div>
-
-                      <div className="mt-3 grid grid-cols-2 gap-3">
-                        <TimeInput
-                          value={medication.time}
-                          onChange={(value) => updateMedication(medication.id, { time: value })}
-                          brand={brand}
-                        />
-                        <ChoiceChip
-                          label={medication.type === 'injection' ? 'זריקה' : 'כדור'}
-                          active
-                          brand={brand}
-                          onClick={() =>
-                            updateMedication(medication.id, {
-                              type: medication.type === 'pill' ? 'injection' : 'pill',
-                              image: medication.type === 'pill' ? '💉' : '💊',
-                              appearanceLabel:
-                                medication.type === 'pill' ? 'עט אינסולין' : 'כדור',
-                            })
-                          }
-                          size="medium"
-                        />
-                      </div>
-                    </div>
-                  ))}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <FieldLabel label="יעד נמוך" />
+                    <LargeInput
+                      value={targetLow}
+                      onChange={setTargetLow}
+                      placeholder="80"
+                      type="number"
+                      themeBorder={theme.primaryBorder}
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel label="יעד גבוה" />
+                    <LargeInput
+                      value={targetHigh}
+                      onChange={setTargetHigh}
+                      placeholder="140"
+                      type="number"
+                      themeBorder={theme.primaryBorder}
+                    />
+                  </div>
                 </div>
-              ) : null}
 
-              <div
-                className="rounded-[24px] p-4"
-                style={{ background: '#FFFFFF', border: `1.5px solid ${brand.border}` }}
-              >
-                <FieldLabel text={COPY.emergencyName} brand={brand} />
-                <TextInput
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <FieldLabel label="שעת קימה" />
+                    <TimeInput value={wakeTime} onChange={setWakeTime} themeBorder={theme.primaryBorder} />
+                  </div>
+                  <div>
+                    <FieldLabel label="שעת שינה" />
+                    <TimeInput value={sleepTime} onChange={setSleepTime} themeBorder={theme.primaryBorder} />
+                  </div>
+                </div>
+
+                <FieldLabel label="איש קשר לחירום" optional />
+                <LargeInput
                   value={emergencyName}
                   onChange={setEmergencyName}
-                  placeholder={COPY.optional}
-                  brand={brand}
+                  placeholder="שם מלא"
+                  themeBorder={theme.primaryBorder}
                 />
-                <div className="mt-3" />
-                <FieldLabel text={COPY.emergencyPhone} brand={brand} />
-                <TextInput
+                <LargeInput
                   value={emergencyPhone}
                   onChange={setEmergencyPhone}
-                  placeholder="0501234567"
-                  brand={brand}
+                  placeholder="טלפון"
+                  type="tel"
+                  themeBorder={theme.primaryBorder}
                 />
-                <p
-                  className="mt-3 text-right text-sm"
-                  style={{ color: brand.muted, lineHeight: 1.7, fontWeight: 700 }}
-                >
-                  הודעת החירום תיקבע אוטומטית וניתן לשנות אותה אחר כך בהגדרות.
-                </p>
               </div>
-            </div>
-          ) : null}
+            ) : null}
+          </div>
 
-          <div className="mt-6 flex items-center justify-between gap-3">
-            {step > 0 ? (
-              <button
-                onClick={() => setStep((current) => current - 1)}
-                className="flex h-14 items-center justify-center gap-1 rounded-[22px] px-5"
-                style={{
-                  background: '#FFFFFF',
-                  border: `1.5px solid ${brand.border}`,
-                  color: brand.primaryDark,
-                  fontWeight: 900,
-                }}
-              >
-                <ChevronLeft size={18} />
-                <span>{COPY.back}</span>
-              </button>
-            ) : (
-              <div />
-            )}
-
+          <div className="mt-6 grid grid-cols-2 gap-3">
             <button
-              onClick={step === totalSteps - 1 ? finish : () => setStep((current) => current + 1)}
-              disabled={!canContinue}
-              className="flex h-14 flex-1 items-center justify-center rounded-[24px] px-6 disabled:opacity-55"
+              type="button"
+              onClick={() => (step === 0 ? undefined : setStep((prev) => prev - 1))}
+              disabled={step === 0}
+              className="flex h-14 items-center justify-center gap-2 rounded-[24px] font-extrabold disabled:opacity-50"
               style={{
-                background: brand.strong,
-                color: '#FFFFFF',
-                fontWeight: 900,
-                boxShadow: `0 18px 36px ${brand.shadow}`,
+                background: '#FFFFFF',
+                color: theme.primaryDark,
+                border: `1.5px solid ${theme.primaryBorder}`,
               }}
             >
-              {step === totalSteps - 1 ? COPY.finish : COPY.next}
+              <ChevronLeft size={18} />
+              <span>חזרה</span>
             </button>
+
+            {step < totalSteps - 1 ? (
+              <button
+                type="button"
+                onClick={() => setStep((prev) => Math.min(prev + 1, totalSteps - 1))}
+                disabled={!canContinue}
+                className="h-14 rounded-[24px] font-extrabold text-white disabled:opacity-60"
+                style={{
+                  background: 'linear-gradient(135deg, #8EADE4 0%, #D49BB0 100%)',
+                  boxShadow: canContinue ? '0 18px 36px rgba(114, 138, 180, 0.18)' : 'none',
+                }}
+              >
+                המשך
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleFinish}
+                disabled={!canContinue}
+                className="h-14 rounded-[24px] font-extrabold text-white disabled:opacity-60"
+                style={{
+                  background: 'linear-gradient(135deg, #8EADE4 0%, #D49BB0 100%)',
+                  boxShadow: canContinue ? '0 18px 36px rgba(114, 138, 180, 0.18)' : 'none',
+                }}
+              >
+                כניסה לאפליקציה
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -681,47 +583,36 @@ export function OnboardingScreen() {
   );
 }
 
-function SectionTitle({
-  title,
-  subtitle,
-  brand,
-}: {
-  title: string;
-  subtitle: string;
-  brand: typeof FEMALE_BRAND;
-}) {
+function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
   return (
     <div className="text-right">
-      <h2 style={{ color: brand.text, fontWeight: 900, fontSize: 28 }}>{title}</h2>
-      <p className="mt-2 text-sm" style={{ color: brand.muted, lineHeight: 1.8, fontWeight: 700 }}>
-        {subtitle}
-      </p>
+      <h2 className="text-[22px] font-black text-[#4D5B73]">{title}</h2>
+      <p className="mt-1 text-sm font-bold text-[#7A8698]">{subtitle}</p>
     </div>
   );
 }
 
-function FieldLabel({ text, brand }: { text: string; brand: typeof FEMALE_BRAND }) {
+function FieldLabel({ label, optional = false }: { label: string; optional?: boolean }) {
   return (
-    <p className="mb-2 text-right text-sm" style={{ color: brand.muted, fontWeight: 800 }}>
-      {text}
-    </p>
+    <div className="mb-2 flex items-center justify-between">
+      {optional ? <span className="text-xs font-bold text-[#9AA7B8]">לא חובה</span> : <span />}
+      <p className="text-sm font-black text-[#5F6D84]">{label}</p>
+    </div>
   );
 }
 
-function TextInput({
+function LargeInput({
   value,
   onChange,
   placeholder,
+  themeBorder,
   type = 'text',
-  brand,
-  heightClass = 'h-14',
 }: {
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string;
+  placeholder: string;
+  themeBorder: string;
   type?: string;
-  brand: typeof FEMALE_BRAND;
-  heightClass?: string;
 }) {
   return (
     <input
@@ -730,156 +621,88 @@ function TextInput({
       placeholder={placeholder}
       type={type}
       dir="rtl"
-      className={`${heightClass} w-full rounded-[22px] px-4 text-right outline-none`}
+      className="h-14 w-full rounded-[22px] px-4 text-right text-base font-bold text-[#4D5B73] outline-none"
       style={{
-        border: `1.5px solid ${brand.border}`,
-        backgroundColor: '#FFFFFF',
-        color: brand.text,
-        fontWeight: 700,
+        background: '#FFFFFF',
+        border: `1.5px solid ${themeBorder}`,
+        boxShadow: '0 10px 22px rgba(122, 146, 182, 0.08)',
       }}
     />
-  );
-}
-
-function SelectInput({
-  value,
-  onChange,
-  children,
-  brand,
-  heightClass = 'h-14',
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  children: ReactNode;
-  brand: typeof FEMALE_BRAND;
-  heightClass?: string;
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(event) => onChange(event.target.value)}
-      dir="rtl"
-      className={`${heightClass} w-full rounded-[22px] px-4 text-right outline-none`}
-      style={{
-        border: `1.5px solid ${brand.border}`,
-        backgroundColor: '#FFFFFF',
-        color: brand.text,
-        fontWeight: 700,
-      }}
-    >
-      {children}
-    </select>
-  );
-}
-
-function ChoiceChip({
-  label,
-  active,
-  brand,
-  onClick,
-  size,
-}: {
-  label: string;
-  active: boolean;
-  brand: typeof FEMALE_BRAND;
-  onClick: () => void;
-  size: 'medium' | 'large';
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={`rounded-[22px] text-center transition-all active:scale-[0.98] ${
-        size === 'large' ? 'py-4 text-base' : 'py-3.5 text-sm'
-      }`}
-      style={{
-        border: `2px solid ${active ? brand.primary : '#E7DED3'}`,
-        background: active ? brand.soft : '#FFFFFF',
-        color: active ? brand.primaryDark : brand.text,
-        fontWeight: 800,
-      }}
-    >
-      {label}
-    </button>
-  );
-}
-
-function ValueCard({
-  label,
-  value,
-  onChange,
-  brand,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  brand: typeof FEMALE_BRAND;
-}) {
-  return (
-    <div
-      className="rounded-[24px] p-4"
-      style={{
-        background: '#FFFFFF',
-        border: `1.5px solid ${brand.border}`,
-      }}
-    >
-      <FieldLabel text={label} brand={brand} />
-      <TextInput value={value} onChange={onChange} type="number" brand={brand} heightClass="h-16" />
-    </div>
-  );
-}
-
-function TimeCard({
-  label,
-  value,
-  onChange,
-  brand,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  brand: typeof FEMALE_BRAND;
-}) {
-  return (
-    <div
-      className="rounded-[24px] p-4"
-      style={{
-        background: '#FFFFFF',
-        border: `1.5px solid ${brand.border}`,
-      }}
-    >
-      <FieldLabel text={label} brand={brand} />
-      <TimeInput value={value} onChange={onChange} brand={brand} />
-    </div>
   );
 }
 
 function TimeInput({
   value,
   onChange,
-  brand,
+  themeBorder,
 }: {
   value: string;
   onChange: (value: string) => void;
-  brand: typeof FEMALE_BRAND;
+  themeBorder: string;
 }) {
   return (
     <label
-      className="flex h-16 items-center gap-3 rounded-[22px] px-4"
+      className="flex h-14 w-full items-center gap-3 rounded-[22px] px-4"
       style={{
-        border: `1.5px solid ${brand.border}`,
-        backgroundColor: '#FFFFFF',
-        color: brand.text,
+        background: '#FFFFFF',
+        border: `1.5px solid ${themeBorder}`,
+        boxShadow: '0 10px 22px rgba(122, 146, 182, 0.08)',
       }}
     >
-      <Clock3 size={18} />
+      <Clock3 size={18} className="text-[#8EADE4]" />
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         type="time"
-        dir="ltr"
-        className="w-full bg-transparent text-left outline-none"
-        style={{ color: brand.text, fontWeight: 800 }}
+        dir="rtl"
+        className="h-full w-full bg-transparent text-right text-base font-bold text-[#4D5B73] outline-none"
       />
     </label>
+  );
+}
+
+function ChoiceButton({
+  active,
+  label,
+  hint,
+  onClick,
+  theme,
+}: {
+  active: boolean;
+  label: string;
+  hint: string;
+  onClick: () => void;
+  theme: typeof FEMALE_THEME;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="min-h-[88px] rounded-[24px] p-4 text-right transition-all"
+      style={{
+        background: active ? theme.primaryBg : '#FFFFFF',
+        border: `2px solid ${active ? theme.primary : '#E2E8F0'}`,
+        boxShadow: active ? `0 12px 28px ${theme.primaryShadow}` : 'none',
+      }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        {active ? (
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-full text-white"
+            style={{ background: theme.primary }}
+          >
+            <Check size={15} />
+          </span>
+        ) : (
+          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F1F5F9] text-[#94A3B8]">
+            <UserRound size={14} />
+          </span>
+        )}
+      </div>
+      <div className="mt-4">
+        <p className="text-[15px] font-black text-[#4D5B73]">{label}</p>
+        {hint ? <p className="mt-1 text-xs font-bold text-[#7F8CA0]">{hint}</p> : null}
+      </div>
+    </button>
   );
 }

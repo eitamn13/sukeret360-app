@@ -11,6 +11,7 @@ interface AuthContextValue {
   session: Session | null;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
   signInWithGoogle: () => Promise<{ error: string | null }>;
+  signInWithFacebook: () => Promise<{ error: string | null }>;
   signUp: (
     email: string,
     password: string,
@@ -23,7 +24,22 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const SERVER_NOT_CONFIGURED = '\u05d4\u05d7\u05d9\u05d1\u05d5\u05e8 \u05dc\u05e9\u05e8\u05ea \u05e2\u05d3\u05d9\u05d9\u05df \u05dc\u05d0 \u05d4\u05d5\u05d2\u05d3\u05e8 \u05d1\u05e1\u05d1\u05d9\u05d1\u05d4.';
+const SERVER_NOT_CONFIGURED = 'החיבור לשרת עדיין לא הוגדר בסביבה.';
+
+async function signInWithOAuthProvider(provider: 'google' | 'facebook') {
+  if (!supabase) {
+    return { error: SERVER_NOT_CONFIGURED };
+  }
+
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider,
+    options: {
+      redirectTo: window.location.origin,
+    },
+  });
+
+  return { error: error?.message ?? null };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(isSupabaseConfigured);
@@ -90,20 +106,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
-  const signInWithGoogle = async () => {
-    if (!supabase) {
-      return { error: SERVER_NOT_CONFIGURED };
-    }
-
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.origin,
-      },
-    });
-
-    return { error: error?.message ?? null };
-  };
+  const signInWithGoogle = async () => signInWithOAuthProvider('google');
+  const signInWithFacebook = async () => signInWithOAuthProvider('facebook');
 
   const signUp = async (email: string, password: string, name: string) => {
     if (!supabase) {
@@ -144,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       signIn,
       signInWithGoogle,
+      signInWithFacebook,
       signUp,
       signOut,
     }),

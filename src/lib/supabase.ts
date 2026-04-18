@@ -24,6 +24,9 @@ export const supabase = isSupabaseConfigured
     })
   : null;
 
+export type SubscriptionStatus = 'free' | 'premium' | 'lifetime';
+export type SubscriptionPlan = 'free' | 'monthly' | 'yearly' | 'lifetime';
+
 export interface RemoteAppSnapshot {
   onboardingDone: boolean;
   userProfile: UserProfile;
@@ -42,6 +45,13 @@ export interface AppUserRecord {
   full_name: string;
   created_at: string;
   last_seen_at: string;
+  auth_provider: string;
+  subscription_status: SubscriptionStatus;
+  subscription_plan: SubscriptionPlan;
+  subscription_updated_at: string | null;
+  billing_provider: string | null;
+  stripe_customer_id: string | null;
+  is_admin_managed: boolean;
 }
 
 export async function fetchRemoteAppSnapshot(userId: string): Promise<RemoteAppSnapshot | null> {
@@ -78,10 +88,26 @@ export async function saveRemoteAppSnapshot(userId: string, snapshot: RemoteAppS
   }
 }
 
+function getAuthProvider(user: {
+  app_metadata?: { provider?: string | null; providers?: string[] | null };
+  identities?: Array<{ provider?: string | null }> | null;
+}) {
+  const fromMetadata = user.app_metadata?.provider?.trim();
+  if (fromMetadata) return fromMetadata;
+
+  const fromProviders = user.app_metadata?.providers?.find(Boolean)?.trim();
+  if (fromProviders) return fromProviders;
+
+  const fromIdentity = user.identities?.find((identity) => identity.provider)?.provider?.trim();
+  return fromIdentity || 'email';
+}
+
 export async function syncAuthenticatedUser(user: {
   id: string;
   email?: string | null;
   user_metadata?: { full_name?: string | null };
+  app_metadata?: { provider?: string | null; providers?: string[] | null };
+  identities?: Array<{ provider?: string | null }> | null;
 }) {
   if (!supabase || !user.email?.trim()) return;
 
@@ -90,6 +116,7 @@ export async function syncAuthenticatedUser(user: {
       user_id: user.id,
       email: user.email.trim().toLowerCase(),
       full_name: user.user_metadata?.full_name?.trim() || '',
+      auth_provider: getAuthProvider(user),
       last_seen_at: new Date().toISOString(),
     },
     { onConflict: 'user_id' }

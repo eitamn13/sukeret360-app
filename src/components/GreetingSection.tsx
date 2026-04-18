@@ -56,26 +56,26 @@ export function GreetingSection({
 
   const cards = [
     {
-      label: '\u05d1\u05d3\u05d9\u05e7\u05ea \u05e1\u05d5\u05db\u05e8',
-      note: latestSugar ? `${latestSugar.level} mg/dL` : '\u05de\u05d3\u05d9\u05d3\u05d4 \u05d7\u05d3\u05e9\u05d4',
+      label: 'בדיקת סוכר',
+      note: latestSugar ? `${latestSugar.level} mg/dL` : 'מדידה חדשה',
       icon: <Droplets size={18} strokeWidth={1.9} />,
       onClick: onSugarClick,
     },
     {
-      label: '\u05e8\u05d9\u05e9\u05d5\u05dd \u05d0\u05e8\u05d5\u05d7\u05d4',
-      note: '\u05e6\u05d9\u05dc\u05d5\u05dd \u05d0\u05d5 \u05d7\u05d9\u05e4\u05d5\u05e9',
+      label: 'רישום ארוחה',
+      note: 'צילום או חיפוש',
       icon: <UtensilsCrossed size={18} strokeWidth={1.9} />,
       onClick: onMealClick,
     },
     {
-      label: '\u05ea\u05e8\u05d5\u05e4\u05d5\u05ea',
-      note: nextMedication ? formatClock(nextMedication.time) : '\u05dc\u05d5\u05d7 \u05d9\u05d5\u05de\u05d9',
+      label: 'תרופות',
+      note: nextMedication ? formatClock(nextMedication.time) : 'לוח יומי',
       icon: <Pill size={18} strokeWidth={1.9} />,
       onClick: onMedicationsClick,
     },
     {
-      label: '\u05d4\u05e2\u05d5\u05d6\u05e8 \u05d4\u05e8\u05e4\u05d5\u05d0\u05d9 \u05e9\u05dc\u05d9',
-      note: '\u05e9\u05d9\u05d7\u05d4 \u05e7\u05d5\u05dc\u05d9\u05ea \u05e7\u05e6\u05e8\u05d4',
+      label: 'העוזר הרפואי שלי',
+      note: 'שיחה קולית קצרה',
       icon: <MessageCircle size={18} strokeWidth={1.9} />,
       onClick: onDoctorClick,
     },
@@ -135,11 +135,11 @@ export function GreetingSection({
           className="text-[28px] leading-tight"
           style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
         >
-          {'\u05de\u05d4 \u05d7\u05e9\u05d5\u05d1 \u05dc\u05d4\u05d9\u05d5\u05dd'}
+          מה חשוב להיום
         </h2>
         {userProfile.name?.trim() ? (
           <p className="mt-2 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
-            {`${'\u05e9\u05dc\u05d5\u05dd'}, ${userProfile.name.trim()}`}
+            {`שלום, ${userProfile.name.trim()}`}
           </p>
         ) : null}
       </div>
