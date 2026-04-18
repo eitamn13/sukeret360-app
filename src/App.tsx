@@ -4,10 +4,8 @@ import { AppProvider, useAppContext } from './context/AppContext';
 import { AuthProvider, useAuthContext } from './context/AuthContext';
 import { Header } from './components/Header';
 import { GreetingSection } from './components/GreetingSection';
-import { ActionGrid } from './components/ActionGrid';
 import { SmartMealLogger } from './components/SmartMealLogger';
 import { SugarModal } from './components/SugarModal';
-import { ComingSoonModal } from './components/ComingSoonModal';
 import { MedicationsScreen } from './components/MedicationsScreen';
 import { DailyTipModal } from './components/DailyTipModal';
 import { HistoryScreen } from './components/HistoryScreen';
@@ -33,7 +31,6 @@ function AppInner() {
   const [showSOS, setShowSOS] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAdminUsers, setShowAdminUsers] = useState(false);
-  const [comingSoon, setComingSoon] = useState<string | null>(null);
 
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -101,25 +98,6 @@ function AppInner() {
     setShowSugarModal(false);
   };
 
-  const handleActionClick = (id: string, label: string) => {
-    if (id === 'tip') {
-      setShowDailyTip(true);
-      return;
-    }
-
-    if (id === 'meals') {
-      setShowMeals(true);
-      return;
-    }
-
-    if (id === 'history') {
-      setShowHistory(true);
-      return;
-    }
-
-    setComingSoon(label);
-  };
-
   return (
     <div
       className="app-shell min-h-[100svh] overflow-x-hidden transition-all duration-500"
@@ -143,9 +121,9 @@ function AppInner() {
             onMealClick={() => setShowMealLogger(true)}
             onMedicationsClick={() => setShowMedications(true)}
             onDoctorClick={() => setShowDoctorConsult(true)}
+            onTipClick={() => setShowDailyTip(true)}
+            onHistoryClick={() => setShowHistory(true)}
           />
-
-          <ActionGrid onActionClick={handleActionClick} />
         </main>
       </div>
 
@@ -176,12 +154,6 @@ function AppInner() {
           setShowNotifications(false);
           setShowMedications(true);
         }}
-      />
-
-      <ComingSoonModal
-        isOpen={comingSoon !== null}
-        featureName={comingSoon ?? ''}
-        onClose={() => setComingSoon(null)}
       />
 
       <SOSModal isOpen={showSOS} onClose={() => setShowSOS(false)} />

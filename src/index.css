@@ -10,10 +10,12 @@
 html {
   background: #fffaf4;
   height: 100%;
+  direction: rtl;
 }
 
 body {
   direction: rtl;
+  text-align: right;
   margin: 0;
   color: #5b4740;
   background:
@@ -26,6 +28,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overscroll-behavior-y: none;
+  overflow-x: hidden;
 }
 
 button,
@@ -34,12 +37,21 @@ textarea,
 select {
   font: inherit;
   -webkit-tap-highlight-color: transparent;
+  direction: rtl;
+}
+
+input,
+textarea,
+select {
+  text-align: right;
 }
 
 #root {
   min-height: 100vh;
   min-height: 100svh;
   direction: rtl;
+  text-align: right;
+  overflow-x: hidden;
 }
 
 .app-shell {

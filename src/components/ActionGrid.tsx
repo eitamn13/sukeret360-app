@@ -47,7 +47,7 @@ export function ActionGrid({ onActionClick }: ActionGridProps) {
 
   return (
     <section className="mt-5 px-4" dir="rtl">
-      <div className="mb-3 flex items-center justify-end gap-2">
+      <div className="mb-3 flex items-center justify-start gap-2">
         <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>
           {'\u05db\u05dc\u05d9\u05dd \u05e0\u05d5\u05e1\u05e4\u05d9\u05dd'}
         </h3>
@@ -72,9 +72,9 @@ export function ActionGrid({ onActionClick }: ActionGridProps) {
               boxShadow: '0 12px 28px rgba(160, 134, 122, 0.08)',
             }}
           >
-            <div className="flex h-full flex-col items-end text-right">
+            <div className="flex h-full flex-col items-start text-right">
               <div
-                className="flex h-11 w-11 items-center justify-center rounded-2xl"
+                className="flex h-11 w-11 items-center justify-center self-start rounded-2xl"
                 style={{
                   background: theme.primaryBg,
                   color: theme.primaryDark,

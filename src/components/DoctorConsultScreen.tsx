@@ -381,15 +381,15 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
             boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
           }}
         >
-          <div className="flex items-start justify-between gap-3">
+          <div className="text-right">
             <div
-              className="flex h-11 w-11 items-center justify-center rounded-2xl"
+              className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl"
               style={{ background: theme.primaryBg, color: theme.primaryDark }}
             >
               <Sparkles size={18} strokeWidth={1.8} />
             </div>
 
-            <div className="flex-1 text-right">
+            <div>
               <p style={{ color: '#0F172A', fontWeight: 900 }}>{TEXT.introTitle}</p>
               <p className="mt-1 text-sm leading-6" style={{ color: '#64748B', fontWeight: 700 }}>
                 {TEXT.introBody}
@@ -418,7 +418,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
               </button>
             ) : null}
 
-            <div className="flex flex-wrap justify-end gap-2">
+            <div className="flex flex-wrap justify-start gap-2">
               {QUICK_SUGGESTIONS.map((suggestion) => (
                 <button
                   key={suggestion}

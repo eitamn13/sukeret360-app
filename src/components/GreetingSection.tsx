@@ -1,4 +1,12 @@
-import { Droplets, MessageCircle, Pill, Siren, UtensilsCrossed } from 'lucide-react';
+import {
+  BookOpen,
+  Droplets,
+  Lightbulb,
+  MessageCircle,
+  Pill,
+  Siren,
+  UtensilsCrossed,
+} from 'lucide-react';
 import { useMemo } from 'react';
 import { useCurrentTime } from '../hooks/useCurrentTime';
 import { useAppContext } from '../context/AppContext';
@@ -9,6 +17,8 @@ interface GreetingSectionProps {
   onMealClick?: () => void;
   onMedicationsClick?: () => void;
   onDoctorClick?: () => void;
+  onTipClick?: () => void;
+  onHistoryClick?: () => void;
 }
 
 function formatClock(time: string) {
@@ -21,6 +31,8 @@ export function GreetingSection({
   onMealClick,
   onMedicationsClick,
   onDoctorClick,
+  onTipClick,
+  onHistoryClick,
 }: GreetingSectionProps) {
   const { timeString, dateString } = useCurrentTime();
   const { userProfile, theme, sugarLogs, medicationSchedule } = useAppContext();
@@ -67,6 +79,18 @@ export function GreetingSection({
       icon: <MessageCircle size={18} strokeWidth={1.9} />,
       onClick: onDoctorClick,
     },
+    {
+      label: 'טיפ יומי',
+      note: 'המלצה קצרה וברורה',
+      icon: <Lightbulb size={18} strokeWidth={1.9} />,
+      onClick: onTipClick,
+    },
+    {
+      label: 'היסטוריה',
+      note: 'מה קרה השבוע',
+      icon: <BookOpen size={18} strokeWidth={1.9} />,
+      onClick: onHistoryClick,
+    },
   ];
 
   return (
@@ -111,13 +135,13 @@ export function GreetingSection({
           className="text-[28px] leading-tight"
           style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
         >
-          {'\u05de\u05d1\u05d8 \u05de\u05d4\u05d9\u05e8 \u05dc\u05d4\u05d9\u05d5\u05dd'}
+          {'\u05de\u05d4 \u05d7\u05e9\u05d5\u05d1 \u05dc\u05d4\u05d9\u05d5\u05dd'}
         </h2>
-        <p className="mt-2 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
-          {userProfile.name?.trim()
-            ? `${'\u05e9\u05dc\u05d5\u05dd'}, ${userProfile.name.trim()}`
-            : '\u05db\u05dc \u05de\u05d4 \u05e9\u05d7\u05e9\u05d5\u05d1 \u05dc\u05d4\u05d9\u05d5\u05dd \u05d1\u05de\u05e7\u05d5\u05dd \u05d0\u05d7\u05d3'}
-        </p>
+        {userProfile.name?.trim() ? (
+          <p className="mt-2 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
+            {`${'\u05e9\u05dc\u05d5\u05dd'}, ${userProfile.name.trim()}`}
+          </p>
+        ) : null}
       </div>
 
       <div className="mt-4 grid grid-cols-2 gap-3">
@@ -133,9 +157,9 @@ export function GreetingSection({
               boxShadow: '0 12px 28px rgba(160, 134, 122, 0.08)',
             }}
           >
-            <div className="flex h-full flex-col items-end text-right">
+            <div className="flex h-full flex-col items-start text-right">
               <div
-                className="flex h-11 w-11 items-center justify-center rounded-2xl"
+                className="flex h-11 w-11 items-center justify-center self-start rounded-2xl"
                 style={{
                   background: theme.primaryBg,
                   color: theme.primaryDark,
