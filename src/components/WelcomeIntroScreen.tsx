@@ -1,4 +1,4 @@
-import { Heart, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 import { Logo } from './Logo';
 
 interface WelcomeIntroScreenProps {
@@ -43,8 +43,13 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
               className="mt-2 text-[36px] leading-none"
               style={{ color: '#5A4740', fontWeight: 900, letterSpacing: '-0.04em' }}
             >
-              הסוכרת שלי
+              {'\u05d4\u05e1\u05d5\u05db\u05e8\u05ea \u05e9\u05dc\u05d9'}
             </h1>
+            <p className="mt-4 text-base leading-8 text-[#7A6A63]">
+              {
+                '\u05d0\u05e4\u05dc\u05d9\u05e7\u05e6\u05d9\u05d4 \u05e4\u05e9\u05d5\u05d8\u05d4, \u05d1\u05e8\u05d5\u05e8\u05d4 \u05d5\u05e0\u05d5\u05d7\u05d4 \u05dc\u05de\u05e2\u05e7\u05d1 \u05e1\u05d5\u05db\u05e8.'
+              }
+            </p>
           </div>
 
           <div
@@ -54,20 +59,11 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
               border: '1px solid #E8DDD2',
             }}
           >
-            <div
-              className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-2xl"
-              style={{
-                background: 'linear-gradient(135deg, #F6D3DD 0%, #CFE5F8 100%)',
-                color: '#7A5764',
-              }}
-            >
-              <Heart size={18} strokeWidth={2} />
-            </div>
             <p style={{ color: '#5A4740', fontWeight: 900, fontSize: 22 }}>
-              מוקדשת לסבתא שלי לאה
+              {'\u05db\u05e0\u05d9\u05e1\u05d4 \u05e7\u05dc\u05d4 \u05d5\u05de\u05d4\u05d9\u05e8\u05d4'}
             </p>
             <p className="mt-2" style={{ color: '#8D7A73', fontWeight: 700, lineHeight: 1.8 }}>
-              מעקב סוכר פשוט, ברור ונגיש.
+              {'\u05e0\u05d2\u05d3\u05d9\u05e8 \u05e8\u05e7 \u05de\u05d4 \u05e9\u05d7\u05e9\u05d5\u05d1 \u05d1\u05d0\u05de\u05ea.'}
             </p>
           </div>
 
@@ -82,7 +78,7 @@ export function WelcomeIntroScreen({ onContinue }: WelcomeIntroScreenProps) {
             }}
           >
             <Sparkles size={18} strokeWidth={2} />
-            <span>נתחיל</span>
+            <span>{'\u05d4\u05de\u05e9\u05da \u05dc\u05db\u05e0\u05d9\u05e1\u05d4'}</span>
           </button>
         </div>
       </div>

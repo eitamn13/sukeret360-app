@@ -1,16 +1,7 @@
-import { Droplets, Heart, MessageCircle, Pill, Siren, UtensilsCrossed } from 'lucide-react';
+import { Droplets, MessageCircle, Pill, Siren, UtensilsCrossed } from 'lucide-react';
 import { useMemo } from 'react';
 import { useCurrentTime } from '../hooks/useCurrentTime';
-import {
-  genderedText,
-  getDiabetesTypeLabel,
-  isLifestyleFocusedProfile,
-  useAppContext,
-} from '../context/AppContext';
-
-function formatClock(time: string) {
-  return time || '--:--';
-}
+import { useAppContext } from '../context/AppContext';
 
 interface GreetingSectionProps {
   onSOSClick?: () => void;
@@ -20,6 +11,10 @@ interface GreetingSectionProps {
   onDoctorClick?: () => void;
 }
 
+function formatClock(time: string) {
+  return time || '--:--';
+}
+
 export function GreetingSection({
   onSOSClick,
   onSugarClick,
@@ -27,11 +22,8 @@ export function GreetingSection({
   onMedicationsClick,
   onDoctorClick,
 }: GreetingSectionProps) {
-  const { timeString, greeting, dateString } = useCurrentTime();
-  const { userProfile, theme, sugarLogs, todayMeals, medicationSchedule } = useAppContext();
-  const isMale = userProfile.gender === 'male';
-  const lifestyleFocused = isLifestyleFocusedProfile(userProfile.diabetesType, userProfile.treatmentType);
-  const displayName = userProfile.name || genderedText(userProfile.gender, 'יקרה', 'יקר');
+  const { timeString, dateString } = useCurrentTime();
+  const { userProfile, theme, sugarLogs, medicationSchedule } = useAppContext();
   const latestSugar = sugarLogs[0];
 
   const nextMedication = useMemo(() => {
@@ -50,70 +42,32 @@ export function GreetingSection({
     );
   }, [medicationSchedule]);
 
-  const quickActions = [
+  const cards = [
     {
-      label: lifestyleFocused ? 'מעקב סוכר' : 'בדיקת סוכר',
-      note: latestSugar ? `אחרון ${latestSugar.level}` : 'מדידה חדשה',
+      label: '\u05d1\u05d3\u05d9\u05e7\u05ea \u05e1\u05d5\u05db\u05e8',
+      note: latestSugar ? `${latestSugar.level} mg/dL` : '\u05de\u05d3\u05d9\u05d3\u05d4 \u05d7\u05d3\u05e9\u05d4',
       icon: <Droplets size={18} strokeWidth={1.9} />,
       onClick: onSugarClick,
     },
     {
-      label: 'רישום ארוחה',
-      note: todayMeals.length > 0 ? `${todayMeals.length} היום` : 'צילום או חיפוש',
+      label: '\u05e8\u05d9\u05e9\u05d5\u05dd \u05d0\u05e8\u05d5\u05d7\u05d4',
+      note: '\u05e6\u05d9\u05dc\u05d5\u05dd \u05d0\u05d5 \u05d7\u05d9\u05e4\u05d5\u05e9',
       icon: <UtensilsCrossed size={18} strokeWidth={1.9} />,
       onClick: onMealClick,
     },
     {
-      label: 'תרופות',
-      note: nextMedication ? formatClock(nextMedication.time) : lifestyleFocused ? 'לפי צורך' : 'לוח יומי',
+      label: '\u05ea\u05e8\u05d5\u05e4\u05d5\u05ea',
+      note: nextMedication ? formatClock(nextMedication.time) : '\u05dc\u05d5\u05d7 \u05d9\u05d5\u05de\u05d9',
       icon: <Pill size={18} strokeWidth={1.9} />,
       onClick: onMedicationsClick,
     },
     {
-      label: 'העוזר הרפואי שלי',
-      note: 'שאלה קצרה בקול',
+      label: '\u05d4\u05e2\u05d5\u05d6\u05e8 \u05d4\u05e8\u05e4\u05d5\u05d0\u05d9 \u05e9\u05dc\u05d9',
+      note: '\u05e9\u05d9\u05d7\u05d4 \u05e7\u05d5\u05dc\u05d9\u05ea \u05e7\u05e6\u05e8\u05d4',
       icon: <MessageCircle size={18} strokeWidth={1.9} />,
       onClick: onDoctorClick,
     },
   ];
-
-  const heroGlow = isMale
-    ? 'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 34%), radial-gradient(circle at bottom left, rgba(189, 214, 246, 0.46) 0%, rgba(189, 214, 246, 0) 38%)'
-    : 'radial-gradient(circle at top right, rgba(255,255,255,0.92) 0%, rgba(255,255,255,0) 34%), radial-gradient(circle at bottom left, rgba(248, 209, 220, 0.45) 0%, rgba(248, 209, 220, 0) 38%)';
-
-  const orbGlow = isMale
-    ? 'radial-gradient(circle, rgba(203, 222, 247, 0.36) 0%, rgba(203, 222, 247, 0) 70%)'
-    : 'radial-gradient(circle, rgba(242, 196, 210, 0.34) 0%, rgba(242, 196, 210, 0) 70%)';
-
-  const sosButton = isMale
-    ? {
-        background: 'linear-gradient(135deg, #D7E5FA 0%, #B9CEF0 100%)',
-        color: '#476183',
-        border: '1px solid rgba(129, 159, 206, 0.36)',
-        boxShadow: '0 14px 28px rgba(118, 150, 201, 0.18)',
-      }
-    : {
-        background: 'linear-gradient(135deg, #F8CAD8 0%, #E9A9BE 100%)',
-        color: '#7D3F56',
-        border: '1px solid rgba(206, 147, 169, 0.35)',
-        boxShadow: '0 14px 28px rgba(204, 132, 158, 0.18)',
-      };
-
-  const accentCard = isMale
-    ? {
-        background: 'linear-gradient(145deg, rgba(247,250,255,0.98) 0%, rgba(232,241,253,0.98) 100%)',
-        border: '#D5E2F4',
-        shadow: '0 18px 34px rgba(138, 169, 214, 0.14)',
-        iconBg: 'linear-gradient(135deg, #D5E5FB 0%, #C3D8F4 100%)',
-        iconColor: '#4F6786',
-      }
-    : {
-        background: 'linear-gradient(145deg, rgba(255,247,244,0.98) 0%, rgba(251,231,236,0.98) 100%)',
-        border: '#ECD8D9',
-        shadow: '0 18px 34px rgba(210, 174, 169, 0.15)',
-        iconBg: 'linear-gradient(135deg, #F7CAD8 0%, #E6B8C7 100%)',
-        iconColor: '#83485F',
-      };
 
   return (
     <section
@@ -125,150 +79,81 @@ export function GreetingSection({
         boxShadow: `0 26px 54px ${theme.primaryShadow}`,
       }}
     >
-      <div className="absolute inset-0 opacity-90" style={{ background: heroGlow }} />
-      <div className="absolute -left-8 bottom-[-18px] h-40 w-40 rounded-full" style={{ background: orbGlow }} />
+      <div className="flex items-start justify-between gap-4">
+        <button
+          onClick={onSOSClick}
+          className="flex h-12 min-w-[112px] items-center justify-center gap-2 rounded-[20px] px-5 transition-all active:scale-95"
+          style={{
+            background: theme.primaryBg,
+            color: theme.primaryDark,
+            border: `1px solid ${theme.primaryBorder}`,
+            boxShadow: '0 14px 28px rgba(118, 150, 201, 0.12)',
+            fontWeight: 900,
+          }}
+          aria-label="SOS"
+        >
+          <Siren size={18} strokeWidth={1.9} />
+          <span>SOS</span>
+        </button>
 
-      <div className="relative z-10">
-        <div className="flex flex-row-reverse items-start justify-between gap-4">
-          <div className="text-right">
-            <p className="text-[28px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
-              {timeString}
-            </p>
-            <p className="mt-1 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
-              {dateString}
-            </p>
-          </div>
-
-          <button
-            onClick={onSOSClick}
-            className="flex h-12 min-w-[108px] items-center justify-center gap-2 rounded-[20px] px-5 transition-all active:scale-95"
-            style={{ ...sosButton, fontWeight: 900 }}
-            aria-label="SOS"
-          >
-            <Siren size={18} strokeWidth={1.9} />
-            <span>SOS</span>
-          </button>
-        </div>
-
-        <div className="mt-5 text-right">
-          <div className="flex flex-row-reverse items-center justify-end gap-2">
-            <div
-              className="flex h-8 w-8 items-center justify-center rounded-full"
-              style={{
-                backgroundColor: isMale ? 'rgba(210, 225, 248, 0.72)' : 'rgba(246, 211, 221, 0.66)',
-                color: theme.primaryDark,
-              }}
-            >
-              <Heart size={16} strokeWidth={2} />
-            </div>
-            <p className="text-base" style={{ color: theme.primaryDark, fontWeight: 800 }}>
-              {greeting}, {displayName}
-            </p>
-          </div>
-
-          <div className="mt-3 flex flex-row-reverse items-center justify-between gap-3">
-            <span
-              className="rounded-full px-3 py-1 text-xs"
-              style={{
-                backgroundColor: isMale ? 'rgba(219, 233, 251, 0.88)' : 'rgba(250, 223, 231, 0.9)',
-                color: theme.primaryDark,
-                fontWeight: 800,
-              }}
-            >
-              {getDiabetesTypeLabel(userProfile.diabetesType)}
-            </span>
-
-            <h2
-              className="text-[28px] leading-tight text-right"
-              style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
-            >
-              מבט מהיר להיום
-            </h2>
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          {quickActions.map((action, index) => {
-            const accent = index === 1 || index === 3;
-
-            return (
-              <button
-                key={action.label}
-                onClick={action.onClick}
-                className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
-                style={{
-                  minHeight: 104,
-                  background: accent ? accentCard.background : 'rgba(255,255,255,0.82)',
-                  border: `1px solid ${accent ? accentCard.border : theme.primaryBorder}`,
-                  boxShadow: accent ? accentCard.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
-                }}
-              >
-                <div className="flex h-full flex-col items-end text-right">
-                  <div
-                    className="flex h-11 w-11 items-center justify-center rounded-2xl"
-                    style={{
-                      background: accent ? accentCard.iconBg : theme.primaryBg,
-                      color: accent ? accentCard.iconColor : theme.primaryDark,
-                    }}
-                  >
-                    {action.icon}
-                  </div>
-
-                  <div className="mt-auto w-full text-right">
-                    <p style={{ color: '#5A4740', fontWeight: 900 }}>{action.label}</p>
-                    <p style={{ color: '#947D74', fontSize: 12, marginTop: 4, fontWeight: 700 }}>
-                      {action.note}
-                    </p>
-                  </div>
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <CompactStatus
-            label="סוכר אחרון"
-            value={latestSugar ? `${latestSugar.level} mg/dL` : 'עוד לא נמדד'}
-            theme={theme}
-          />
-          <CompactStatus
-            label={lifestyleFocused ? 'להמשך היום' : 'התרופה הבאה'}
-            value={
-              lifestyleFocused
-                ? 'ארוחה רגועה והליכה קצרה'
-                : nextMedication
-                  ? `${nextMedication.name} · ${formatClock(nextMedication.time)}`
-                  : 'עוד לא הוגדרה'
-            }
-            theme={theme}
-          />
+        <div className="text-right">
+          <p className="text-[28px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
+            {timeString}
+          </p>
+          <p className="mt-1 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
+            {dateString}
+          </p>
         </div>
       </div>
-    </section>
-  );
-}
 
-function CompactStatus({
-  label,
-  value,
-  theme,
-}: {
-  label: string;
-  value: string;
-  theme: ReturnType<typeof useAppContext>['theme'];
-}) {
-  return (
-    <div
-      className="rounded-[22px] p-4 text-right"
-      style={{
-        background: 'rgba(255,255,255,0.72)',
-        border: `1px solid ${theme.primaryBorder}`,
-        boxShadow: '0 10px 24px rgba(160, 134, 122, 0.06)',
-      }}
-    >
-      <p style={{ color: '#9A8379', fontSize: 12, fontWeight: 800 }}>{label}</p>
-      <p style={{ color: '#5B4740', fontWeight: 900, marginTop: 8, lineHeight: 1.5 }}>{value}</p>
-    </div>
+      <div className="mt-5 text-right">
+        <h2
+          className="text-[28px] leading-tight"
+          style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
+        >
+          {'\u05de\u05d1\u05d8 \u05de\u05d4\u05d9\u05e8 \u05dc\u05d4\u05d9\u05d5\u05dd'}
+        </h2>
+        <p className="mt-2 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
+          {userProfile.name?.trim()
+            ? `${'\u05e9\u05dc\u05d5\u05dd'}, ${userProfile.name.trim()}`
+            : '\u05db\u05dc \u05de\u05d4 \u05e9\u05d7\u05e9\u05d5\u05d1 \u05dc\u05d4\u05d9\u05d5\u05dd \u05d1\u05de\u05e7\u05d5\u05dd \u05d0\u05d7\u05d3'}
+        </p>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {cards.map((card) => (
+          <button
+            key={card.label}
+            onClick={card.onClick}
+            className="rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
+            style={{
+              minHeight: 104,
+              background: 'rgba(255,255,255,0.84)',
+              border: `1px solid ${theme.primaryBorder}`,
+              boxShadow: '0 12px 28px rgba(160, 134, 122, 0.08)',
+            }}
+          >
+            <div className="flex h-full flex-col items-end text-right">
+              <div
+                className="flex h-11 w-11 items-center justify-center rounded-2xl"
+                style={{
+                  background: theme.primaryBg,
+                  color: theme.primaryDark,
+                }}
+              >
+                {card.icon}
+              </div>
+
+              <div className="mt-auto w-full text-right">
+                <p style={{ color: '#5A4740', fontWeight: 900 }}>{card.label}</p>
+                <p style={{ color: '#947D74', fontSize: 12, marginTop: 4, fontWeight: 700 }}>
+                  {card.note}
+                </p>
+              </div>
+            </div>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }

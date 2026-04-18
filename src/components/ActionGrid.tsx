@@ -1,5 +1,5 @@
-import { BookOpen, Sparkles, Stethoscope, UtensilsCrossed } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { BookOpen, Sparkles, Stethoscope, UtensilsCrossed } from 'lucide-react';
 import { isLifestyleFocusedProfile, useAppContext } from '../context/AppContext';
 
 interface ActionItem {
@@ -11,93 +11,73 @@ interface ActionItem {
 }
 
 interface ActionGridProps {
-  onMealLoggerClick?: () => void;
-  onSugarClick?: () => void;
   onActionClick?: (id: string, label: string) => void;
 }
 
 export function ActionGrid({ onActionClick }: ActionGridProps) {
   const { theme, userProfile } = useAppContext();
-  const isMale = userProfile.gender === 'male';
-  const lifestyleFocused = isLifestyleFocusedProfile(userProfile.diabetesType, userProfile.treatmentType);
+  const lifestyleFocused = isLifestyleFocusedProfile(
+    userProfile.diabetesType,
+    userProfile.treatmentType
+  );
 
-  const secondaryActions: ActionItem[] = [
+  const actions: ActionItem[] = [
     {
       icon: <UtensilsCrossed size={24} strokeWidth={1.7} />,
-      label: 'הצעות ארוחה',
-      hint: lifestyleFocused ? 'בחירות קלות ליום רגוע' : 'רעיונות פשוטים לאיזון',
+      label: '\u05d4\u05e6\u05e2\u05d5\u05ea \u05d0\u05e8\u05d5\u05d7\u05d4',
+      hint: lifestyleFocused
+        ? '\u05d1\u05d7\u05d9\u05e8\u05d5\u05ea \u05e7\u05dc\u05d5\u05ea \u05dc\u05d9\u05d5\u05dd \u05e8\u05d2\u05d5\u05e2'
+        : '\u05e8\u05e2\u05d9\u05d5\u05e0\u05d5\u05ea \u05e4\u05e9\u05d5\u05d8\u05d9\u05dd \u05dc\u05d0\u05d9\u05d6\u05d5\u05df',
       accent: true,
       id: 'meals',
     },
     {
       icon: <Stethoscope size={24} strokeWidth={1.7} />,
-      label: 'טיפ יומי',
-      hint: 'קצר, ברור ובקול',
+      label: '\u05d8\u05d9\u05e4 \u05d9\u05d5\u05de\u05d9',
+      hint: '\u05e7\u05e6\u05e8, \u05d1\u05e8\u05d5\u05e8 \u05d5\u05e7\u05d5\u05dc\u05d9',
       id: 'tip',
     },
     {
       icon: <BookOpen size={24} strokeWidth={1.7} />,
-      label: 'היסטוריה',
-      hint: 'מה קרה השבוע',
+      label: '\u05d4\u05d9\u05e1\u05d8\u05d5\u05e8\u05d9\u05d4',
+      hint: '\u05de\u05d4 \u05e7\u05e8\u05d4 \u05d4\u05e9\u05d1\u05d5\u05e2',
       id: 'history',
     },
   ];
 
-  const accentSurface = isMale
-    ? {
-        headerBadge: 'linear-gradient(135deg, rgba(223,236,255,0.96) 0%, rgba(246,250,255,0.98) 100%)',
-        card: 'linear-gradient(145deg, #F9FBFF 0%, #EEF4FD 100%)',
-        border: '#D7E4F6',
-        shadow: '0 18px 34px rgba(138, 169, 214, 0.14)',
-        iconBg: 'linear-gradient(135deg, #D6E6FB 0%, #C6D9F5 100%)',
-        iconColor: '#4B6686',
-        plainBg: 'linear-gradient(145deg, #FFFFFF 0%, #F7FAFE 100%)',
-        plainIconBg: 'linear-gradient(135deg, #F1F6FE 0%, #E6EEF9 100%)',
-      }
-    : {
-        headerBadge: 'linear-gradient(135deg, rgba(248,230,235,0.96) 0%, rgba(255,248,245,0.98) 100%)',
-        card: 'linear-gradient(145deg, #FFF9F5 0%, #FBEDEE 100%)',
-        border: '#EAD8DC',
-        shadow: '0 18px 34px rgba(211, 176, 177, 0.15)',
-        iconBg: 'linear-gradient(135deg, #F7D2DD 0%, #F0C2D0 100%)',
-        iconColor: '#8D5065',
-        plainBg: 'linear-gradient(145deg, #FFFFFF 0%, #FFF9F4 100%)',
-        plainIconBg: 'linear-gradient(135deg, #FFF5EF 0%, #FBF0E8 100%)',
-      };
-
   return (
     <section className="mt-5 px-4" dir="rtl">
-      <div className="mb-3 flex flex-row-reverse items-center justify-end gap-2">
+      <div className="mb-3 flex items-center justify-end gap-2">
+        <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>
+          {'\u05db\u05dc\u05d9\u05dd \u05e0\u05d5\u05e1\u05e4\u05d9\u05dd'}
+        </h3>
         <div
           className="flex h-10 w-10 items-center justify-center rounded-2xl"
-          style={{ background: accentSurface.headerBadge, color: theme.primaryDark }}
+          style={{ background: theme.primaryBg, color: theme.primaryDark }}
         >
           <Sparkles size={18} strokeWidth={1.9} />
-        </div>
-        <div className="text-right">
-          <h3 style={{ color: '#5A4740', fontWeight: 900, fontSize: 18 }}>כלים נוספים</h3>
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {secondaryActions.map((action) => (
+        {actions.map((action) => (
           <button
             key={action.id}
             onClick={() => onActionClick?.(action.id, action.label)}
             className="rounded-[26px] p-4 text-right transition-all active:scale-[0.98]"
             style={{
               minHeight: 118,
-              background: action.accent ? accentSurface.card : accentSurface.plainBg,
-              border: `1px solid ${action.accent ? accentSurface.border : theme.primaryBorder}`,
-              boxShadow: action.accent ? accentSurface.shadow : '0 12px 28px rgba(160, 134, 122, 0.08)',
+              background: action.accent ? theme.gradientCard : '#FFFFFF',
+              border: `1px solid ${theme.primaryBorder}`,
+              boxShadow: '0 12px 28px rgba(160, 134, 122, 0.08)',
             }}
           >
             <div className="flex h-full flex-col items-end text-right">
               <div
                 className="flex h-11 w-11 items-center justify-center rounded-2xl"
                 style={{
-                  background: action.accent ? accentSurface.iconBg : accentSurface.plainIconBg,
-                  color: action.accent ? accentSurface.iconColor : theme.primaryDark,
+                  background: theme.primaryBg,
+                  color: theme.primaryDark,
                 }}
               >
                 {action.icon}

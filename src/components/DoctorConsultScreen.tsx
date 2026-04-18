@@ -51,13 +51,32 @@ declare global {
 }
 
 const CHAT_ENDPOINT = '/api/chat';
-
 const QUICK_SUGGESTIONS = [
-  'מה הסוכר התקין לפני ארוחה?',
-  'מה עושים אם יש רעד או חולשה?',
-  'מתי הכי טוב לקחת מטפורמין?',
-  'איזו ארוחת ערב טובה לסוכרת?',
+  '\u05de\u05d4 \u05d4\u05e1\u05d5\u05db\u05e8 \u05d4\u05ea\u05e7\u05d9\u05df \u05dc\u05e4\u05e0\u05d9 \u05d0\u05e8\u05d5\u05d7\u05d4?',
+  '\u05de\u05d4 \u05e2\u05d5\u05e9\u05d9\u05dd \u05d0\u05dd \u05d9\u05e9 \u05e8\u05e2\u05d3 \u05d0\u05d5 \u05d7\u05d5\u05dc\u05e9\u05d4?',
+  '\u05de\u05ea\u05d9 \u05d4\u05db\u05d9 \u05d8\u05d5\u05d1 \u05dc\u05e7\u05d7\u05ea \u05de\u05d8\u05e4\u05d5\u05e8\u05de\u05d9\u05df?',
+  '\u05d0\u05d9\u05d6\u05d5 \u05d0\u05e8\u05d5\u05d7\u05ea \u05e2\u05e8\u05d1 \u05d8\u05d5\u05d1\u05d4 \u05dc\u05e1\u05d5\u05db\u05e8\u05ea?',
 ];
+
+const TEXT = {
+  title: '\u05d4\u05e2\u05d5\u05d6\u05e8 \u05d4\u05e8\u05e4\u05d5\u05d0\u05d9 \u05e9\u05dc\u05d9',
+  subtitle: '\u05e9\u05d9\u05d7\u05d4 \u05e7\u05d5\u05dc\u05d9\u05ea \u05e7\u05e6\u05e8\u05d4 \u05d5\u05d1\u05e8\u05d5\u05e8\u05d4',
+  introTitle: '\u05d1\u05de\u05d4 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e2\u05d6\u05d5\u05e8 \u05e2\u05db\u05e9\u05d9\u05d5?',
+  introBody:
+    '\u05d0\u05e4\u05e9\u05e8 \u05dc\u05dc\u05d7\u05d5\u05e5 \u05e2\u05dc \u05d4\u05de\u05d9\u05e7\u05e8\u05d5\u05e4\u05d5\u05df \u05d5\u05dc\u05d3\u05d1\u05e8 \u05d1\u05e7\u05d5\u05dc, \u05d0\u05d5 \u05dc\u05db\u05ea\u05d5\u05d1 \u05e9\u05d0\u05dc\u05d4 \u05e7\u05e6\u05e8\u05d4.',
+  listenReady: '\u05d0\u05e0\u05d9 \u05de\u05d0\u05d6\u05d9\u05df. \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d3\u05d1\u05e8 \u05d7\u05d5\u05e4\u05e9\u05d9.',
+  listenError: '\u05dc\u05d0 \u05d4\u05e6\u05dc\u05d7\u05ea\u05d9 \u05dc\u05e7\u05dc\u05d5\u05d8 \u05d0\u05ea \u05d4\u05d4\u05e7\u05dc\u05d8\u05d4. \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e0\u05e1\u05d5\u05ea \u05e9\u05d5\u05d1.',
+  voiceOff: '\u05d4\u05de\u05e2\u05e0\u05d4 \u05d4\u05e7\u05d5\u05dc\u05d9 \u05db\u05d5\u05d1\u05d4.',
+  voiceOn: '\u05d4\u05de\u05e2\u05e0\u05d4 \u05d4\u05e7\u05d5\u05dc\u05d9 \u05e4\u05e2\u05d9\u05dc.',
+  temporaryIssue:
+    '\u05d9\u05e9 \u05ea\u05e7\u05dc\u05d4 \u05d6\u05de\u05e0\u05d9\u05ea. \u05d0\u05e0\u05d9 \u05e2\u05d5\u05d1\u05e8 \u05dc\u05de\u05e2\u05e0\u05d4 \u05d2\u05d9\u05d1\u05d5\u05d9 \u05db\u05d3\u05d9 \u05e9\u05dc\u05d0 \u05ea\u05d9\u05ea\u05e7\u05e2 \u05d4\u05e9\u05d9\u05d7\u05d4.',
+  inputPlaceholder: '\u05d0\u05e4\u05e9\u05e8 \u05dc\u05db\u05ea\u05d5\u05d1 \u05e9\u05d0\u05dc\u05d4 \u05e7\u05e6\u05e8\u05d4...',
+  send: '\u05e9\u05dc\u05d7',
+  mic: '\u05d4\u05ea\u05d7\u05dc \u05d4\u05e7\u05dc\u05d8\u05d4',
+  stopMic: '\u05e2\u05e6\u05d5\u05e8 \u05d4\u05e7\u05dc\u05d8\u05d4',
+  welcome:
+    '\u05d0\u05e0\u05d9 \u05db\u05d0\u05df \u05db\u05d3\u05d9 \u05dc\u05e2\u05d6\u05d5\u05e8 \u05dc\u05da \u05d1\u05e0\u05d5\u05e9\u05d0\u05d9 \u05e1\u05d5\u05db\u05e8, \u05ea\u05e8\u05d5\u05e4\u05d5\u05ea, \u05d0\u05d5\u05db\u05dc \u05d5\u05d4\u05e8\u05d2\u05e9\u05d4 \u05db\u05dc\u05dc\u05d9\u05ea.',
+} as const;
 
 function nowTime() {
   return new Date().toLocaleTimeString('he-IL', {
@@ -69,7 +88,7 @@ function nowTime() {
 const INITIAL_MESSAGE: Message = {
   id: 'welcome',
   from: 'ai',
-  text: 'אני כאן בתור העוזר הרפואי שלך. אפשר לדבר איתי בקול על סוכר, אוכל, תרופות או הרגשה, ואענה בצורה קצרה וברורה.',
+  text: TEXT.welcome,
   time: nowTime(),
 };
 
@@ -79,43 +98,33 @@ function normalizeMessage(message: string) {
 
 function isGreeting(message: string) {
   const normalized = normalizeMessage(message);
-  return ['ai', 'היי', 'הי', 'שלום', 'hello', 'hey'].includes(normalized);
+  return ['ai', '\u05d4\u05d9\u05d9', '\u05d4\u05d9', '\u05e9\u05dc\u05d5\u05dd', 'hello', 'hey'].includes(normalized);
 }
 
 function createLocalFallbackReply(message: string) {
   const normalized = normalizeMessage(message);
 
   if (isGreeting(message)) {
-    return 'אני כאן כדי לעזור לך בקול או בכתיבה. אפשר לשאול על סוכר, תרופות, אוכל, תסמינים או מה כדאי לעשות עכשיו.';
+    return '\u05d0\u05e0\u05d9 \u05db\u05d0\u05df \u05db\u05d3\u05d9 \u05dc\u05e2\u05d6\u05d5\u05e8 \u05dc\u05da \u05d1\u05e9\u05d0\u05dc\u05d5\u05ea \u05e7\u05e6\u05e8\u05d5\u05ea \u05e2\u05dc \u05e1\u05d5\u05db\u05e8, \u05ea\u05e8\u05d5\u05e4\u05d5\u05ea, \u05d0\u05d5\u05db\u05dc \u05d5\u05ea\u05e1\u05de\u05d9\u05e0\u05d9\u05dd.';
   }
 
-  if (normalized.includes('לפני') && normalized.includes('ארוחה') && normalized.includes('סוכר')) {
-    return 'בדרך כלל יעד מקובל לפני ארוחה הוא בערך 80 עד 130 mg/dL, אבל הכי חשוב לפעול לפי היעד האישי שהרופא הגדיר.';
+  if (normalized.includes('\u05dc\u05e4\u05e0\u05d9') && normalized.includes('\u05d0\u05e8\u05d5\u05d7\u05d4') && normalized.includes('\u05e1\u05d5\u05db\u05e8')) {
+    return '\u05d1\u05d3\u05e8\u05da \u05db\u05dc\u05dc \u05d9\u05e2\u05d3 \u05de\u05e7\u05d5\u05d1\u05dc \u05dc\u05e4\u05e0\u05d9 \u05d0\u05e8\u05d5\u05d7\u05d4 \u05d4\u05d5\u05d0 \u05d1\u05e2\u05e8\u05da 80 \u05e2\u05d3 130 mg/dL, \u05d0\u05d1\u05dc \u05d4\u05db\u05d9 \u05d7\u05e9\u05d5\u05d1 \u05dc\u05e4\u05e2\u05d5\u05dc \u05dc\u05e4\u05d9 \u05d4\u05d9\u05e2\u05d3 \u05d4\u05d0\u05d9\u05e9\u05d9.';
   }
 
-  if (
-    normalized.includes('היפו') ||
-    normalized.includes('רעד') ||
-    normalized.includes('סחרחורת') ||
-    normalized.includes('חולשה')
-  ) {
-    return 'אם יש רעד, חולשה, הזעה או סחרחורת, כדאי קודם לבדוק סוכר. אם הוא נמוך, נהוג לקחת פחמימה מהירה ולבדוק שוב אחרי כ-15 דקות. אם יש בלבול או החמרה, צריך לפנות מיד לעזרה רפואית.';
+  if (normalized.includes('\u05e8\u05e2\u05d3') || normalized.includes('\u05d7\u05d5\u05dc\u05e9') || normalized.includes('\u05d4\u05d9\u05e4\u05d5')) {
+    return '\u05d0\u05dd \u05d9\u05e9 \u05e8\u05e2\u05d3, \u05d7\u05d5\u05dc\u05e9\u05d4 \u05d0\u05d5 \u05d4\u05d6\u05e2\u05d4, \u05db\u05d3\u05d0\u05d9 \u05e7\u05d5\u05d3\u05dd \u05dc\u05d1\u05d3\u05d5\u05e7 \u05e1\u05d5\u05db\u05e8. \u05d0\u05dd \u05d4\u05d5\u05d0 \u05e0\u05de\u05d5\u05da, \u05e0\u05d4\u05d5\u05d2 \u05dc\u05e7\u05d7\u05ea \u05e4\u05d7\u05de\u05d9\u05de\u05d4 \u05de\u05d4\u05d9\u05e8\u05d4 \u05d5\u05dc\u05d1\u05d3\u05d5\u05e7 \u05e9\u05d5\u05d1 \u05d0\u05d7\u05e8\u05d9 15 \u05d3\u05e7\u05d5\u05ea.';
   }
 
-  if (
-    normalized.includes('תרופה') ||
-    normalized.includes('תרופות') ||
-    normalized.includes('מטפורמין') ||
-    normalized.includes('אינסולין')
-  ) {
-    return 'לגבי תרופות, הכי בטוח להיצמד להנחיה האישית שלך. אם תכתוב או תגיד לי את שם התרופה והשעה, אוכל להסביר מה מקובל באופן כללי.';
+  if (normalized.includes('\u05ea\u05e8\u05d5\u05e4') || normalized.includes('\u05de\u05d8\u05e4\u05d5\u05e8\u05de\u05d9\u05df') || normalized.includes('\u05d0\u05d9\u05e0\u05e1\u05d5\u05dc\u05d9\u05df')) {
+    return '\u05dc\u05d2\u05d1\u05d9 \u05ea\u05e8\u05d5\u05e4\u05d5\u05ea, \u05d4\u05db\u05d9 \u05d1\u05d8\u05d5\u05d7 \u05dc\u05d4\u05d9\u05e6\u05de\u05d3 \u05dc\u05d4\u05e0\u05d7\u05d9\u05d4 \u05d4\u05d0\u05d9\u05e9\u05d9\u05ea \u05e9\u05dc\u05da. \u05d0\u05dd \u05ea\u05d0\u05de\u05e8 \u05dc\u05d9 \u05d0\u05ea \u05e9\u05dd \u05d4\u05ea\u05e8\u05d5\u05e4\u05d4 \u05d0\u05d5 \u05d4\u05e9\u05e2\u05d4, \u05d0\u05e1\u05d1\u05d9\u05e8 \u05de\u05d4 \u05de\u05e7\u05d5\u05d1\u05dc \u05d1\u05d0\u05d5\u05e4\u05df \u05db\u05dc\u05dc\u05d9.';
   }
 
-  if (normalized.includes('אוכל') || normalized.includes('ארוחה') || normalized.includes('פחמ')) {
-    return 'בדרך כלל עדיף לבחור ארוחה פשוטה עם חלבון, ירקות ופחמימה מדודה. למשל יוגורט עם אגוזים, חביתה עם סלט, או עוף עם אורז בכמות קטנה.';
+  if (normalized.includes('\u05d0\u05d5\u05db\u05dc') || normalized.includes('\u05d0\u05e8\u05d5\u05d7\u05d4') || normalized.includes('\u05e4\u05d7\u05de')) {
+    return '\u05d1\u05d3\u05e8\u05da \u05db\u05dc\u05dc \u05e2\u05d3\u05d9\u05e3 \u05dc\u05d1\u05d7\u05d5\u05e8 \u05d0\u05e8\u05d5\u05d7\u05d4 \u05e2\u05dd \u05d7\u05dc\u05d1\u05d5\u05df, \u05d9\u05e8\u05e7\u05d5\u05ea \u05d5\u05e4\u05d7\u05de\u05d9\u05de\u05d4 \u05de\u05d3\u05d5\u05d3\u05d4. \u05dc\u05de\u05e9\u05dc \u05d9\u05d5\u05d2\u05d5\u05e8\u05d8 \u05e2\u05dd \u05d0\u05d2\u05d5\u05d6\u05d9\u05dd \u05d0\u05d5 \u05e1\u05dc\u05d8 \u05e2\u05dd \u05ea\u05d5\u05e1\u05e4\u05ea \u05d7\u05dc\u05d1\u05d5\u05df.';
   }
 
-  return 'יש כרגע תקלה זמנית בחיבור המלא, אבל אני עדיין כאן. אפשר להמשיך לדבר איתי בקול או לכתוב שאלה קצרה על סוכר, תרופות, אוכל או הרגשה.';
+  return '\u05d9\u05e9 \u05db\u05e8\u05d2\u05e2 \u05ea\u05e7\u05dc\u05d4 \u05d6\u05de\u05e0\u05d9\u05ea \u05d1\u05d7\u05d9\u05d1\u05d5\u05e8 \u05d4\u05de\u05dc\u05d0, \u05d0\u05d1\u05dc \u05d0\u05e0\u05d9 \u05e2\u05d3\u05d9\u05d9\u05df \u05db\u05d0\u05df. \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05de\u05e9\u05d9\u05da \u05d1\u05e7\u05d5\u05dc \u05d0\u05d5 \u05dc\u05db\u05ea\u05d5\u05d1 \u05e9\u05d0\u05dc\u05d4 \u05e7\u05e6\u05e8\u05d4.';
 }
 
 export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
@@ -132,7 +141,6 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
   const autoSpeakRef = useRef(true);
   const pendingTranscriptRef = useRef('');
-  const greetedRef = useRef(false);
 
   const speechRecognitionSupported =
     typeof window !== 'undefined' &&
@@ -147,15 +155,11 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
 
   useEffect(() => {
     autoSpeakRef.current = autoSpeak;
-
-    if (!autoSpeak) {
-      stopSpeaking();
-    }
+    if (!autoSpeak) stopSpeaking();
   }, [autoSpeak, stopSpeaking]);
 
   useEffect(() => {
     preloadSpeechVoices();
-
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = () => {
         preloadSpeechVoices();
@@ -177,7 +181,6 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   const speakText = useCallback(
     (text: string) => {
       if (!speechSynthesisSupported || !autoSpeakRef.current) return;
-
       stopSpeaking();
       setIsSpeaking(true);
 
@@ -191,15 +194,6 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
     },
     [speechSynthesisSupported, stopSpeaking, userProfile.gender]
   );
-
-  useEffect(() => {
-    if (!greetedRef.current && autoSpeakRef.current) {
-      greetedRef.current = true;
-      window.setTimeout(() => {
-        speakText(INITIAL_MESSAGE.text);
-      }, 220);
-    }
-  }, [speakText]);
 
   const pushAssistantReply = useCallback(
     (replyText: string, userMessage: string) => {
@@ -226,8 +220,6 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       const messageText = (text ?? input).trim();
       if (!messageText || isTyping) return;
 
-      setNotice(null);
-
       const userMessage: Message = {
         id: Date.now().toString(),
         from: 'user',
@@ -237,6 +229,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
 
       setMessages((prev) => [...prev, userMessage]);
       setInput('');
+      setNotice(null);
 
       if (isGreeting(messageText)) {
         pushAssistantReply(createLocalFallbackReply(messageText), messageText);
@@ -258,7 +251,6 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
         });
 
         const data = await response.json().catch(() => null);
-
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -271,7 +263,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
         pushAssistantReply(replyText, messageText);
       } catch (error) {
         console.error('DoctorConsultScreen sendMessage failed:', error);
-        setNotice('יש תקלה זמנית. עברתי למענה גיבוי כדי שלא תיתקע השיחה.');
+        setNotice(TEXT.temporaryIssue);
         pushAssistantReply(createLocalFallbackReply(messageText), messageText);
       } finally {
         setIsTyping(false);
@@ -293,7 +285,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
     if (!Recognition) return;
 
     pendingTranscriptRef.current = '';
-    setNotice('אני מאזין. אפשר לדבר חופשי.');
+    setNotice(TEXT.listenReady);
 
     const recognition = new Recognition();
     recognition.lang = 'he-IL';
@@ -315,7 +307,7 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
 
     recognition.onerror = () => {
       setIsListening(false);
-      setNotice('לא הצלחתי לקלוט את ההקלטה. אפשר לנסות שוב.');
+      setNotice(TEXT.listenError);
     };
 
     recognition.onend = () => {
@@ -343,16 +335,14 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   const handleVoiceToggle = () => {
     if (autoSpeak) {
       setAutoSpeak(false);
-      setNotice('המענה הקולי כובה. אפשר להדליק שוב מתי שתרצה.');
+      setNotice(TEXT.voiceOff);
       return;
     }
 
     autoSpeakRef.current = true;
     setAutoSpeak(true);
-    setNotice('המענה הקולי פעיל. אקריא את התשובות בקול.');
+    setNotice(TEXT.voiceOn);
   };
-
-  const showSuggestions = messages.length === 1 && !isTyping;
 
   return (
     <div
@@ -361,8 +351,8 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       style={{ background: theme.gradientFull }}
     >
       <OverlayHeader
-        title="העוזר הרפואי שלי"
-        subtitle="שיחה קולית רגועה וברורה"
+        title={TEXT.title}
+        subtitle={TEXT.subtitle}
         theme={theme}
         onBack={onClose}
         onClose={onClose}
@@ -375,14 +365,14 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
               border: `1px solid ${isSpeaking ? '#FCD34D' : autoSpeak ? theme.primaryBorder : '#E2E8F0'}`,
               color: isSpeaking ? '#B45309' : autoSpeak ? theme.primary : '#64748B',
             }}
-            aria-label="הקראה קולית"
+            aria-label={'\u05d4\u05e7\u05e8\u05d0\u05d4 \u05e7\u05d5\u05dc\u05d9\u05ea'}
           >
             {autoSpeak ? <Volume2 size={18} strokeWidth={1.8} /> : <VolumeX size={18} strokeWidth={1.8} />}
           </button>
         }
       />
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
         <div
           className="rounded-3xl p-4 text-right"
           style={{
@@ -391,216 +381,178 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
             boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
           }}
         >
-          <div className="flex flex-row-reverse items-start justify-end gap-3">
+          <div className="flex items-start justify-between gap-3">
             <div
               className="flex h-11 w-11 items-center justify-center rounded-2xl"
-              style={{ background: theme.gradientCard, color: '#FFFFFF' }}
+              style={{ background: theme.primaryBg, color: theme.primaryDark }}
             >
               <Sparkles size={18} strokeWidth={1.8} />
             </div>
+
             <div className="flex-1 text-right">
-              <p style={{ color: '#0F172A', fontWeight: 900 }}>אפשר פשוט לדבר איתי בקול</p>
+              <p style={{ color: '#0F172A', fontWeight: 900 }}>{TEXT.introTitle}</p>
               <p className="mt-1 text-sm leading-6" style={{ color: '#64748B', fontWeight: 700 }}>
-                לוחצים על המיקרופון, שואלים בקול, ומקבלים תשובה רפואית קצרה וברורה.
+                {TEXT.introBody}
               </p>
             </div>
           </div>
 
           <div className="mt-4 flex flex-col gap-3">
-            {speechRecognitionSupported && (
+            {speechRecognitionSupported ? (
               <button
                 onClick={startListening}
                 className="flex h-14 w-full items-center justify-center gap-2 rounded-[22px] transition-all active:scale-[0.98]"
                 style={{
-                  background: isListening ? 'linear-gradient(135deg, #FCA5A5 0%, #EF4444 100%)' : theme.gradientCard,
+                  background: isListening
+                    ? 'linear-gradient(135deg, #FCA5A5 0%, #EF4444 100%)'
+                    : theme.gradientCard,
                   color: '#FFFFFF',
-                  boxShadow: isListening ? '0 14px 28px rgba(239, 68, 68, 0.22)' : `0 14px 28px ${theme.primaryShadow}`,
+                  boxShadow: isListening
+                    ? '0 14px 28px rgba(239, 68, 68, 0.22)'
+                    : `0 14px 28px ${theme.primaryShadow}`,
                   fontWeight: 900,
                 }}
               >
                 <Mic size={20} strokeWidth={1.9} />
-                <span>{isListening ? 'מאזין עכשיו...' : 'התחל שיחה קולית'}</span>
+                <span>{isListening ? TEXT.stopMic : TEXT.mic}</span>
               </button>
-            )}
+            ) : null}
 
-            <div className="flex w-full flex-row-reverse flex-wrap justify-start gap-2">
-              {['סוכר', 'תרופות', 'אוכל', 'תסמינים'].map((item) => (
-                <span
-                  key={item}
-                  className="rounded-full px-3 py-1.5 text-sm"
+            <div className="flex flex-wrap justify-end gap-2">
+              {QUICK_SUGGESTIONS.map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => void sendMessage(suggestion)}
+                  className="rounded-full px-4 py-2 text-sm"
                   style={{
-                    backgroundColor: theme.primaryBg,
-                    color: theme.primary,
+                    backgroundColor: '#FFFFFF',
+                    border: `1px solid ${theme.primaryBorder}`,
+                    color: theme.primaryDark,
                     fontWeight: 800,
                   }}
                 >
-                  {item}
-                </span>
+                  {suggestion}
+                </button>
               ))}
             </div>
           </div>
         </div>
 
-        {messages.map((message) => (
+        {notice ? (
           <div
-            key={message.id}
-            className={`flex items-end gap-3 ${message.from === 'user' ? 'flex-row-reverse' : 'flex-row'}`}
-          >
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0"
-              style={{ background: message.from === 'ai' ? theme.gradientCard : '#F1F5F9' }}
-            >
-              {message.from === 'ai' ? (
-                <Sparkles size={16} strokeWidth={1.8} color="#FFFFFF" />
-              ) : (
-                <User size={16} strokeWidth={1.8} style={{ color: '#334155' }} />
-              )}
-            </div>
-
-            <div className="max-w-[82%]">
-              <div
-                className="px-4 py-3.5 text-sm"
-                style={{
-                  backgroundColor: message.from === 'user' ? theme.primary : '#FFFFFF',
-                  color: message.from === 'user' ? '#FFFFFF' : '#1F2937',
-                  borderRadius:
-                    message.from === 'user' ? '18px 18px 6px 18px' : '6px 18px 18px 18px',
-                  border: message.from === 'ai' ? `1px solid ${theme.primaryBorder}` : 'none',
-                  boxShadow:
-                    message.from === 'ai'
-                      ? '0 8px 20px rgba(15, 23, 42, 0.05)'
-                      : `0 10px 20px ${theme.primaryShadow}`,
-                  textAlign: 'right',
-                  direction: 'rtl',
-                  lineHeight: 1.75,
-                  fontWeight: 600,
-                }}
-              >
-                {message.text}
-              </div>
-              <p className="mt-1.5 text-right text-xs" style={{ color: '#94A3B8' }}>
-                {message.time}
-              </p>
-            </div>
-          </div>
-        ))}
-
-        {isTyping && (
-          <div className="flex items-end gap-3">
-            <div
-              className="flex h-10 w-10 items-center justify-center rounded-full flex-shrink-0"
-              style={{ background: theme.gradientCard }}
-            >
-              <Sparkles size={16} strokeWidth={1.8} color="#FFFFFF" />
-            </div>
-            <div
-              className="flex items-center gap-1.5 rounded-[20px] px-5 py-3.5"
-              style={{
-                backgroundColor: '#FFFFFF',
-                border: `1px solid ${theme.primaryBorder}`,
-              }}
-            >
-              {[0, 1, 2].map((index) => (
-                <div
-                  key={index}
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={{
-                    backgroundColor: theme.primaryMuted,
-                    animation: `bounce 1.2s ease-in-out ${index * 0.2}s infinite`,
-                  }}
-                />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {notice && (
-          <div
-            className="flex flex-row-reverse items-center gap-3 rounded-2xl px-4 py-3"
+            className="flex items-start gap-2 rounded-2xl p-4 text-right"
             style={{
-              backgroundColor: '#EFF6FF',
-              border: '1px solid #BFDBFE',
+              backgroundColor: '#FFF7ED',
+              border: '1px solid #FED7AA',
+              color: '#9A3412',
             }}
           >
-            <AlertCircle size={18} strokeWidth={2} style={{ color: '#1D4ED8', flexShrink: 0 }} />
-            <p className="flex-1 text-right text-sm" style={{ color: '#1D4ED8', fontWeight: 700 }}>
-              {notice}
-            </p>
+            <AlertCircle size={18} className="mt-0.5 shrink-0" />
+            <p className="text-sm leading-7 font-bold">{notice}</p>
           </div>
-        )}
+        ) : null}
 
-        {showSuggestions && (
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {QUICK_SUGGESTIONS.map((suggestion) => (
-              <button
-                key={suggestion}
-                onClick={() => void sendMessage(suggestion)}
-                className="w-full rounded-2xl px-4 py-3.5 text-right text-sm transition-all active:scale-[0.98]"
+        <div className="space-y-3">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${message.from === 'user' ? 'justify-start' : 'justify-end'}`}
+            >
+              <div
+                className="max-w-[85%] rounded-[24px] px-4 py-3"
                 style={{
-                  backgroundColor: '#FFFFFF',
-                  border: `1px solid ${theme.primaryBorder}`,
-                  color: '#1F2937',
-                  fontWeight: 800,
+                  background:
+                    message.from === 'ai'
+                      ? '#FFFFFF'
+                      : 'linear-gradient(135deg, #8EADE4 0%, #6C8FD1 100%)',
+                  color: message.from === 'ai' ? '#334155' : '#FFFFFF',
+                  border:
+                    message.from === 'ai' ? `1px solid ${theme.primaryBorder}` : '1px solid transparent',
+                  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
                 }}
               >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        )}
+                <div className="mb-2 flex items-center gap-2">
+                  <div
+                    className="flex h-7 w-7 items-center justify-center rounded-full"
+                    style={{
+                      backgroundColor:
+                        message.from === 'ai' ? theme.primaryBg : 'rgba(255,255,255,0.2)',
+                      color: message.from === 'ai' ? theme.primaryDark : '#FFFFFF',
+                    }}
+                  >
+                    {message.from === 'ai' ? <Sparkles size={14} /> : <User size={14} />}
+                  </div>
+                  <span
+                    className="text-[11px]"
+                    style={{
+                      color: message.from === 'ai' ? '#94A3B8' : 'rgba(255,255,255,0.78)',
+                      fontWeight: 800,
+                    }}
+                  >
+                    {message.time}
+                  </span>
+                </div>
+                <p className="text-right text-sm leading-7 font-bold">{message.text}</p>
+              </div>
+            </div>
+          ))}
 
-        <div ref={bottomRef} />
+          {isTyping ? (
+            <div className="flex justify-end">
+              <div
+                className="rounded-[24px] px-4 py-3"
+                style={{
+                  background: '#FFFFFF',
+                  border: `1px solid ${theme.primaryBorder}`,
+                }}
+              >
+                <p className="text-sm font-bold text-[#64748B]">
+                  {'\u05e2\u05d5\u05d3 \u05e8\u05d2\u05e2, \u05d0\u05e0\u05d9 \u05e2\u05d5\u05e0\u05d4...'}
+                </p>
+              </div>
+            </div>
+          ) : null}
+          <div ref={bottomRef} />
+        </div>
       </div>
 
       <div
-        className="flex-shrink-0 bg-white px-4 pt-3 pb-6"
-        style={{ borderTop: `1px solid ${theme.primaryBorder}` }}
+        className="border-t px-4 pb-4 pt-3"
+        style={{
+          borderColor: theme.primaryBorder,
+          background: 'rgba(255,255,255,0.94)',
+          paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
+        }}
       >
-        {speechRecognitionSupported && (
-          <button
-            onClick={startListening}
-            className="mb-3 flex h-14 w-full items-center justify-center gap-2 rounded-[22px] transition-all active:scale-[0.98]"
-            style={{
-              background: isListening ? 'linear-gradient(135deg, #FCA5A5 0%, #EF4444 100%)' : theme.gradientCard,
-              color: '#FFFFFF',
-              boxShadow: isListening ? '0 14px 28px rgba(239, 68, 68, 0.22)' : `0 14px 28px ${theme.primaryShadow}`,
-              fontWeight: 900,
-            }}
-          >
-            <Mic size={20} strokeWidth={1.9} />
-            <span>{isListening ? 'מאזין עכשיו...' : 'דברו איתי עכשיו'}</span>
-          </button>
-        )}
-
-        <div className="flex flex-row-reverse items-center gap-3">
-          <input
-            type="text"
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder="או אם נוח, אפשר גם לכתוב שאלה קצרה..."
-            dir="rtl"
-            className="h-12 flex-1 rounded-2xl px-4 text-sm outline-none"
-            style={{
-              backgroundColor: '#F8FAFC',
-              border: `1px solid ${theme.primaryBorder}`,
-              color: '#0F172A',
-              fontWeight: 600,
-            }}
-          />
-
+        <div className="flex items-center gap-2">
           <button
             onClick={() => void sendMessage()}
             disabled={!input.trim() || isTyping}
-            className="flex h-12 w-12 items-center justify-center rounded-2xl transition-all active:scale-95 disabled:opacity-50"
+            className="flex h-12 w-12 items-center justify-center rounded-2xl disabled:opacity-50"
             style={{
-              background: input.trim() && !isTyping ? theme.gradientCard : '#E2E8F0',
-              boxShadow: input.trim() && !isTyping ? `0 12px 24px ${theme.primaryShadow}` : 'none',
+              background: theme.gradientCard,
+              color: '#FFFFFF',
+              boxShadow: `0 10px 24px ${theme.primaryShadow}`,
             }}
-            aria-label="שליחה"
+            aria-label={TEXT.send}
           >
-            <Send size={18} strokeWidth={1.9} color="#FFFFFF" />
+            <Send size={18} strokeWidth={2} />
           </button>
+
+          <input
+            value={input}
+            onChange={(event) => setInput(event.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={TEXT.inputPlaceholder}
+            className="h-12 flex-1 rounded-2xl px-4 text-right outline-none"
+            dir="rtl"
+            style={{
+              backgroundColor: '#FFFFFF',
+              border: `1px solid ${theme.primaryBorder}`,
+              color: '#334155',
+              fontWeight: 700,
+            }}
+          />
         </div>
       </div>
     </div>

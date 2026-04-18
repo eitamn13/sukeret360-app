@@ -1,11 +1,5 @@
-import {
-  createContext,
-  ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
 import { isSupabaseConfigured, supabase, syncAuthenticatedUser } from '../lib/supabase';
 
@@ -16,7 +10,12 @@ interface AuthContextValue {
   user: User | null;
   session: Session | null;
   signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, name: string) => Promise<{
+  signInWithGoogle: () => Promise<{ error: string | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    name: string
+  ) => Promise<{
     error: string | null;
     needsEmailConfirmation: boolean;
   }>;
@@ -24,11 +23,13 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+const SERVER_NOT_CONFIGURED = '\u05d4\u05d7\u05d9\u05d1\u05d5\u05e8 \u05dc\u05e9\u05e8\u05ea \u05e2\u05d3\u05d9\u05d9\u05df \u05dc\u05d0 \u05d4\u05d5\u05d2\u05d3\u05e8 \u05d1\u05e1\u05d1\u05d9\u05d1\u05d4.';
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState<boolean>(isSupabaseConfigured);
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+
   const adminEmails = useMemo(
     () =>
       (import.meta.env.VITE_ADMIN_EMAILS ?? '')
@@ -48,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     void supabase.auth.getSession().then(({ data }) => {
       if (!active) return;
+
       setSession(data.session ?? null);
       setUser(data.session?.user ?? null);
       setLoading(false);
@@ -77,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     if (!supabase) {
-      return { error: 'ההרשמה לשרת עדיין לא הוגדרה בסביבה.' };
+      return { error: SERVER_NOT_CONFIGURED };
     }
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -88,10 +90,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
+  const signInWithGoogle = async () => {
+    if (!supabase) {
+      return { error: SERVER_NOT_CONFIGURED };
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin,
+      },
+    });
+
+    return { error: error?.message ?? null };
+  };
+
   const signUp = async (email: string, password: string, name: string) => {
     if (!supabase) {
       return {
-        error: 'ההרשמה לשרת עדיין לא הוגדרה בסביבה.',
+        error: SERVER_NOT_CONFIGURED,
         needsEmailConfirmation: false,
       };
     }
@@ -126,10 +143,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       user,
       session,
       signIn,
+      signInWithGoogle,
       signUp,
       signOut,
     }),
-    [adminEmails, loading, user, session]
+    [adminEmails, loading, session, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

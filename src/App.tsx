@@ -16,16 +16,11 @@ import { OnboardingScreen } from './components/OnboardingScreen';
 import { MealSuggestionsScreen } from './components/MealSuggestionsScreen';
 import { ProfileSettingsModal } from './components/ProfileSettingsModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
-import { WelcomeIntroScreen } from './components/WelcomeIntroScreen';
 import { AuthScreen } from './components/AuthScreen';
 import { AdminUsersScreen } from './components/AdminUsersScreen';
 
 function AppInner() {
   const { onboardingDone, theme, logSugar, remoteReady } = useAppContext();
-  const [showWelcomeIntro, setShowWelcomeIntro] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return true;
-    return window.localStorage.getItem('welcomeIntroSeen') !== 'true';
-  });
 
   const [showMealLogger, setShowMealLogger] = useState(false);
   const [showSugarModal, setShowSugarModal] = useState(false);
@@ -70,17 +65,19 @@ function AppInner() {
   if (!remoteReady) {
     return (
       <div
-        className="min-h-[100dvh] flex items-center justify-center px-6"
+        className="flex min-h-[100dvh] items-center justify-center px-6"
         dir="rtl"
         style={{ background: theme.gradientFull }}
       >
-        <div className="max-w-sm w-full text-center">
-          <div
-            className="mx-auto mb-4 h-16 w-16 rounded-full border-4 border-[#DCE7F8] border-t-[#6B97D6] animate-spin"
-          />
-          <h2 className="text-2xl font-black text-[#4D5B73]">טוענים את החשבון שלך</h2>
+        <div className="w-full max-w-sm text-center">
+          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-[#DCE7F8] border-t-[#6B97D6]" />
+          <h2 className="text-2xl font-black text-[#4D5B73]">
+            {'\u05d8\u05d5\u05e2\u05e0\u05d9\u05dd \u05d0\u05ea \u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05e9\u05dc\u05da'}
+          </h2>
           <p className="mt-3 text-sm leading-7 text-[#7F8CA0]">
-            עוד רגע כל הנתונים האישיים שלך יסתנכרנו בצורה מאובטחת.
+            {
+              '\u05e2\u05d5\u05d3 \u05e8\u05d2\u05e2 \u05db\u05dc \u05d4\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd \u05d4\u05d0\u05d9\u05e9\u05d9\u05d9\u05dd \u05e9\u05dc\u05da \u05d9\u05e1\u05ea\u05e0\u05db\u05e8\u05e0\u05d5 \u05d1\u05e6\u05d5\u05e8\u05d4 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7\u05ea.'
+            }
           </p>
         </div>
       </div>
@@ -88,17 +85,6 @@ function AppInner() {
   }
 
   if (!onboardingDone) {
-    if (showWelcomeIntro) {
-      return (
-        <WelcomeIntroScreen
-          onContinue={() => {
-            window.localStorage.setItem('welcomeIntroSeen', 'true');
-            setShowWelcomeIntro(false);
-          }}
-        />
-      );
-    }
-
     return <OnboardingScreen />;
   }
 
@@ -116,11 +102,6 @@ function AppInner() {
   };
 
   const handleActionClick = (id: string, label: string) => {
-    if (id === 'medications') {
-      setShowMedications(true);
-      return;
-    }
-
     if (id === 'tip') {
       setShowDailyTip(true);
       return;
@@ -136,20 +117,15 @@ function AppInner() {
       return;
     }
 
-    if (id === 'doctor') {
-      setShowDoctorConsult(true);
-      return;
-    }
-
     setComingSoon(label);
   };
 
   return (
     <div
-      className="min-h-[100svh] transition-all duration-500 overflow-x-hidden app-shell"
+      className="app-shell min-h-[100svh] overflow-x-hidden transition-all duration-500"
       style={{ background: theme.gradientFull }}
     >
-      <div className="max-w-md mx-auto" dir="rtl">
+      <div className="mx-auto max-w-md" dir="rtl">
         <Header
           onSettingsClick={() => setShowSettings(true)}
           onNotificationsClick={() => setShowNotifications(true)}
@@ -169,44 +145,20 @@ function AppInner() {
             onDoctorClick={() => setShowDoctorConsult(true)}
           />
 
-          <ActionGrid
-            onMealLoggerClick={() => setShowMealLogger(true)}
-            onSugarClick={() => setShowSugarModal(true)}
-            onActionClick={handleActionClick}
-          />
+          <ActionGrid onActionClick={handleActionClick} />
         </main>
       </div>
 
-      {showMealLogger && (
-        <SmartMealLogger onClose={() => setShowMealLogger(false)} />
-      )}
+      {showMealLogger ? <SmartMealLogger onClose={() => setShowMealLogger(false)} /> : null}
 
-      <SugarModal
-        isOpen={showSugarModal}
-        onClose={() => setShowSugarModal(false)}
-        onSave={handleSugarSave}
-      />
+      <SugarModal isOpen={showSugarModal} onClose={() => setShowSugarModal(false)} onSave={handleSugarSave} />
 
-      {showMedications && (
-        <MedicationsScreen onClose={() => setShowMedications(false)} />
-      )}
+      {showMedications ? <MedicationsScreen onClose={() => setShowMedications(false)} /> : null}
+      {showMeals ? <MealSuggestionsScreen onClose={() => setShowMeals(false)} /> : null}
+      {showHistory ? <HistoryScreen onClose={() => setShowHistory(false)} /> : null}
+      {showDoctorConsult ? <DoctorConsultScreen onClose={() => setShowDoctorConsult(false)} /> : null}
 
-      {showMeals && (
-        <MealSuggestionsScreen onClose={() => setShowMeals(false)} />
-      )}
-
-      {showHistory && (
-        <HistoryScreen onClose={() => setShowHistory(false)} />
-      )}
-
-      {showDoctorConsult && (
-        <DoctorConsultScreen onClose={() => setShowDoctorConsult(false)} />
-      )}
-
-      <DailyTipModal
-        isOpen={showDailyTip}
-        onClose={() => setShowDailyTip(false)}
-      />
+      <DailyTipModal isOpen={showDailyTip} onClose={() => setShowDailyTip(false)} />
 
       <ProfileSettingsModal
         isOpen={showSettings}
@@ -232,15 +184,8 @@ function AppInner() {
         onClose={() => setComingSoon(null)}
       />
 
-      <SOSModal
-        isOpen={showSOS}
-        onClose={() => setShowSOS(false)}
-      />
-
-      <AdminUsersScreen
-        isOpen={showAdminUsers}
-        onClose={() => setShowAdminUsers(false)}
-      />
+      <SOSModal isOpen={showSOS} onClose={() => setShowSOS(false)} />
+      <AdminUsersScreen isOpen={showAdminUsers} onClose={() => setShowAdminUsers(false)} />
     </div>
   );
 }
@@ -259,15 +204,17 @@ function AppShell() {
   if (loading) {
     return (
       <div
-        className="min-h-[100dvh] flex items-center justify-center px-6"
+        className="flex min-h-[100dvh] items-center justify-center px-6"
         dir="rtl"
         style={{
           background: 'linear-gradient(180deg, #FFFDF8 0%, #F6FAFF 45%, #FFF8F4 100%)',
         }}
       >
-        <div className="max-w-sm w-full text-center">
-          <div className="mx-auto mb-4 h-16 w-16 rounded-full border-4 border-[#E5EAF5] border-t-[#8EADE4] animate-spin" />
-          <h2 className="text-2xl font-black text-[#4D5B73]">בודקים התחברות מאובטחת</h2>
+        <div className="w-full max-w-sm text-center">
+          <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-[#E5EAF5] border-t-[#8EADE4]" />
+          <h2 className="text-2xl font-black text-[#4D5B73]">
+            {'\u05d1\u05d5\u05d3\u05e7\u05d9\u05dd \u05d7\u05d9\u05d1\u05d5\u05e8 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7'}
+          </h2>
         </div>
       </div>
     );

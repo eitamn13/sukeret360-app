@@ -1,5 +1,5 @@
-import { ChevronRight, X } from 'lucide-react';
 import type { ReactNode } from 'react';
+import { ChevronRight, X } from 'lucide-react';
 import type { Theme } from '../context/AppContext';
 
 interface OverlayHeaderProps {
@@ -18,12 +18,12 @@ export function OverlayHeader({
   theme,
   onBack,
   onClose,
-  backLabel = 'חזרה',
+  backLabel = '\u05d7\u05d6\u05e8\u05d4',
   rightSlot,
 }: OverlayHeaderProps) {
   return (
     <div
-      className="flex-shrink-0 px-5 pt-12 pb-4"
+      className="flex-shrink-0 px-5 pb-4 pt-12"
       dir="rtl"
       style={{
         backgroundColor: theme.headerBg,
@@ -36,7 +36,7 @@ export function OverlayHeader({
         <div className="absolute right-0 top-0">
           <button
             onClick={onBack}
-            className="min-w-[104px] h-11 px-3 rounded-2xl flex items-center justify-center gap-1.5 transition-all active:scale-95"
+            className="flex h-11 min-w-[104px] items-center justify-center gap-1.5 rounded-2xl px-3 transition-all active:scale-95"
             style={{
               border: `1.5px solid ${theme.primaryBorder}`,
               backgroundColor: '#FFFFFF',
@@ -56,20 +56,20 @@ export function OverlayHeader({
           {rightSlot}
           <button
             onClick={onClose}
-            className="w-11 h-11 rounded-2xl flex items-center justify-center transition-all active:scale-95"
+            className="flex h-11 w-11 items-center justify-center rounded-2xl transition-all active:scale-95"
             style={{
               border: `1.5px solid ${theme.primaryBorder}`,
               backgroundColor: '#FFFFFF',
               color: theme.primary,
               boxShadow: `0 2px 10px ${theme.primary}12`,
             }}
-            aria-label="סגור"
+            aria-label={'\u05e1\u05d2\u05d5\u05e8'}
           >
             <X size={19} strokeWidth={2.2} />
           </button>
         </div>
 
-        <div className="px-[112px] text-center min-h-[52px] flex flex-col justify-center">
+        <div className="flex min-h-[52px] flex-col justify-center px-[112px] text-center">
           <h1
             className="text-lg leading-tight"
             style={{ color: '#0F172A', fontWeight: 900, letterSpacing: '-0.02em' }}
@@ -78,7 +78,7 @@ export function OverlayHeader({
           </h1>
           {subtitle ? (
             <p
-              className="text-xs mt-1"
+              className="mt-1 text-xs"
               style={{ color: theme.primaryMuted, fontWeight: 600, lineHeight: 1.6 }}
             >
               {subtitle}
