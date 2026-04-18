@@ -1,12 +1,7 @@
-import { BellRing, CreditCard, LogOut, Save, ShieldCheck, UserRound, UserX } from 'lucide-react';
+import { BellRing, Crown, LogOut, Save, ShieldCheck, UserRound, UserX } from 'lucide-react';
 import { type ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAuthContext } from '../context/AuthContext';
-import type {
-  DiabetesType,
-  Gender,
-  TreatmentType,
-  UserProfile,
-} from '../context/AppContext';
+import type { DiabetesType, Gender, TreatmentType, UserProfile } from '../context/AppContext';
 import { useAppContext } from '../context/AppContext';
 import { OverlayHeader } from './OverlayHeader';
 
@@ -14,6 +9,7 @@ interface ProfileSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onOpenAdminUsers?: () => void;
+  onOpenSubscription?: () => void;
 }
 
 type EmergencyContactDraft = {
@@ -39,13 +35,14 @@ const TREATMENT_OPTIONS: Array<{ value: TreatmentType; label: string }> = [
 const DEFAULT_EMERGENCY_CONTACT: EmergencyContactDraft = {
   name: '',
   phone: '',
-  message: 'אני צריכה עזרה דחופה. זה המיקום שלי:',
+  message: 'אני צריך עזרה דחופה. זה המיקום שלי:',
 };
 
 export function ProfileSettingsModal({
   isOpen,
   onClose,
   onOpenAdminUsers,
+  onOpenSubscription,
 }: ProfileSettingsModalProps) {
   const { userProfile, saveEmergencyContact, saveUserProfile, theme } = useAppContext();
   const { authEnabled, isAdmin, session, signOut } = useAuthContext();
@@ -54,7 +51,6 @@ export function ProfileSettingsModal({
   const [age, setAge] = useState(userProfile.age);
   const [gender, setGender] = useState<Gender>(userProfile.gender);
   const [diabetesType, setDiabetesType] = useState<DiabetesType>(userProfile.diabetesType);
-  const [diagnosisYear, setDiagnosisYear] = useState(userProfile.diagnosisYear);
   const [treatmentType, setTreatmentType] = useState<TreatmentType>(userProfile.treatmentType);
   const [targetLow, setTargetLow] = useState(userProfile.targetLow);
   const [targetHigh, setTargetHigh] = useState(userProfile.targetHigh);
@@ -63,7 +59,6 @@ export function ProfileSettingsModal({
   const [emergencyName, setEmergencyName] = useState('');
   const [emergencyPhone, setEmergencyPhone] = useState('');
   const [emergencyMessage, setEmergencyMessage] = useState(DEFAULT_EMERGENCY_CONTACT.message);
-  const [busy, setBusy] = useState<'checkout' | 'portal' | null>(null);
   const [notice, setNotice] = useState('');
   const [saved, setSaved] = useState(false);
 
@@ -82,7 +77,6 @@ export function ProfileSettingsModal({
     setAge(userProfile.age);
     setGender(userProfile.gender);
     setDiabetesType(userProfile.diabetesType);
-    setDiagnosisYear(userProfile.diagnosisYear);
     setTreatmentType(userProfile.treatmentType);
     setTargetLow(userProfile.targetLow);
     setTargetHigh(userProfile.targetHigh);
@@ -111,25 +105,24 @@ export function ProfileSettingsModal({
 
   const isValid = useMemo(() => {
     return Boolean(
-      name.trim() &&
-        age.trim() &&
+      age.trim() &&
         gender &&
         diabetesType &&
         treatmentType &&
         Number(targetLow) > 0 &&
         Number(targetHigh) > Number(targetLow)
     );
-  }, [age, diabetesType, gender, name, targetHigh, targetLow, treatmentType]);
+  }, [age, diabetesType, gender, targetHigh, targetLow, treatmentType]);
 
   const handleSave = () => {
     if (!isValid) return;
 
     const updated: UserProfile = {
-      name: name.trim(),
+      name: name.trim() || 'המשתמש/ת',
       age: age.trim(),
       gender,
       diabetesType,
-      diagnosisYear: diagnosisYear.trim(),
+      diagnosisYear: '',
       treatmentType,
       targetLow,
       targetHigh,
@@ -154,7 +147,13 @@ export function ProfileSettingsModal({
   };
 
   const handleDeleteAccount = async () => {
-    if (!session?.access_token) return;
+    if (!authEnabled || !session?.access_token) {
+      const confirmed = window.confirm('למחוק את כל הנתונים מהמכשיר הזה?');
+      if (!confirmed) return;
+      localStorage.clear();
+      window.location.reload();
+      return;
+    }
 
     const confirmed = window.confirm('האם למחוק את החשבון ואת כל הנתונים השמורים שלו?');
     if (!confirmed) return;
@@ -181,68 +180,14 @@ export function ProfileSettingsModal({
     }
   };
 
-  const launchCheckout = async (plan: 'monthly' | 'yearly') => {
-    if (!session?.access_token) return;
-
-    setBusy('checkout');
-    setNotice('');
-
-    try {
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session.access_token}`,
-        },
-        body: JSON.stringify({ plan }),
-      });
-
-      const payload = (await response.json().catch(() => null)) as
-        | { url?: string; error?: string }
-        | null;
-
-      if (!response.ok || !payload?.url) {
-        throw new Error(payload?.error || 'Checkout failed');
-      }
-
-      window.location.href = payload.url;
-    } catch (error) {
-      console.error('Failed to start checkout', error);
-      setNotice('לא הצלחנו לפתוח את המנוי כרגע.');
-    } finally {
-      setBusy(null);
+  const handleSignOut = async () => {
+    if (!authEnabled) {
+      localStorage.removeItem('guest_mode_v1');
+      window.location.reload();
+      return;
     }
-  };
 
-  const launchCustomerPortal = async () => {
-    if (!session?.access_token) return;
-
-    setBusy('portal');
-    setNotice('');
-
-    try {
-      const response = await fetch('/api/customer-portal', {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      const payload = (await response.json().catch(() => null)) as
-        | { url?: string; error?: string }
-        | null;
-
-      if (!response.ok || !payload?.url) {
-        throw new Error(payload?.error || 'Portal failed');
-      }
-
-      window.location.href = payload.url;
-    } catch (error) {
-      console.error('Failed to open customer portal', error);
-      setNotice('לא הצלחנו לפתוח את אזור החיוב כרגע.');
-    } finally {
-      setBusy(null);
-    }
+    await signOut();
   };
 
   if (!isOpen) return null;
@@ -263,54 +208,30 @@ export function ProfileSettingsModal({
       />
 
       <div
-        className="flex-1 overflow-y-auto px-4 py-4 space-y-4 overscroll-contain"
+        className="flex-1 space-y-4 overflow-y-auto px-4 py-4 overscroll-contain"
         style={{ paddingBottom: 'calc(13rem + env(safe-area-inset-bottom, 0px))' }}
       >
         <SectionCard title="פרטים אישיים" icon={<UserRound size={18} />} theme={theme}>
           <div className="space-y-3">
-            <FieldLabel label="שם מלא" />
+            <FieldLabel label="שם מלא" optional />
             <LargeInput value={name} onChange={setName} placeholder="שם מלא" theme={theme} />
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <FieldLabel label="גיל" />
-                <LargeInput
-                  value={age}
-                  onChange={setAge}
-                  placeholder="גיל"
-                  theme={theme}
-                  type="number"
-                />
-              </div>
-              <div>
-                <FieldLabel label="שנת אבחון" optional />
-                <LargeInput
-                  value={diagnosisYear}
-                  onChange={setDiagnosisYear}
-                  placeholder="שנת אבחון"
-                  theme={theme}
-                  type="number"
-                />
-              </div>
-            </div>
+            <FieldLabel label="גיל" />
+            <LargeInput
+              value={age}
+              onChange={setAge}
+              placeholder="גיל"
+              theme={theme}
+              type="number"
+            />
 
             <FieldLabel label="מגדר" />
             <div className="grid grid-cols-2 gap-3">
-              <ChoiceButton
-                active={gender === 'female'}
-                label="אישה"
-                onClick={() => setGender('female')}
-                theme={theme}
-              />
-              <ChoiceButton
-                active={gender === 'male'}
-                label="גבר"
-                onClick={() => setGender('male')}
-                theme={theme}
-              />
+              <ChoiceButton active={gender === 'female'} label="אישה 👩" onClick={() => setGender('female')} theme={theme} />
+              <ChoiceButton active={gender === 'male'} label="גבר 👨" onClick={() => setGender('male')} theme={theme} />
             </div>
 
-            <FieldLabel label="מצב רפואי" />
+            <FieldLabel label="סוג סוכרת" />
             <div className="grid grid-cols-2 gap-3">
               {DIABETES_TYPE_OPTIONS.map((option) => (
                 <ChoiceButton
@@ -342,23 +263,11 @@ export function ProfileSettingsModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <FieldLabel label="יעד נמוך" />
-              <LargeInput
-                value={targetLow}
-                onChange={setTargetLow}
-                placeholder="80"
-                theme={theme}
-                type="number"
-              />
+              <LargeInput value={targetLow} onChange={setTargetLow} placeholder="80" theme={theme} type="number" />
             </div>
             <div>
               <FieldLabel label="יעד גבוה" />
-              <LargeInput
-                value={targetHigh}
-                onChange={setTargetHigh}
-                placeholder="140"
-                theme={theme}
-                type="number"
-              />
+              <LargeInput value={targetHigh} onChange={setTargetHigh} placeholder="140" theme={theme} type="number" />
             </div>
           </div>
 
@@ -377,21 +286,10 @@ export function ProfileSettingsModal({
         <SectionCard title="קשר חירום" icon={<ShieldCheck size={18} />} theme={theme}>
           <div className="space-y-3">
             <FieldLabel label="שם איש קשר" optional />
-            <LargeInput
-              value={emergencyName}
-              onChange={setEmergencyName}
-              placeholder="שם מלא"
-              theme={theme}
-            />
+            <LargeInput value={emergencyName} onChange={setEmergencyName} placeholder="שם מלא" theme={theme} />
 
             <FieldLabel label="טלפון" optional />
-            <LargeInput
-              value={emergencyPhone}
-              onChange={setEmergencyPhone}
-              placeholder="טלפון"
-              theme={theme}
-              type="tel"
-            />
+            <LargeInput value={emergencyPhone} onChange={setEmergencyPhone} placeholder="טלפון" theme={theme} type="tel" />
 
             <FieldLabel label="נוסח הודעת חירום" optional />
             <textarea
@@ -407,66 +305,38 @@ export function ProfileSettingsModal({
           </div>
         </SectionCard>
 
-        {authEnabled ? (
-          <SectionCard title="מנוי" icon={<CreditCard size={18} />} theme={theme}>
-            <div className="grid grid-cols-2 gap-3">
-              <ActionButton
-                label="חודשי · 19 ₪"
-                onClick={() => void launchCheckout('monthly')}
-                busy={busy === 'checkout'}
-                theme={theme}
-                tone="primary"
-              />
-              <ActionButton
-                label="שנתי · 149 ₪"
-                onClick={() => void launchCheckout('yearly')}
-                busy={busy === 'checkout'}
-                theme={theme}
-                tone="secondary"
-              />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => void launchCustomerPortal()}
-              disabled={busy !== null}
-              className="mt-3 h-12 w-full rounded-[22px] font-extrabold"
-              style={{
-                background: '#FFFFFF',
-                color: theme.primaryDark,
-                border: `1.5px solid ${theme.primaryBorder}`,
-              }}
-            >
-              {busy === 'portal' ? 'פותחים...' : 'אזור חיוב ומנויים'}
-            </button>
-          </SectionCard>
-        ) : null}
-
-        {isAdmin ? (
-          <SectionCard title="ניהול" icon={<ShieldCheck size={18} />} theme={theme}>
-            <button
-              type="button"
-              onClick={() => {
-                onClose();
-                onOpenAdminUsers?.();
-              }}
-              className="h-12 w-full rounded-[22px] font-extrabold"
-              style={{
-                background: theme.primaryBg,
-                color: theme.primaryDark,
-                border: `1.5px solid ${theme.primaryBorder}`,
-              }}
-            >
-              מסך מנהל משתמשים
-            </button>
-          </SectionCard>
-        ) : null}
-
-        <SectionCard title="חשבון" icon={<UserX size={18} />} theme={theme}>
+        <SectionCard title="חשבון ומנוי" icon={<Crown size={18} />} theme={theme}>
           <div className="space-y-3">
             <button
               type="button"
-              onClick={() => void signOut()}
+              onClick={onOpenSubscription}
+              className="h-12 w-full rounded-[22px] font-extrabold text-white"
+              style={{ background: 'linear-gradient(135deg, #8EADE4 0%, #D49BB0 100%)' }}
+            >
+              פתיחת מסך מנוי PRO
+            </button>
+
+            {isAdmin ? (
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenAdminUsers?.();
+                }}
+                className="h-12 w-full rounded-[22px] font-extrabold"
+                style={{
+                  background: '#FFFFFF',
+                  color: theme.primaryDark,
+                  border: `1.5px solid ${theme.primaryBorder}`,
+                }}
+              >
+                מסך מנהל משתמשים
+              </button>
+            ) : null}
+
+            <button
+              type="button"
+              onClick={() => void handleSignOut()}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-[22px] font-extrabold"
               style={{
                 background: '#FFFFFF',
@@ -475,7 +345,7 @@ export function ProfileSettingsModal({
               }}
             >
               <LogOut size={16} />
-              <span>התנתקות</span>
+              <span>{authEnabled ? 'התנתקות' : 'יציאה ממצב אורח'}</span>
             </button>
 
             <button
@@ -489,7 +359,7 @@ export function ProfileSettingsModal({
               }}
             >
               <UserX size={16} />
-              <span>מחיקת חשבון</span>
+              <span>{authEnabled ? 'מחיקת חשבון' : 'מחיקת נתונים מהמכשיר'}</span>
             </button>
           </div>
         </SectionCard>
@@ -656,38 +526,6 @@ function ChoiceButton({
       }}
     >
       {label}
-    </button>
-  );
-}
-
-function ActionButton({
-  label,
-  onClick,
-  busy,
-  theme,
-  tone,
-}: {
-  label: string;
-  onClick: () => void;
-  busy: boolean;
-  theme: ReturnType<typeof useAppContext>['theme'];
-  tone: 'primary' | 'secondary';
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={busy}
-      className="h-12 rounded-[22px] font-extrabold text-white disabled:opacity-60"
-      style={{
-        background:
-          tone === 'primary'
-            ? 'linear-gradient(135deg, #8EADE4 0%, #6B97D6 100%)'
-            : 'linear-gradient(135deg, #D49BB0 0%, #8EADE4 100%)',
-        boxShadow: `0 12px 24px ${theme.primaryShadow}`,
-      }}
-    >
-      {busy ? 'פותחים...' : label}
     </button>
   );
 }

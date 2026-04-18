@@ -11,11 +11,11 @@ import { DailyTipModal } from './components/DailyTipModal';
 import { HistoryScreen } from './components/HistoryScreen';
 import { DoctorConsultScreen } from './components/DoctorConsultScreen';
 import { OnboardingScreen } from './components/OnboardingScreen';
-import { MealSuggestionsScreen } from './components/MealSuggestionsScreen';
 import { ProfileSettingsModal } from './components/ProfileSettingsModal';
 import { NotificationCenterModal } from './components/NotificationCenterModal';
 import { AuthScreen } from './components/AuthScreen';
 import { AdminUsersScreen } from './components/AdminUsersScreen';
+import { SubscriptionScreen } from './components/SubscriptionScreen';
 
 function AppInner() {
   const { onboardingDone, theme, logSugar, remoteReady } = useAppContext();
@@ -26,11 +26,11 @@ function AppInner() {
   const [showDailyTip, setShowDailyTip] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [showDoctorConsult, setShowDoctorConsult] = useState(false);
-  const [showMeals, setShowMeals] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showSOS, setShowSOS] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showAdminUsers, setShowAdminUsers] = useState(false);
+  const [showSubscription, setShowSubscription] = useState(false);
 
   useEffect(() => {
     const meta = document.querySelector('meta[name="theme-color"]');
@@ -43,13 +43,9 @@ function AppInner() {
     const params = new URLSearchParams(window.location.search);
     const open = params.get('open');
 
-    if (open === 'sugar') {
-      setShowSugarModal(true);
-    }
-
-    if (open === 'meal') {
-      setShowMealLogger(true);
-    }
+    if (open === 'sugar') setShowSugarModal(true);
+    if (open === 'meal') setShowMealLogger(true);
+    if (open === 'subscription') setShowSubscription(true);
 
     if (open) {
       params.delete('open');
@@ -68,13 +64,9 @@ function AppInner() {
       >
         <div className="w-full max-w-sm text-center">
           <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-[#DCE7F8] border-t-[#6B97D6]" />
-          <h2 className="text-2xl font-black text-[#4D5B73]">
-            {'\u05d8\u05d5\u05e2\u05e0\u05d9\u05dd \u05d0\u05ea \u05d4\u05d7\u05e9\u05d1\u05d5\u05df \u05e9\u05dc\u05da'}
-          </h2>
+          <h2 className="text-2xl font-black text-[#4D5B73]">טוענים את החשבון שלך</h2>
           <p className="mt-3 text-sm leading-7 text-[#7F8CA0]">
-            {
-              '\u05e2\u05d5\u05d3 \u05e8\u05d2\u05e2 \u05db\u05dc \u05d4\u05e0\u05ea\u05d5\u05e0\u05d9\u05dd \u05d4\u05d0\u05d9\u05e9\u05d9\u05d9\u05dd \u05e9\u05dc\u05da \u05d9\u05e1\u05ea\u05e0\u05db\u05e8\u05e0\u05d5 \u05d1\u05e6\u05d5\u05e8\u05d4 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7\u05ea.'
-            }
+            עוד רגע כל הנתונים האישיים שלך יסתנכרנו בצורה מאובטחת.
           </p>
         </div>
       </div>
@@ -100,7 +92,7 @@ function AppInner() {
 
   return (
     <div
-      className="app-shell min-h-[100svh] overflow-x-hidden transition-all duration-500"
+      className="app-shell min-h-[100svh] overflow-x-hidden transition-all duration-300"
       style={{ background: theme.gradientFull }}
     >
       <div className="mx-auto max-w-md" dir="rtl">
@@ -123,19 +115,17 @@ function AppInner() {
             onDoctorClick={() => setShowDoctorConsult(true)}
             onTipClick={() => setShowDailyTip(true)}
             onHistoryClick={() => setShowHistory(true)}
+            onSubscriptionClick={() => setShowSubscription(true)}
           />
         </main>
       </div>
 
       {showMealLogger ? <SmartMealLogger onClose={() => setShowMealLogger(false)} /> : null}
-
       <SugarModal isOpen={showSugarModal} onClose={() => setShowSugarModal(false)} onSave={handleSugarSave} />
-
       {showMedications ? <MedicationsScreen onClose={() => setShowMedications(false)} /> : null}
-      {showMeals ? <MealSuggestionsScreen onClose={() => setShowMeals(false)} /> : null}
       {showHistory ? <HistoryScreen onClose={() => setShowHistory(false)} /> : null}
       {showDoctorConsult ? <DoctorConsultScreen onClose={() => setShowDoctorConsult(false)} /> : null}
-
+      {showSubscription ? <SubscriptionScreen onClose={() => setShowSubscription(false)} /> : null}
       <DailyTipModal isOpen={showDailyTip} onClose={() => setShowDailyTip(false)} />
 
       <ProfileSettingsModal
@@ -144,6 +134,10 @@ function AppInner() {
         onOpenAdminUsers={() => {
           setShowSettings(false);
           setShowAdminUsers(true);
+        }}
+        onOpenSubscription={() => {
+          setShowSettings(false);
+          setShowSubscription(true);
         }}
       />
 
@@ -172,6 +166,15 @@ function App() {
 
 function AppShell() {
   const { authEnabled, loading, user } = useAuthContext();
+  const [guestMode, setGuestMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem('guest_mode_v1') === '1';
+  });
+
+  const continueAsGuest = () => {
+    window.localStorage.setItem('guest_mode_v1', '1');
+    setGuestMode(true);
+  };
 
   if (loading) {
     return (
@@ -184,9 +187,7 @@ function AppShell() {
       >
         <div className="w-full max-w-sm text-center">
           <div className="mx-auto mb-4 h-16 w-16 animate-spin rounded-full border-4 border-[#E5EAF5] border-t-[#8EADE4]" />
-          <h2 className="text-2xl font-black text-[#4D5B73]">
-            {'\u05d1\u05d5\u05d3\u05e7\u05d9\u05dd \u05d7\u05d9\u05d1\u05d5\u05e8 \u05de\u05d0\u05d5\u05d1\u05d8\u05d7'}
-          </h2>
+          <h2 className="text-2xl font-black text-[#4D5B73]">בודקים חיבור מאובטח</h2>
         </div>
       </div>
     );
@@ -194,6 +195,10 @@ function AppShell() {
 
   if (authEnabled && !user) {
     return <AuthScreen />;
+  }
+
+  if (!authEnabled && !guestMode) {
+    return <AuthScreen onContinueGuest={continueAsGuest} showGuestOption />;
   }
 
   return (

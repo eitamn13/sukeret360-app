@@ -1,5 +1,15 @@
-import { type KeyboardEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { AlertCircle, Mic, Send, Sparkles, User, Volume2, VolumeX } from 'lucide-react';
+import { type KeyboardEvent, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  AlertCircle,
+  Keyboard,
+  Mic,
+  MicOff,
+  Send,
+  Sparkles,
+  User,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
 import { OverlayHeader } from './OverlayHeader';
 import { useAppContext } from '../context/AppContext';
 import { cancelHebrewSpeech, preloadSpeechVoices, speakHebrewText } from '../utils/speech';
@@ -10,7 +20,7 @@ interface DoctorConsultScreenProps {
 
 interface Message {
   id: string;
-  from: 'ai' | 'user';
+  from: 'assistant' | 'user';
   text: string;
   time: string;
 }
@@ -51,31 +61,27 @@ declare global {
 }
 
 const CHAT_ENDPOINT = '/api/chat';
-const QUICK_SUGGESTIONS = [
-  '\u05de\u05d4 \u05d4\u05e1\u05d5\u05db\u05e8 \u05d4\u05ea\u05e7\u05d9\u05df \u05dc\u05e4\u05e0\u05d9 \u05d0\u05e8\u05d5\u05d7\u05d4?',
-  '\u05de\u05d4 \u05e2\u05d5\u05e9\u05d9\u05dd \u05d0\u05dd \u05d9\u05e9 \u05e8\u05e2\u05d3 \u05d0\u05d5 \u05d7\u05d5\u05dc\u05e9\u05d4?',
-  '\u05de\u05ea\u05d9 \u05d4\u05db\u05d9 \u05d8\u05d5\u05d1 \u05dc\u05e7\u05d7\u05ea \u05de\u05d8\u05e4\u05d5\u05e8\u05de\u05d9\u05df?',
-  '\u05d0\u05d9\u05d6\u05d5 \u05d0\u05e8\u05d5\u05d7\u05ea \u05e2\u05e8\u05d1 \u05d8\u05d5\u05d1\u05d4 \u05dc\u05e1\u05d5\u05db\u05e8\u05ea?',
-];
+const QUICK_TOPICS = ['סוכר', 'תרופות', 'אוכל', 'תסמינים'];
 
-const TEXT = {
-  title: '\u05d4\u05e2\u05d5\u05d6\u05e8 \u05d4\u05e8\u05e4\u05d5\u05d0\u05d9 \u05e9\u05dc\u05d9',
-  subtitle: '\u05e9\u05d9\u05d7\u05d4 \u05e7\u05d5\u05dc\u05d9\u05ea \u05e7\u05e6\u05e8\u05d4 \u05d5\u05d1\u05e8\u05d5\u05e8\u05d4',
-  introTitle: '\u05d1\u05de\u05d4 \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e2\u05d6\u05d5\u05e8 \u05e2\u05db\u05e9\u05d9\u05d5?',
+const COPY = {
+  title: 'העוזר הרפואי שלי',
+  subtitle: 'שיחה חיה, תשובה קצרה וברורה',
+  introTitle: 'במה אפשר לעזור עכשיו?',
   introBody:
-    '\u05d0\u05e4\u05e9\u05e8 \u05dc\u05dc\u05d7\u05d5\u05e5 \u05e2\u05dc \u05d4\u05de\u05d9\u05e7\u05e8\u05d5\u05e4\u05d5\u05df \u05d5\u05dc\u05d3\u05d1\u05e8 \u05d1\u05e7\u05d5\u05dc, \u05d0\u05d5 \u05dc\u05db\u05ea\u05d5\u05d1 \u05e9\u05d0\u05dc\u05d4 \u05e7\u05e6\u05e8\u05d4.',
-  listenReady: '\u05d0\u05e0\u05d9 \u05de\u05d0\u05d6\u05d9\u05df. \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d3\u05d1\u05e8 \u05d7\u05d5\u05e4\u05e9\u05d9.',
-  listenError: '\u05dc\u05d0 \u05d4\u05e6\u05dc\u05d7\u05ea\u05d9 \u05dc\u05e7\u05dc\u05d5\u05d8 \u05d0\u05ea \u05d4\u05d4\u05e7\u05dc\u05d8\u05d4. \u05d0\u05e4\u05e9\u05e8 \u05dc\u05e0\u05e1\u05d5\u05ea \u05e9\u05d5\u05d1.',
-  voiceOff: '\u05d4\u05de\u05e2\u05e0\u05d4 \u05d4\u05e7\u05d5\u05dc\u05d9 \u05db\u05d5\u05d1\u05d4.',
-  voiceOn: '\u05d4\u05de\u05e2\u05e0\u05d4 \u05d4\u05e7\u05d5\u05dc\u05d9 \u05e4\u05e2\u05d9\u05dc.',
-  temporaryIssue:
-    '\u05d9\u05e9 \u05ea\u05e7\u05dc\u05d4 \u05d6\u05de\u05e0\u05d9\u05ea. \u05d0\u05e0\u05d9 \u05e2\u05d5\u05d1\u05e8 \u05dc\u05de\u05e2\u05e0\u05d4 \u05d2\u05d9\u05d1\u05d5\u05d9 \u05db\u05d3\u05d9 \u05e9\u05dc\u05d0 \u05ea\u05d9\u05ea\u05e7\u05e2 \u05d4\u05e9\u05d9\u05d7\u05d4.',
-  inputPlaceholder: '\u05d0\u05e4\u05e9\u05e8 \u05dc\u05db\u05ea\u05d5\u05d1 \u05e9\u05d0\u05dc\u05d4 \u05e7\u05e6\u05e8\u05d4...',
-  send: '\u05e9\u05dc\u05d7',
-  mic: '\u05d4\u05ea\u05d7\u05dc \u05d4\u05e7\u05dc\u05d8\u05d4',
-  stopMic: '\u05e2\u05e6\u05d5\u05e8 \u05d4\u05e7\u05dc\u05d8\u05d4',
+    'אפשר להיכנס לשיחה חיה בקול, לדבר חופשי ולקבל תשובות ברורות בלי להקליד.',
+  liveStart: 'התחל שיחה חיה',
+  liveStop: 'עצור שיחה',
+  listening: 'אני מאזין עכשיו. אפשר לדבר חופשי.',
+  voiceOn: 'הקול פועל.',
+  voiceOff: 'הקול כבוי.',
+  recognitionError: 'לא הצלחתי לשמוע טוב. אפשר לנסות שוב.',
+  temporaryIssue: 'יש כרגע תקלה זמנית, אז אני עובר למענה גיבוי כדי שלא תיתקע השיחה.',
+  inputPlaceholder: 'אפשר לכתוב כאן שאלה קצרה...',
+  keyboardOpen: 'פתח מקלדת',
+  keyboardClose: 'סגור מקלדת',
+  send: 'שלח',
   welcome:
-    '\u05d0\u05e0\u05d9 \u05db\u05d0\u05df \u05db\u05d3\u05d9 \u05dc\u05e2\u05d6\u05d5\u05e8 \u05dc\u05da \u05d1\u05e0\u05d5\u05e9\u05d0\u05d9 \u05e1\u05d5\u05db\u05e8, \u05ea\u05e8\u05d5\u05e4\u05d5\u05ea, \u05d0\u05d5\u05db\u05dc \u05d5\u05d4\u05e8\u05d2\u05e9\u05d4 \u05db\u05dc\u05dc\u05d9\u05ea.',
+    'אני כאן כדי לעזור בנושאי סוכר, תרופות, אוכל והרגשה כללית בצורה קצרה וברורה.',
 } as const;
 
 function nowTime() {
@@ -87,8 +93,8 @@ function nowTime() {
 
 const INITIAL_MESSAGE: Message = {
   id: 'welcome',
-  from: 'ai',
-  text: TEXT.welcome,
+  from: 'assistant',
+  text: COPY.welcome,
   time: nowTime(),
 };
 
@@ -96,35 +102,38 @@ function normalizeMessage(message: string) {
   return message.trim().toLowerCase();
 }
 
-function isGreeting(message: string) {
-  const normalized = normalizeMessage(message);
-  return ['ai', '\u05d4\u05d9\u05d9', '\u05d4\u05d9', '\u05e9\u05dc\u05d5\u05dd', 'hello', 'hey'].includes(normalized);
-}
-
-function createLocalFallbackReply(message: string) {
+function createFallbackReply(message: string) {
   const normalized = normalizeMessage(message);
 
-  if (isGreeting(message)) {
-    return '\u05d0\u05e0\u05d9 \u05db\u05d0\u05df \u05db\u05d3\u05d9 \u05dc\u05e2\u05d6\u05d5\u05e8 \u05dc\u05da \u05d1\u05e9\u05d0\u05dc\u05d5\u05ea \u05e7\u05e6\u05e8\u05d5\u05ea \u05e2\u05dc \u05e1\u05d5\u05db\u05e8, \u05ea\u05e8\u05d5\u05e4\u05d5\u05ea, \u05d0\u05d5\u05db\u05dc \u05d5\u05ea\u05e1\u05de\u05d9\u05e0\u05d9\u05dd.';
+  if (['היי', 'שלום', 'ai', 'hello', 'hey'].includes(normalized)) {
+    return 'אני כאן כדי לעזור בשאלות קצרות על סוכר, תרופות, אוכל ותסמינים.';
   }
 
-  if (normalized.includes('\u05dc\u05e4\u05e0\u05d9') && normalized.includes('\u05d0\u05e8\u05d5\u05d7\u05d4') && normalized.includes('\u05e1\u05d5\u05db\u05e8')) {
-    return '\u05d1\u05d3\u05e8\u05da \u05db\u05dc\u05dc \u05d9\u05e2\u05d3 \u05de\u05e7\u05d5\u05d1\u05dc \u05dc\u05e4\u05e0\u05d9 \u05d0\u05e8\u05d5\u05d7\u05d4 \u05d4\u05d5\u05d0 \u05d1\u05e2\u05e8\u05da 80 \u05e2\u05d3 130 mg/dL, \u05d0\u05d1\u05dc \u05d4\u05db\u05d9 \u05d7\u05e9\u05d5\u05d1 \u05dc\u05e4\u05e2\u05d5\u05dc \u05dc\u05e4\u05d9 \u05d4\u05d9\u05e2\u05d3 \u05d4\u05d0\u05d9\u05e9\u05d9.';
+  if (normalized.includes('סוכר') && normalized.includes('לפני') && normalized.includes('ארוחה')) {
+    return 'בדרך כלל יעד מקובל לפני ארוחה הוא בערך 80 עד 130 mg/dL, אבל חשוב לפעול לפי היעד האישי שהוגדר לך.';
   }
 
-  if (normalized.includes('\u05e8\u05e2\u05d3') || normalized.includes('\u05d7\u05d5\u05dc\u05e9') || normalized.includes('\u05d4\u05d9\u05e4\u05d5')) {
-    return '\u05d0\u05dd \u05d9\u05e9 \u05e8\u05e2\u05d3, \u05d7\u05d5\u05dc\u05e9\u05d4 \u05d0\u05d5 \u05d4\u05d6\u05e2\u05d4, \u05db\u05d3\u05d0\u05d9 \u05e7\u05d5\u05d3\u05dd \u05dc\u05d1\u05d3\u05d5\u05e7 \u05e1\u05d5\u05db\u05e8. \u05d0\u05dd \u05d4\u05d5\u05d0 \u05e0\u05de\u05d5\u05da, \u05e0\u05d4\u05d5\u05d2 \u05dc\u05e7\u05d7\u05ea \u05e4\u05d7\u05de\u05d9\u05de\u05d4 \u05de\u05d4\u05d9\u05e8\u05d4 \u05d5\u05dc\u05d1\u05d3\u05d5\u05e7 \u05e9\u05d5\u05d1 \u05d0\u05d7\u05e8\u05d9 15 \u05d3\u05e7\u05d5\u05ea.';
+  if (normalized.includes('היפו') || normalized.includes('רעב') || normalized.includes('חולשה')) {
+    return 'אם יש רעב, חולשה, רעד או הזעה, כדאי לבדוק סוכר. אם הוא נמוך, בדרך כלל נוהגים לקחת פחמימה מהירה ואז לבדוק שוב אחרי 15 דקות.';
   }
 
-  if (normalized.includes('\u05ea\u05e8\u05d5\u05e4') || normalized.includes('\u05de\u05d8\u05e4\u05d5\u05e8\u05de\u05d9\u05df') || normalized.includes('\u05d0\u05d9\u05e0\u05e1\u05d5\u05dc\u05d9\u05df')) {
-    return '\u05dc\u05d2\u05d1\u05d9 \u05ea\u05e8\u05d5\u05e4\u05d5\u05ea, \u05d4\u05db\u05d9 \u05d1\u05d8\u05d5\u05d7 \u05dc\u05d4\u05d9\u05e6\u05de\u05d3 \u05dc\u05d4\u05e0\u05d7\u05d9\u05d4 \u05d4\u05d0\u05d9\u05e9\u05d9\u05ea \u05e9\u05dc\u05da. \u05d0\u05dd \u05ea\u05d0\u05de\u05e8 \u05dc\u05d9 \u05d0\u05ea \u05e9\u05dd \u05d4\u05ea\u05e8\u05d5\u05e4\u05d4 \u05d0\u05d5 \u05d4\u05e9\u05e2\u05d4, \u05d0\u05e1\u05d1\u05d9\u05e8 \u05de\u05d4 \u05de\u05e7\u05d5\u05d1\u05dc \u05d1\u05d0\u05d5\u05e4\u05df \u05db\u05dc\u05dc\u05d9.';
+  if (
+    normalized.includes('תרופה') ||
+    normalized.includes('מטפורמין') ||
+    normalized.includes('אינסולין')
+  ) {
+    return 'אם תגיד לי מה שם התרופה או מתי צריך לקחת אותה, אכוון אותך בצורה קצרה וברורה.';
   }
 
-  if (normalized.includes('\u05d0\u05d5\u05db\u05dc') || normalized.includes('\u05d0\u05e8\u05d5\u05d7\u05d4') || normalized.includes('\u05e4\u05d7\u05de')) {
-    return '\u05d1\u05d3\u05e8\u05da \u05db\u05dc\u05dc \u05e2\u05d3\u05d9\u05e3 \u05dc\u05d1\u05d7\u05d5\u05e8 \u05d0\u05e8\u05d5\u05d7\u05d4 \u05e2\u05dd \u05d7\u05dc\u05d1\u05d5\u05df, \u05d9\u05e8\u05e7\u05d5\u05ea \u05d5\u05e4\u05d7\u05de\u05d9\u05de\u05d4 \u05de\u05d3\u05d5\u05d3\u05d4. \u05dc\u05de\u05e9\u05dc \u05d9\u05d5\u05d2\u05d5\u05e8\u05d8 \u05e2\u05dd \u05d0\u05d2\u05d5\u05d6\u05d9\u05dd \u05d0\u05d5 \u05e1\u05dc\u05d8 \u05e2\u05dd \u05ea\u05d5\u05e1\u05e4\u05ea \u05d7\u05dc\u05d1\u05d5\u05df.';
+  if (
+    normalized.includes('אוכל') ||
+    normalized.includes('ארוחה') ||
+    normalized.includes('פחמימה')
+  ) {
+    return 'בדרך כלל עדיף לבחור ארוחה עם חלבון, ירקות ופחמימה מדודה. אם תרצה, אפשר להתמקד בארוחת בוקר, צהריים או ערב.';
   }
 
-  return '\u05d9\u05e9 \u05db\u05e8\u05d2\u05e2 \u05ea\u05e7\u05dc\u05d4 \u05d6\u05de\u05e0\u05d9\u05ea \u05d1\u05d7\u05d9\u05d1\u05d5\u05e8 \u05d4\u05de\u05dc\u05d0, \u05d0\u05d1\u05dc \u05d0\u05e0\u05d9 \u05e2\u05d3\u05d9\u05d9\u05df \u05db\u05d0\u05df. \u05d0\u05e4\u05e9\u05e8 \u05dc\u05d4\u05de\u05e9\u05d9\u05da \u05d1\u05e7\u05d5\u05dc \u05d0\u05d5 \u05dc\u05db\u05ea\u05d5\u05d1 \u05e9\u05d0\u05dc\u05d4 \u05e7\u05e6\u05e8\u05d4.';
+  return 'יש כרגע תקלה זמנית בחיבור המלא, אבל עדיין אפשר להמשיך לדבר איתי ולקבל מענה קצר וברור.';
 }
 
 export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
@@ -132,20 +141,29 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   const [messages, setMessages] = useState<Message[]>([INITIAL_MESSAGE]);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [input, setInput] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
+  const [isTyping, setIsTyping] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [autoSpeak, setAutoSpeak] = useState(true);
+  const [liveMode, setLiveMode] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-  const autoSpeakRef = useRef(true);
   const pendingTranscriptRef = useRef('');
+  const sendMessageRef = useRef<(text?: string) => Promise<void>>(async () => {});
+  const autoSpeakRef = useRef(true);
+  const liveModeRef = useRef(false);
 
   const speechRecognitionSupported =
     typeof window !== 'undefined' &&
     Boolean(window.SpeechRecognition || window.webkitSpeechRecognition);
   const speechSynthesisSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+  const canUseLiveConversation = useMemo(
+    () => speechRecognitionSupported && speechSynthesisSupported,
+    [speechRecognitionSupported, speechSynthesisSupported]
+  );
 
   const stopSpeaking = useCallback(() => {
     if (!speechSynthesisSupported) return;
@@ -159,16 +177,18 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   }, [autoSpeak, stopSpeaking]);
 
   useEffect(() => {
+    liveModeRef.current = liveMode;
+  }, [liveMode]);
+
+  useEffect(() => {
     preloadSpeechVoices();
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.onvoiceschanged = () => {
-        preloadSpeechVoices();
-      };
+      window.speechSynthesis.onvoiceschanged = () => preloadSpeechVoices();
     }
   }, []);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   }, [messages, isTyping]);
 
   useEffect(() => {
@@ -178,28 +198,95 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
     };
   }, []);
 
+  const beginListening = useCallback(() => {
+    if (!speechRecognitionSupported || isListening) return;
+
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) return;
+
+    pendingTranscriptRef.current = '';
+    setNotice(COPY.listening);
+
+    const recognition = new Recognition();
+    recognition.lang = 'he-IL';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    recognition.continuous = false;
+
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript ?? '')
+        .join(' ')
+        .trim();
+
+      if (transcript) {
+        pendingTranscriptRef.current = transcript;
+      }
+    };
+
+    recognition.onerror = () => {
+      setIsListening(false);
+      setNotice(COPY.recognitionError);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      const transcript = pendingTranscriptRef.current.trim();
+      pendingTranscriptRef.current = '';
+
+      if (transcript) {
+        void sendMessageRef.current(transcript);
+        return;
+      }
+
+      if (liveModeRef.current) {
+        window.setTimeout(() => beginListening(), 500);
+      }
+    };
+
+    recognitionRef.current = recognition;
+    setIsListening(true);
+    recognition.start();
+  }, [isListening, speechRecognitionSupported]);
+
   const speakText = useCallback(
     (text: string) => {
-      if (!speechSynthesisSupported || !autoSpeakRef.current) return;
+      if (!speechSynthesisSupported || !autoSpeakRef.current) {
+        if (liveModeRef.current) {
+          window.setTimeout(() => beginListening(), 450);
+        }
+        return;
+      }
+
       stopSpeaking();
       setIsSpeaking(true);
 
       speakHebrewText(text, {
         gender: userProfile.gender,
-        rate: 0.92,
-        pitch: userProfile.gender === 'male' ? 0.96 : 1.02,
-        onEnd: () => setIsSpeaking(false),
-        onError: () => setIsSpeaking(false),
+        rate: 0.93,
+        pitch: userProfile.gender === 'male' ? 0.95 : 1.01,
+        onEnd: () => {
+          setIsSpeaking(false);
+          if (liveModeRef.current) {
+            window.setTimeout(() => beginListening(), 450);
+          }
+        },
+        onError: () => {
+          setIsSpeaking(false);
+          if (liveModeRef.current) {
+            window.setTimeout(() => beginListening(), 450);
+          }
+        },
       });
     },
-    [speechSynthesisSupported, stopSpeaking, userProfile.gender]
+    [beginListening, speechSynthesisSupported, stopSpeaking, userProfile.gender]
   );
 
-  const pushAssistantReply = useCallback(
+  const appendAssistantReply = useCallback(
     (replyText: string, userMessage: string) => {
       const replyMessage: Message = {
-        id: `${Date.now()}-reply`,
-        from: 'ai',
+        id: `${Date.now()}-assistant`,
+        from: 'assistant',
         text: replyText,
         time: nowTime(),
       };
@@ -216,12 +303,12 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   );
 
   const sendMessage = useCallback(
-    async (text?: string) => {
-      const messageText = (text ?? input).trim();
+    async (rawText?: string) => {
+      const messageText = (rawText ?? input).trim();
       if (!messageText || isTyping) return;
 
       const userMessage: Message = {
-        id: Date.now().toString(),
+        id: `${Date.now()}-user`,
         from: 'user',
         text: messageText,
         time: nowTime(),
@@ -230,12 +317,6 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       setMessages((prev) => [...prev, userMessage]);
       setInput('');
       setNotice(null);
-
-      if (isGreeting(messageText)) {
-        pushAssistantReply(createLocalFallbackReply(messageText), messageText);
-        return;
-      }
-
       setIsTyping(true);
 
       try {
@@ -250,83 +331,34 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
           }),
         });
 
-        const data = await response.json().catch(() => null);
+        const payload = await response.json().catch(() => null);
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          throw new Error(payload?.error || `HTTP ${response.status}`);
         }
 
         const replyText =
-          typeof data?.reply === 'string' && data.reply.trim()
-            ? data.reply.trim()
-            : createLocalFallbackReply(messageText);
+          typeof payload?.reply === 'string' && payload.reply.trim()
+            ? payload.reply.trim()
+            : createFallbackReply(messageText);
 
-        pushAssistantReply(replyText, messageText);
+        appendAssistantReply(replyText, messageText);
       } catch (error) {
         console.error('DoctorConsultScreen sendMessage failed:', error);
-        setNotice(TEXT.temporaryIssue);
-        pushAssistantReply(createLocalFallbackReply(messageText), messageText);
+        setNotice(COPY.temporaryIssue);
+        appendAssistantReply(createFallbackReply(messageText), messageText);
       } finally {
         setIsTyping(false);
       }
     },
-    [history, input, isTyping, pushAssistantReply]
+    [appendAssistantReply, history, input, isTyping]
   );
 
-  const startListening = () => {
-    if (!speechRecognitionSupported) return;
-
-    if (isListening) {
-      recognitionRef.current?.stop();
-      setIsListening(false);
-      return;
-    }
-
-    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!Recognition) return;
-
-    pendingTranscriptRef.current = '';
-    setNotice(TEXT.listenReady);
-
-    const recognition = new Recognition();
-    recognition.lang = 'he-IL';
-    recognition.interimResults = false;
-    recognition.maxAlternatives = 1;
-    recognition.continuous = false;
-
-    recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map((result) => result[0]?.transcript ?? '')
-        .join(' ')
-        .trim();
-
-      if (transcript) {
-        pendingTranscriptRef.current = transcript;
-        setInput(transcript);
-      }
-    };
-
-    recognition.onerror = () => {
-      setIsListening(false);
-      setNotice(TEXT.listenError);
-    };
-
-    recognition.onend = () => {
-      setIsListening(false);
-
-      if (pendingTranscriptRef.current) {
-        const spokenText = pendingTranscriptRef.current;
-        pendingTranscriptRef.current = '';
-        void sendMessage(spokenText);
-      }
-    };
-
-    recognitionRef.current = recognition;
-    setIsListening(true);
-    recognition.start();
-  };
+  useEffect(() => {
+    sendMessageRef.current = sendMessage;
+  }, [sendMessage]);
 
   const handleKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && !event.shiftKey) {
+    if (event.key === 'Enter') {
       event.preventDefault();
       void sendMessage();
     }
@@ -335,13 +367,32 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
   const handleVoiceToggle = () => {
     if (autoSpeak) {
       setAutoSpeak(false);
-      setNotice(TEXT.voiceOff);
+      setNotice(COPY.voiceOff);
+      stopSpeaking();
       return;
     }
 
-    autoSpeakRef.current = true;
     setAutoSpeak(true);
-    setNotice(TEXT.voiceOn);
+    setNotice(COPY.voiceOn);
+  };
+
+  const toggleLiveMode = () => {
+    if (!canUseLiveConversation) {
+      setNotice('בדפדפן הזה שיחה קולית מלאה עדיין לא זמינה. אפשר להמשיך עם המקלדת.');
+      return;
+    }
+
+    if (liveMode) {
+      setLiveMode(false);
+      recognitionRef.current?.stop();
+      setIsListening(false);
+      stopSpeaking();
+      setNotice('השיחה החיה נעצרה.');
+      return;
+    }
+
+    setLiveMode(true);
+    beginListening();
   };
 
   return (
@@ -351,210 +402,222 @@ export function DoctorConsultScreen({ onClose }: DoctorConsultScreenProps) {
       style={{ background: theme.gradientFull }}
     >
       <OverlayHeader
-        title={TEXT.title}
-        subtitle={TEXT.subtitle}
+        title={COPY.title}
+        subtitle={COPY.subtitle}
         theme={theme}
         onBack={onClose}
         onClose={onClose}
         rightSlot={
-          <button
-            onClick={handleVoiceToggle}
-            className="flex h-11 w-11 items-center justify-center rounded-2xl transition-all active:scale-95"
-            style={{
-              backgroundColor: isSpeaking ? '#FEF3C7' : autoSpeak ? theme.primaryBg : '#FFFFFF',
-              border: `1px solid ${isSpeaking ? '#FCD34D' : autoSpeak ? theme.primaryBorder : '#E2E8F0'}`,
-              color: isSpeaking ? '#B45309' : autoSpeak ? theme.primary : '#64748B',
-            }}
-            aria-label={'\u05d4\u05e7\u05e8\u05d0\u05d4 \u05e7\u05d5\u05dc\u05d9\u05ea'}
-          >
+            <button
+              onClick={handleVoiceToggle}
+              className="flex h-11 w-11 items-center justify-center rounded-2xl transition-all active:scale-95"
+              style={{
+              backgroundColor: isSpeaking
+                ? '#FEF3C7'
+                : autoSpeak
+                  ? theme.primaryBg
+                  : '#FFFFFF',
+              border: `1px solid ${
+                isSpeaking ? '#FCD34D' : autoSpeak ? theme.primaryBorder : '#E2E8F0'
+              }`,
+              color: isSpeaking ? '#B45309' : autoSpeak ? theme.primaryDark : '#64748B',
+              }}
+              aria-label="הקראה קולית"
+            >
             {autoSpeak ? <Volume2 size={18} strokeWidth={1.8} /> : <VolumeX size={18} strokeWidth={1.8} />}
           </button>
         }
       />
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
-        <div
-          className="rounded-3xl p-4 text-right"
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: `1px solid ${theme.primaryBorder}`,
-            boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
-          }}
-        >
-          <div className="text-right">
-            <div
-              className="mb-3 flex h-11 w-11 items-center justify-center rounded-2xl"
-              style={{ background: theme.primaryBg, color: theme.primaryDark }}
-            >
-              <Sparkles size={18} strokeWidth={1.8} />
-            </div>
-
-            <div>
-              <p style={{ color: '#0F172A', fontWeight: 900 }}>{TEXT.introTitle}</p>
-              <p className="mt-1 text-sm leading-6" style={{ color: '#64748B', fontWeight: 700 }}>
-                {TEXT.introBody}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-col gap-3">
-            {speechRecognitionSupported ? (
-              <button
-                onClick={startListening}
-                className="flex h-14 w-full items-center justify-center gap-2 rounded-[22px] transition-all active:scale-[0.98]"
-                style={{
-                  background: isListening
-                    ? 'linear-gradient(135deg, #FCA5A5 0%, #EF4444 100%)'
-                    : theme.gradientCard,
-                  color: '#FFFFFF',
-                  boxShadow: isListening
-                    ? '0 14px 28px rgba(239, 68, 68, 0.22)'
-                    : `0 14px 28px ${theme.primaryShadow}`,
-                  fontWeight: 900,
-                }}
-              >
-                <Mic size={20} strokeWidth={1.9} />
-                <span>{isListening ? TEXT.stopMic : TEXT.mic}</span>
-              </button>
-            ) : null}
-
-            <div className="flex flex-wrap justify-start gap-2">
-              {QUICK_SUGGESTIONS.map((suggestion) => (
-                <button
-                  key={suggestion}
-                  onClick={() => void sendMessage(suggestion)}
-                  className="rounded-full px-4 py-2 text-sm"
-                  style={{
-                    backgroundColor: '#FFFFFF',
-                    border: `1px solid ${theme.primaryBorder}`,
-                    color: theme.primaryDark,
-                    fontWeight: 800,
-                  }}
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {notice ? (
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="space-y-4">
           <div
-            className="flex items-start gap-2 rounded-2xl p-4 text-right"
-            style={{
-              backgroundColor: '#FFF7ED',
-              border: '1px solid #FED7AA',
-              color: '#9A3412',
-            }}
-          >
-            <AlertCircle size={18} className="mt-0.5 shrink-0" />
-            <p className="text-sm leading-7 font-bold">{notice}</p>
-          </div>
-        ) : null}
-
-        <div className="space-y-3">
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              className={`flex ${message.from === 'user' ? 'justify-start' : 'justify-end'}`}
-            >
-              <div
-                className="max-w-[85%] rounded-[24px] px-4 py-3"
-                style={{
-                  background:
-                    message.from === 'ai'
-                      ? '#FFFFFF'
-                      : 'linear-gradient(135deg, #8EADE4 0%, #6C8FD1 100%)',
-                  color: message.from === 'ai' ? '#334155' : '#FFFFFF',
-                  border:
-                    message.from === 'ai' ? `1px solid ${theme.primaryBorder}` : '1px solid transparent',
-                  boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
-                }}
-              >
-                <div className="mb-2 flex items-center gap-2">
-                  <div
-                    className="flex h-7 w-7 items-center justify-center rounded-full"
-                    style={{
-                      backgroundColor:
-                        message.from === 'ai' ? theme.primaryBg : 'rgba(255,255,255,0.2)',
-                      color: message.from === 'ai' ? theme.primaryDark : '#FFFFFF',
-                    }}
-                  >
-                    {message.from === 'ai' ? <Sparkles size={14} /> : <User size={14} />}
-                  </div>
-                  <span
-                    className="text-[11px]"
-                    style={{
-                      color: message.from === 'ai' ? '#94A3B8' : 'rgba(255,255,255,0.78)',
-                      fontWeight: 800,
-                    }}
-                  >
-                    {message.time}
-                  </span>
-                </div>
-                <p className="text-right text-sm leading-7 font-bold">{message.text}</p>
-              </div>
-            </div>
-          ))}
-
-          {isTyping ? (
-            <div className="flex justify-end">
-              <div
-                className="rounded-[24px] px-4 py-3"
-                style={{
-                  background: '#FFFFFF',
-                  border: `1px solid ${theme.primaryBorder}`,
-                }}
-              >
-                <p className="text-sm font-bold text-[#64748B]">
-                  {'\u05e2\u05d5\u05d3 \u05e8\u05d2\u05e2, \u05d0\u05e0\u05d9 \u05e2\u05d5\u05e0\u05d4...'}
-                </p>
-              </div>
-            </div>
-          ) : null}
-          <div ref={bottomRef} />
-        </div>
-      </div>
-
-      <div
-        className="border-t px-4 pb-4 pt-3"
-        style={{
-          borderColor: theme.primaryBorder,
-          background: 'rgba(255,255,255,0.94)',
-          paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => void sendMessage()}
-            disabled={!input.trim() || isTyping}
-            className="flex h-12 w-12 items-center justify-center rounded-2xl disabled:opacity-50"
-            style={{
-              background: theme.gradientCard,
-              color: '#FFFFFF',
-              boxShadow: `0 10px 24px ${theme.primaryShadow}`,
-            }}
-            aria-label={TEXT.send}
-          >
-            <Send size={18} strokeWidth={2} />
-          </button>
-
-          <input
-            value={input}
-            onChange={(event) => setInput(event.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={TEXT.inputPlaceholder}
-            className="h-12 flex-1 rounded-2xl px-4 text-right outline-none"
-            dir="rtl"
+            className="rounded-[28px] p-4 text-right"
             style={{
               backgroundColor: '#FFFFFF',
               border: `1px solid ${theme.primaryBorder}`,
-              color: '#334155',
-              fontWeight: 700,
+              boxShadow: '0 14px 32px rgba(15, 23, 42, 0.05)',
             }}
-          />
+          >
+            <div
+              className="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl"
+              style={{ background: theme.primaryBg, color: theme.primaryDark }}
+            >
+              <Sparkles size={20} strokeWidth={1.9} />
+            </div>
+
+            <h2 className="text-[22px] font-black text-[#0F172A]">{COPY.introTitle}</h2>
+            <p className="mt-2 text-sm font-bold leading-7 text-[#64748B]">{COPY.introBody}</p>
+
+            <div className="mt-4 grid gap-3">
+              <button
+                onClick={toggleLiveMode}
+                className="flex h-14 w-full items-center justify-center gap-2 rounded-[22px] text-white transition-all active:scale-[0.98]"
+                style={{
+                  background: liveMode
+                    ? 'linear-gradient(135deg, #F43F5E 0%, #DC2626 100%)'
+                    : 'linear-gradient(135deg, #8EADE4 0%, #D49BB0 100%)',
+                  boxShadow: '0 18px 36px rgba(114, 138, 180, 0.18)',
+                  fontWeight: 900,
+                }}
+              >
+                {liveMode ? <MicOff size={18} strokeWidth={1.9} /> : <Mic size={18} strokeWidth={1.9} />}
+                <span>{liveMode ? COPY.liveStop : COPY.liveStart}</span>
+              </button>
+
+              <div className="flex flex-wrap justify-end gap-2">
+                {QUICK_TOPICS.map((topic) => (
+                  <button
+                    key={topic}
+                    onClick={() => void sendMessage(topic)}
+                    className="rounded-full px-4 py-2 text-sm"
+                    style={{
+                      backgroundColor: '#FFFFFF',
+                      border: `1px solid ${theme.primaryBorder}`,
+                      color: theme.primaryDark,
+                      fontWeight: 800,
+                    }}
+                  >
+                    {topic}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setKeyboardOpen((current) => !current)}
+                className="flex h-12 w-full items-center justify-center gap-2 rounded-[22px] font-extrabold"
+                style={{
+                  backgroundColor: '#FFFFFF',
+                  color: '#475569',
+                  border: `1px solid ${theme.primaryBorder}`,
+                }}
+              >
+                <Keyboard size={17} />
+                <span>{keyboardOpen ? COPY.keyboardClose : COPY.keyboardOpen}</span>
+              </button>
+            </div>
+          </div>
+
+          {notice ? (
+            <div
+              className="flex items-start gap-2 rounded-2xl p-4"
+              style={{
+                backgroundColor: '#FFF7ED',
+                border: '1px solid #FED7AA',
+                color: '#9A3412',
+              }}
+            >
+              <AlertCircle size={18} className="mt-0.5 shrink-0" />
+              <p className="text-sm font-bold leading-7">{notice}</p>
+            </div>
+          ) : null}
+
+          <div className="space-y-3">
+            {messages.map((message) => (
+              <div
+                key={message.id}
+                className={`flex ${message.from === 'assistant' ? 'justify-end' : 'justify-start'}`}
+              >
+                <div
+                  className="max-w-[88%] rounded-[24px] px-4 py-3"
+                  style={{
+                    background:
+                      message.from === 'assistant'
+                        ? '#FFFFFF'
+                        : 'linear-gradient(135deg, #8EADE4 0%, #6C8FD1 100%)',
+                    color: message.from === 'assistant' ? '#334155' : '#FFFFFF',
+                    border:
+                      message.from === 'assistant'
+                        ? `1px solid ${theme.primaryBorder}`
+                        : '1px solid transparent',
+                    boxShadow: '0 10px 24px rgba(15, 23, 42, 0.05)',
+                  }}
+                >
+                  <div className="mb-2 flex items-center gap-2">
+                    <div
+                      className="flex h-7 w-7 items-center justify-center rounded-full"
+                      style={{
+                        backgroundColor:
+                          message.from === 'assistant' ? theme.primaryBg : 'rgba(255,255,255,0.2)',
+                        color: message.from === 'assistant' ? theme.primaryDark : '#FFFFFF',
+                      }}
+                    >
+                      {message.from === 'assistant' ? <Sparkles size={14} /> : <User size={14} />}
+                    </div>
+                    <span
+                      className="text-[11px]"
+                      style={{
+                        color: message.from === 'assistant' ? '#94A3B8' : 'rgba(255,255,255,0.78)',
+                        fontWeight: 800,
+                      }}
+                    >
+                      {message.time}
+                    </span>
+                  </div>
+                  <p className="text-right text-sm font-bold leading-7">{message.text}</p>
+                </div>
+              </div>
+            ))}
+
+            {isTyping ? (
+              <div className="flex justify-end">
+                <div
+                  className="rounded-[24px] px-4 py-3"
+                  style={{
+                    background: '#FFFFFF',
+                    border: `1px solid ${theme.primaryBorder}`,
+                  }}
+                >
+                  <p className="text-sm font-bold text-[#64748B]">עוד רגע, אני עונה...</p>
+                </div>
+              </div>
+            ) : null}
+            <div ref={bottomRef} />
+          </div>
         </div>
       </div>
+
+      {keyboardOpen ? (
+        <div
+          className="border-t px-4 pb-4 pt-3"
+          style={{
+            borderColor: theme.primaryBorder,
+            background: 'rgba(255,255,255,0.97)',
+            paddingBottom: 'max(1rem, env(safe-area-inset-bottom, 0px))',
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => void sendMessage()}
+              disabled={!input.trim() || isTyping}
+              className="flex h-12 w-12 items-center justify-center rounded-2xl disabled:opacity-50"
+              style={{
+                background: theme.primary,
+                color: '#FFFFFF',
+                boxShadow: `0 10px 24px ${theme.primaryShadow}`,
+              }}
+              aria-label={COPY.send}
+            >
+              <Send size={18} strokeWidth={2} />
+            </button>
+
+            <input
+              value={input}
+              onChange={(event) => setInput(event.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={COPY.inputPlaceholder}
+              className="h-12 flex-1 rounded-2xl px-4 text-right outline-none"
+              dir="rtl"
+              style={{
+                backgroundColor: '#FFFFFF',
+                border: `1px solid ${theme.primaryBorder}`,
+                color: '#334155',
+                fontWeight: 700,
+              }}
+            />
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

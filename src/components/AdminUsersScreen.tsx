@@ -61,9 +61,11 @@ export function AdminUsersScreen({ isOpen, onClose }: AdminUsersScreenProps) {
     if (filter === 'free') {
       return users.filter((user) => user.subscription_status === 'free');
     }
+
     if (filter === 'paid') {
       return users.filter((user) => user.subscription_status !== 'free');
     }
+
     return users;
   }, [filter, users]);
 
@@ -138,9 +140,7 @@ export function AdminUsersScreen({ isOpen, onClose }: AdminUsersScreenProps) {
         throw new Error(payload?.error || 'עדכון המנוי נכשל');
       }
 
-      setUsers((prev) =>
-        prev.map((item) => (item.user_id === userId ? payload.user! : item))
-      );
+      setUsers((prev) => prev.map((item) => (item.user_id === userId ? payload.user! : item)));
     } catch (nextError) {
       console.error('AdminUsersScreen update failed:', nextError);
       setError('לא הצלחנו לעדכן את המנוי כרגע.');
@@ -170,191 +170,192 @@ export function AdminUsersScreen({ isOpen, onClose }: AdminUsersScreenProps) {
     >
       <OverlayHeader
         title="ניהול משתמשים"
-        subtitle="צפייה בהרשמות, מנויים והגדרות מנהל"
+        subtitle="הרשמות, מנויים ועדכונים מהירים"
         theme={theme}
         onBack={onClose}
         onClose={onClose}
       />
 
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-        <div className="grid grid-cols-3 gap-3">
-          <AdminStatCard label="סה״כ" value={String(stats.total)} themeColor={theme.primary} />
-          <AdminStatCard label="חינמיים" value={String(stats.free)} themeColor="#F97316" />
-          <AdminStatCard label="מנויים" value={String(stats.paid)} themeColor="#16A34A" />
-        </div>
-
-        <div
-          className="rounded-[28px] p-4"
-          style={{
-            backgroundColor: '#FFFFFF',
-            border: `1px solid ${theme.primaryBorder}`,
-            boxShadow: '0 12px 30px rgba(15, 23, 42, 0.05)',
-          }}
-        >
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <button
-              onClick={() => void fetchUsers()}
-              className="flex h-11 items-center justify-center gap-2 rounded-2xl px-4 transition-all active:scale-[0.98]"
-              style={{
-                background: theme.gradientCard,
-                border: `1px solid ${theme.primaryBorder}`,
-                color: theme.primaryDark,
-                fontWeight: 800,
-              }}
-            >
-              <RefreshCw size={16} strokeWidth={2} />
-              <span>רענון</span>
-            </button>
-
-            <div className="text-right">
-              <p style={{ color: '#0F172A', fontWeight: 900, fontSize: 18 }}>מבט מנהל</p>
-              <p style={{ color: '#64748B', fontSize: 13, marginTop: 4 }}>
-                מי עדיין ללא מנוי ומי כבר פרימיום
-              </p>
-            </div>
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="space-y-4">
+          <div className="grid grid-cols-3 gap-3">
+            <AdminStatCard label="סה״כ" value={String(stats.total)} themeColor={theme.primary} />
+            <AdminStatCard label="חינמיים" value={String(stats.free)} themeColor="#F97316" />
+            <AdminStatCard label="מנויים" value={String(stats.paid)} themeColor="#16A34A" />
           </div>
 
-          <div className="mb-4 grid grid-cols-3 gap-2">
-            {[
-              { id: 'all', label: 'הכול' },
-              { id: 'free', label: 'ללא מנוי' },
-              { id: 'paid', label: 'מנויים' },
-            ].map((option) => (
+          <div
+            className="rounded-[28px] p-4"
+            style={{
+              backgroundColor: '#FFFFFF',
+              border: `1px solid ${theme.primaryBorder}`,
+              boxShadow: '0 12px 30px rgba(15, 23, 42, 0.05)',
+            }}
+          >
+            <div className="mb-4 flex items-center justify-between gap-3">
               <button
-                key={option.id}
-                onClick={() => setFilter(option.id as 'all' | 'free' | 'paid')}
-                className="h-11 rounded-2xl"
+                onClick={() => void fetchUsers()}
+                className="flex h-11 items-center justify-center gap-2 rounded-2xl px-4 transition-all active:scale-[0.98]"
                 style={{
-                  backgroundColor: filter === option.id ? theme.primaryBg : '#FFFFFF',
-                  border: `2px solid ${filter === option.id ? theme.primary : '#E2E8F0'}`,
-                  color: filter === option.id ? theme.primaryDark : '#475569',
+                  background: theme.gradientCard,
+                  border: `1px solid ${theme.primaryBorder}`,
+                  color: theme.primaryDark,
                   fontWeight: 800,
                 }}
               >
-                {option.label}
+                <RefreshCw size={16} strokeWidth={2} />
+                <span>רענון</span>
               </button>
-            ))}
-          </div>
 
-          {loading ? <EmptyCard text="טוענים את המשתמשים..." /> : null}
-
-          {error ? (
-            <div
-              className="rounded-2xl px-4 py-4 text-sm"
-              style={{
-                backgroundColor: '#FEF2F2',
-                border: '1px solid #FECACA',
-                color: '#B91C1C',
-                fontWeight: 700,
-              }}
-            >
-              {error}
+              <div className="text-right">
+                <p className="text-[18px] font-black text-[#0F172A]">מבט מנהל</p>
+                <p className="mt-1 text-sm font-bold text-[#64748B]">
+                  מי עדיין ללא מנוי ומי כבר PRO
+                </p>
+              </div>
             </div>
-          ) : null}
 
-          {!loading && !error && filteredUsers.length === 0 ? (
-            <EmptyCard text="אין כרגע משתמשים להצגה במסנן שבחרת." />
-          ) : null}
+            <div className="mb-4 grid grid-cols-3 gap-2">
+              {[
+                { id: 'all', label: 'הכול' },
+                { id: 'free', label: 'ללא מנוי' },
+                { id: 'paid', label: 'מנויים' },
+              ].map((option) => (
+                <button
+                  key={option.id}
+                  onClick={() => setFilter(option.id as 'all' | 'free' | 'paid')}
+                  className="h-11 rounded-2xl"
+                  style={{
+                    backgroundColor: filter === option.id ? theme.primaryBg : '#FFFFFF',
+                    border: `2px solid ${filter === option.id ? theme.primary : '#E2E8F0'}`,
+                    color: filter === option.id ? theme.primaryDark : '#475569',
+                    fontWeight: 800,
+                  }}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
 
-          {!loading && !error && filteredUsers.length > 0 ? (
-            <div className="space-y-3">
-              {filteredUsers.map((user) => {
-                const isSaving = savingUserId === user.user_id;
+            {loading ? <EmptyCard text="טוענים את המשתמשים..." /> : null}
+            {error ? <EmptyCard text={error} tone="error" /> : null}
+            {!loading && !error && filteredUsers.length === 0 ? (
+              <EmptyCard text="אין כרגע משתמשים להצגה במסנן שבחרת." />
+            ) : null}
 
-                return (
-                  <div
-                    key={user.user_id}
-                    className="rounded-[24px] p-4"
-                    style={{
-                      backgroundColor: '#F8FAFC',
-                      border: '1px solid #E2E8F0',
-                    }}
-                  >
-                    <div className="mb-4 flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        {user.subscription_status === 'free' ? (
-                          <Users size={18} className="text-[#64748B]" />
-                        ) : (
-                          <Crown size={18} className="text-[#D97706]" />
-                        )}
-                        {user.is_admin_managed ? (
-                          <span
-                            className="rounded-full px-2 py-1 text-[11px]"
-                            style={{
-                              backgroundColor: '#EEF2FF',
-                              color: '#4338CA',
-                              fontWeight: 800,
-                            }}
-                          >
-                            מנוהל ידנית
-                          </span>
-                        ) : null}
-                      </div>
+            {!loading && !error && filteredUsers.length > 0 ? (
+              <div className="space-y-3">
+                {filteredUsers.map((user) => {
+                  const isSaving = savingUserId === user.user_id;
 
-                      <div className="text-right">
-                        <p className="text-base font-black text-[#0F172A]">
-                          {user.full_name || 'ללא שם'}
-                        </p>
-                        <p className="mt-1 text-sm font-bold text-[#64748B]">{user.email}</p>
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-3">
-                      <InfoTile label="סטטוס מנוי" value={getSubscriptionLabel(user.subscription_status, user.subscription_plan)} />
-                      <InfoTile label="ספק כניסה" value={user.auth_provider || 'email'} />
-                      <InfoTile label="נרשם בתאריך" value={formatDateTime(user.created_at)} />
-                      <InfoTile label="כניסה אחרונה" value={formatDateTime(user.last_seen_at)} />
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-3 gap-2">
-                      <PlanButton
-                        label="חינמי"
-                        active={user.subscription_status === 'free'}
-                        onClick={() => void updateSubscription(user.user_id, 'free', 'free')}
-                        disabled={isSaving}
-                        tone="neutral"
-                      />
-                      <PlanButton
-                        label="חודשי"
-                        active={
-                          user.subscription_status === 'premium' &&
-                          user.subscription_plan === 'monthly'
-                        }
-                        onClick={() => void updateSubscription(user.user_id, 'premium', 'monthly')}
-                        disabled={isSaving}
-                        tone="blue"
-                      />
-                      <PlanButton
-                        label="שנתי"
-                        active={
-                          user.subscription_status === 'premium' &&
-                          user.subscription_plan === 'yearly'
-                        }
-                        onClick={() => void updateSubscription(user.user_id, 'premium', 'yearly')}
-                        disabled={isSaving}
-                        tone="green"
-                      />
-                    </div>
-
-                    <button
-                      onClick={() => void updateSubscription(user.user_id, 'lifetime', 'lifetime')}
-                      disabled={isSaving}
-                      className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-2xl"
+                  return (
+                    <div
+                      key={user.user_id}
+                      className="rounded-[24px] p-4"
                       style={{
-                        backgroundColor: user.subscription_status === 'lifetime' ? '#FEF3C7' : '#FFFFFF',
-                        border: `1px solid ${user.subscription_status === 'lifetime' ? '#F59E0B' : '#E2E8F0'}`,
-                        color: user.subscription_status === 'lifetime' ? '#B45309' : '#475569',
-                        fontWeight: 800,
+                        backgroundColor: '#F8FAFC',
+                        border: '1px solid #E2E8F0',
                       }}
                     >
-                      <ShieldCheck size={16} />
-                      <span>{isSaving ? 'שומרים...' : 'לכל החיים'}</span>
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
-          ) : null}
+                      <div className="mb-4 flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          {user.subscription_status === 'free' ? (
+                            <Users size={18} className="text-[#64748B]" />
+                          ) : (
+                            <Crown size={18} className="text-[#D97706]" />
+                          )}
+                          {user.is_admin_managed ? (
+                            <span
+                              className="rounded-full px-2 py-1 text-[11px]"
+                              style={{
+                                backgroundColor: '#EEF2FF',
+                                color: '#4338CA',
+                                fontWeight: 800,
+                              }}
+                            >
+                              מנוהל ידנית
+                            </span>
+                          ) : null}
+                        </div>
+
+                        <div className="text-right">
+                          <p className="text-base font-black text-[#0F172A]">
+                            {user.full_name || 'ללא שם'}
+                          </p>
+                          <p className="mt-1 text-sm font-bold text-[#64748B]">{user.email}</p>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <InfoTile
+                          label="סטטוס מנוי"
+                          value={getSubscriptionLabel(user.subscription_status, user.subscription_plan)}
+                        />
+                        <InfoTile label="ספק כניסה" value={user.auth_provider || 'email'} />
+                        <InfoTile label="נרשם בתאריך" value={formatDateTime(user.created_at)} />
+                        <InfoTile label="כניסה אחרונה" value={formatDateTime(user.last_seen_at)} />
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-3 gap-2">
+                        <PlanButton
+                          label="חינמי"
+                          active={user.subscription_status === 'free'}
+                          onClick={() => void updateSubscription(user.user_id, 'free', 'free')}
+                          disabled={isSaving}
+                          tone="neutral"
+                        />
+                        <PlanButton
+                          label="חודשי"
+                          active={
+                            user.subscription_status === 'premium' &&
+                            user.subscription_plan === 'monthly'
+                          }
+                          onClick={() =>
+                            void updateSubscription(user.user_id, 'premium', 'monthly')
+                          }
+                          disabled={isSaving}
+                          tone="blue"
+                        />
+                        <PlanButton
+                          label="שנתי"
+                          active={
+                            user.subscription_status === 'premium' &&
+                            user.subscription_plan === 'yearly'
+                          }
+                          onClick={() =>
+                            void updateSubscription(user.user_id, 'premium', 'yearly')
+                          }
+                          disabled={isSaving}
+                          tone="green"
+                        />
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          void updateSubscription(user.user_id, 'lifetime', 'lifetime')
+                        }
+                        disabled={isSaving}
+                        className="mt-2 flex h-11 w-full items-center justify-center gap-2 rounded-2xl"
+                        style={{
+                          backgroundColor:
+                            user.subscription_status === 'lifetime' ? '#FEF3C7' : '#FFFFFF',
+                          border: `1px solid ${
+                            user.subscription_status === 'lifetime' ? '#F59E0B' : '#E2E8F0'
+                          }`,
+                          color:
+                            user.subscription_status === 'lifetime' ? '#B45309' : '#475569',
+                          fontWeight: 800,
+                        }}
+                      >
+                        <ShieldCheck size={16} />
+                        <span>{isSaving ? 'שומרים...' : 'לכל החיים'}</span>
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
     </div>
@@ -386,11 +387,15 @@ function AdminStatCard({
   );
 }
 
-function EmptyCard({ text }: { text: string }) {
+function EmptyCard({ text, tone = 'neutral' }: { text: string; tone?: 'neutral' | 'error' }) {
   return (
     <div
       className="rounded-2xl px-4 py-8 text-center"
-      style={{ backgroundColor: '#F8FAFC', color: '#64748B', fontWeight: 700 }}
+      style={{
+        backgroundColor: tone === 'error' ? '#FEF2F2' : '#F8FAFC',
+        color: tone === 'error' ? '#B91C1C' : '#64748B',
+        fontWeight: 700,
+      }}
     >
       {text}
     </div>
@@ -423,21 +428,15 @@ function PlanButton({
   tone: 'neutral' | 'blue' | 'green';
 }) {
   const styleMap = {
-    neutral: {
-      activeBg: '#F1F5F9',
-      activeBorder: '#64748B',
-      activeText: '#334155',
-    },
-    blue: {
-      activeBg: '#DBEAFE',
-      activeBorder: '#3B82F6',
-      activeText: '#1D4ED8',
-    },
-    green: {
-      activeBg: '#DCFCE7',
-      activeBorder: '#22C55E',
-      activeText: '#15803D',
-    },
+    neutral: active
+      ? { background: '#F8FAFC', border: '#94A3B8', color: '#334155' }
+      : { background: '#FFFFFF', border: '#E2E8F0', color: '#64748B' },
+    blue: active
+      ? { background: '#DBEAFE', border: '#60A5FA', color: '#1D4ED8' }
+      : { background: '#FFFFFF', border: '#E2E8F0', color: '#64748B' },
+    green: active
+      ? { background: '#DCFCE7', border: '#4ADE80', color: '#15803D' }
+      : { background: '#FFFFFF', border: '#E2E8F0', color: '#64748B' },
   } as const;
 
   const style = styleMap[tone];
@@ -446,11 +445,12 @@ function PlanButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="h-11 rounded-2xl font-extrabold disabled:opacity-60"
+      className="h-11 rounded-2xl disabled:opacity-60"
       style={{
-        backgroundColor: active ? style.activeBg : '#FFFFFF',
-        border: `1px solid ${active ? style.activeBorder : '#E2E8F0'}`,
-        color: active ? style.activeText : '#475569',
+        backgroundColor: style.background,
+        border: `1px solid ${style.border}`,
+        color: style.color,
+        fontWeight: 800,
       }}
     >
       {label}

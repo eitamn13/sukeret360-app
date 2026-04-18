@@ -4,32 +4,12 @@ import type { ReactNode } from 'react';
 import { Logo } from './Logo';
 import { useAuthContext } from '../context/AuthContext';
 
-const COPY = {
-  appName: 'הסוכרת שלי',
-  subtitle: 'כניסה פשוטה, בטוחה ונוחה לשימוש יומיומי.',
-  google: 'המשך עם Google',
-  facebook: 'המשך עם Facebook',
-  orEmail: 'או עם מייל וסיסמה',
-  signIn: 'כניסה',
-  signUp: 'הרשמה',
-  fullName: 'שם מלא',
-  email: 'מייל',
-  password: 'סיסמה',
-  busy: 'עוד רגע...',
-  signInAction: 'נכנסים לאפליקציה',
-  signUpAction: 'יוצרים חשבון חדש',
-  secured: 'הפרטים נשמרים בצורה מאובטחת',
-  privacy: 'מדיניות פרטיות',
-  deleteAccount: 'מחיקת חשבון',
-  serverSetup: 'כדי לאפשר כניסה עם Google או Facebook צריך לחבר Supabase בשרת.',
-  signInError: 'לא הצלחנו להתחבר כרגע. כדאי לבדוק מייל וסיסמה ולנסות שוב.',
-  signUpError: 'לא הצלחנו ליצור חשבון כרגע. אפשר לנסות שוב בעוד רגע.',
-  signUpNotice: 'שלחנו מייל לאישור החשבון. אחרי האישור אפשר להיכנס.',
-  signUpSuccess: 'החשבון נוצר בהצלחה. ממשיכים פנימה.',
-  oauthError: 'כרגע אי אפשר להשלים את הכניסה דרך הספק שבחרת. אפשר לנסות שוב.',
-} as const;
+interface AuthScreenProps {
+  onContinueGuest?: () => void;
+  showGuestOption?: boolean;
+}
 
-export function AuthScreen() {
+export function AuthScreen({ onContinueGuest, showGuestOption = false }: AuthScreenProps) {
   const { authEnabled, signIn, signInWithGoogle, signInWithFacebook, signUp } = useAuthContext();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
   const [name, setName] = useState('');
@@ -55,9 +35,8 @@ export function AuthScreen() {
     if (mode === 'signin') {
       const result = await signIn(email, password);
       setBusy(false);
-
       if (result.error) {
-        setError(COPY.signInError);
+        setError('לא הצלחנו להתחבר כרגע. כדאי לבדוק מייל וסיסמה ולנסות שוב.');
       }
       return;
     }
@@ -66,11 +45,15 @@ export function AuthScreen() {
     setBusy(false);
 
     if (result.error) {
-      setError(COPY.signUpError);
+      setError('לא הצלחנו ליצור חשבון כרגע. אפשר לנסות שוב בעוד רגע.');
       return;
     }
 
-    setNotice(result.needsEmailConfirmation ? COPY.signUpNotice : COPY.signUpSuccess);
+    setNotice(
+      result.needsEmailConfirmation
+        ? 'שלחנו מייל לאישור החשבון. אחרי האישור אפשר להיכנס.'
+        : 'החשבון נוצר בהצלחה. ממשיכים פנימה.'
+    );
   };
 
   const handleOAuth = async (provider: 'google' | 'facebook') => {
@@ -84,7 +67,7 @@ export function AuthScreen() {
       provider === 'google' ? await signInWithGoogle() : await signInWithFacebook();
 
     if (result.error) {
-      setError(COPY.oauthError);
+      setError('כרגע אי אפשר להשלים את הכניסה דרך הספק שבחרת. אפשר לנסות שוב.');
       setBusy(false);
     }
   };
@@ -112,8 +95,10 @@ export function AuthScreen() {
         </div>
 
         <div className="mb-5 text-center">
-          <h1 className="text-[34px] font-black text-[#4D5B73]">{COPY.appName}</h1>
-          <p className="mt-3 text-base leading-8 text-[#7A8698]">{COPY.subtitle}</p>
+          <h1 className="text-[34px] font-black text-[#4D5B73]">הסוכרת שלי</h1>
+          <p className="mt-3 text-base leading-8 text-[#7A8698]">
+            כניסה מהירה ובטוחה, עם מעט הקלדה וכפתורים גדולים וברורים.
+          </p>
         </div>
 
         <div
@@ -129,33 +114,33 @@ export function AuthScreen() {
               onClick={() => void handleOAuth('google')}
               disabled={busy || !authEnabled}
               icon={<Chrome size={18} />}
-              label={COPY.google}
+              label="המשך עם Google"
             />
 
             <SocialButton
               onClick={() => void handleOAuth('facebook')}
               disabled={busy || !authEnabled}
               icon={<Facebook size={18} />}
-              label={COPY.facebook}
+              label="המשך עם Facebook"
             />
           </div>
 
           <div className="my-5 flex items-center gap-3">
             <div className="h-px flex-1 bg-[#E6E0D7]" />
-            <span className="text-xs font-bold text-[#8C97A8]">{COPY.orEmail}</span>
+            <span className="text-xs font-bold text-[#8C97A8]">או עם מייל וסיסמה</span>
             <div className="h-px flex-1 bg-[#E6E0D7]" />
           </div>
 
           <div className="mb-5 grid grid-cols-2 gap-3">
             <ModeButton
               active={mode === 'signin'}
-              label={COPY.signIn}
+              label="כניסה"
               onClick={() => setMode('signin')}
               tone="blue"
             />
             <ModeButton
               active={mode === 'signup'}
-              label={COPY.signUp}
+              label="הרשמה"
               onClick={() => setMode('signup')}
               tone="rose"
             />
@@ -163,33 +148,33 @@ export function AuthScreen() {
 
           <div className="space-y-3">
             {mode === 'signup' ? (
-              <FieldRow icon={<UserPlus size={18} />} placeholder={COPY.fullName}>
+              <FieldRow icon={<UserPlus size={18} />} placeholder="שם מלא">
                 <input
                   value={name}
                   onChange={(event) => setName(event.target.value)}
-                  placeholder={COPY.fullName}
+                  placeholder="שם מלא"
                   className="h-14 w-full bg-transparent text-right outline-none"
                   dir="rtl"
                 />
               </FieldRow>
             ) : null}
 
-            <FieldRow icon={<Mail size={18} />} placeholder={COPY.email}>
+            <FieldRow icon={<Mail size={18} />} placeholder="מייל">
               <input
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                placeholder={COPY.email}
+                placeholder="מייל"
                 type="email"
                 className="h-14 w-full bg-transparent text-right outline-none"
                 dir="rtl"
               />
             </FieldRow>
 
-            <FieldRow icon={<LockKeyhole size={18} />} placeholder={COPY.password}>
+            <FieldRow icon={<LockKeyhole size={18} />} placeholder="סיסמה">
               <input
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder={COPY.password}
+                placeholder="סיסמה"
                 type="password"
                 className="h-14 w-full bg-transparent text-right outline-none"
                 dir="rtl"
@@ -199,7 +184,11 @@ export function AuthScreen() {
 
           {error ? <NoticeCard tone="error">{error}</NoticeCard> : null}
           {notice ? <NoticeCard tone="info">{notice}</NoticeCard> : null}
-          {!authEnabled ? <NoticeCard tone="warn">{COPY.serverSetup}</NoticeCard> : null}
+          {!authEnabled ? (
+            <NoticeCard tone="warn">
+              כדי להפעיל כניסה עם Google, Facebook והרשמה אמיתית צריך לחבר Supabase בשרת.
+            </NoticeCard>
+          ) : null}
 
           <button
             onClick={() => void handleSubmit()}
@@ -213,24 +202,38 @@ export function AuthScreen() {
             }}
           >
             {mode === 'signup' ? <UserPlus size={18} /> : <LogIn size={18} />}
-            <span>{busy ? COPY.busy : mode === 'signup' ? COPY.signUpAction : COPY.signInAction}</span>
+            <span>{busy ? 'עוד רגע...' : mode === 'signup' ? 'יוצרים חשבון חדש' : 'נכנסים לאפליקציה'}</span>
           </button>
+
+          {showGuestOption && onContinueGuest ? (
+            <button
+              onClick={onContinueGuest}
+              className="mt-3 flex h-12 w-full items-center justify-center rounded-[22px] font-extrabold"
+              style={{
+                background: '#FFFFFF',
+                color: '#5F6D84',
+                border: '1px solid #E3E8F1',
+              }}
+            >
+              המשך בלי חשבון
+            </button>
+          ) : null}
 
           <div
             className="mt-5 flex items-center justify-center gap-2 rounded-[22px] px-4 py-3 text-center"
             style={{ background: '#FFFFFF', border: '1px solid #E7E4DF' }}
           >
             <ShieldCheck size={17} className="text-[#8DA8D6]" />
-            <p className="text-sm font-bold text-[#6D7A8D]">{COPY.secured}</p>
+            <p className="text-sm font-bold text-[#6D7A8D]">הפרטים נשמרים בצורה מאובטחת</p>
           </div>
 
           <div className="mt-5 text-center text-xs leading-6 text-[#8C97A8]">
             <a href="/privacy-policy.html" className="underline underline-offset-4">
-              {COPY.privacy}
+              מדיניות פרטיות
             </a>
             {' · '}
             <a href="/delete-account.html" className="underline underline-offset-4">
-              {COPY.deleteAccount}
+              מחיקת חשבון
             </a>
           </div>
         </div>
@@ -256,11 +259,11 @@ function SocialButton({
       disabled={disabled}
       className="flex h-14 w-full items-center justify-center gap-3 rounded-[24px] disabled:opacity-60"
       style={{
-        background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FBFF 100%)',
-        border: '1.5px solid #DCE6F5',
-        color: '#48617F',
-        fontWeight: 900,
-        boxShadow: '0 14px 28px rgba(114, 138, 180, 0.1)',
+        background: '#FFFFFF',
+        color: '#4D5B73',
+        border: '1px solid #E7E1DA',
+        boxShadow: '0 10px 22px rgba(122, 146, 182, 0.08)',
+        fontWeight: 800,
       }}
     >
       {icon}
@@ -280,19 +283,17 @@ function ModeButton({
   onClick: () => void;
   tone: 'blue' | 'rose';
 }) {
-  const background =
-    tone === 'blue'
-      ? 'linear-gradient(135deg, #8EADE4 0%, #5D79AE 100%)'
-      : 'linear-gradient(135deg, #D49BB0 0%, #8EADE4 100%)';
+  const activeColor = tone === 'blue' ? '#8EADE4' : '#D49BB0';
 
   return (
     <button
       onClick={onClick}
-      className="h-12 rounded-[20px] font-extrabold transition-all"
+      className="rounded-[22px] font-extrabold"
       style={{
-        background: active ? background : '#FFFFFF',
-        color: active ? '#FFFFFF' : '#5F6D84',
-        border: `1px solid ${active ? 'transparent' : '#E3E8F1'}`,
+        height: 52,
+        background: active ? `${activeColor}1E` : '#FFFFFF',
+        color: active ? '#4D5B73' : '#7A8698',
+        border: `2px solid ${active ? activeColor : '#E2E8F0'}`,
       }}
     >
       {label}
@@ -311,16 +312,16 @@ function FieldRow({
 }) {
   return (
     <div
-      className="flex items-center gap-3 rounded-[22px] px-4"
+      className="flex h-14 items-center gap-3 rounded-[22px] px-4"
       style={{
         background: '#FFFFFF',
-        border: '1px solid #E4EAF4',
-        boxShadow: '0 10px 24px rgba(122, 146, 182, 0.08)',
+        border: '1.5px solid #E4EBF5',
+        boxShadow: '0 10px 22px rgba(122, 146, 182, 0.08)',
       }}
       aria-label={placeholder}
     >
-      <div className="text-[#89A3CC]">{icon}</div>
-      <div className="flex-1">{children}</div>
+      <div className="text-[#8EADE4]">{icon}</div>
+      {children}
     </div>
   );
 }
@@ -332,33 +333,20 @@ function NoticeCard({
   children: ReactNode;
   tone: 'error' | 'info' | 'warn';
 }) {
-  const styleMap = {
-    error: {
-      background: '#FEF2F2',
-      border: '#FECACA',
-      color: '#B91C1C',
-    },
-    info: {
-      background: '#EFF6FF',
-      border: '#BFDBFE',
-      color: '#1D4ED8',
-    },
-    warn: {
-      background: '#FFF7ED',
-      border: '#FED7AA',
-      color: '#C2410C',
-    },
-  } as const;
-
-  const style = styleMap[tone];
+  const palette =
+    tone === 'error'
+      ? { background: '#FEF2F2', border: '#FECACA', color: '#B91C1C' }
+      : tone === 'info'
+        ? { background: '#EFF6FF', border: '#BFDBFE', color: '#1D4ED8' }
+        : { background: '#FFF7ED', border: '#FED7AA', color: '#C2410C' };
 
   return (
     <div
-      className="mt-4 rounded-[22px] px-4 py-3 text-sm font-bold leading-7"
+      className="mt-4 rounded-[20px] px-4 py-3 text-right text-sm font-bold leading-7"
       style={{
-        backgroundColor: style.background,
-        border: `1px solid ${style.border}`,
-        color: style.color,
+        background: palette.background,
+        border: `1px solid ${palette.border}`,
+        color: palette.color,
       }}
     >
       {children}
