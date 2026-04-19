@@ -56,219 +56,177 @@ export function GreetingSection({
     );
   }, [medicationSchedule]);
 
-  const mainCards = [
+  const primaryActions = [
     {
       key: 'sugar',
       title: 'בדיקת סוכר',
       subtitle: latestSugar ? `${latestSugar.level} mg/dL` : 'מדידה חדשה',
-      icon: <Droplets size={18} strokeWidth={1.9} />,
+      icon: <Droplets size={18} strokeWidth={2} />,
       onClick: onSugarClick,
     },
     {
       key: 'meal',
       title: 'רישום ארוחה',
       subtitle: 'צילום או חיפוש',
-      icon: <UtensilsCrossed size={18} strokeWidth={1.9} />,
+      icon: <UtensilsCrossed size={18} strokeWidth={2} />,
       onClick: onMealClick,
     },
     {
       key: 'medications',
       title: 'תרופות',
       subtitle: nextMedication ? formatClock(nextMedication.time) : 'לוח יומי',
-      icon: <Pill size={18} strokeWidth={1.9} />,
+      icon: <Pill size={18} strokeWidth={2} />,
       onClick: onMedicationsClick,
     },
     {
       key: 'doctor',
-      title: 'העוזר הרפואי שלי',
-      subtitle: 'שיחה חיה בקול',
-      icon: <MessageCircleMore size={18} strokeWidth={1.9} />,
+      title: 'העוזר הרפואי',
+      subtitle: 'שיחה קולית חיה',
+      icon: <MessageCircleMore size={18} strokeWidth={2} />,
       onClick: onDoctorClick,
+    },
+    {
+      key: 'history',
+      title: 'היסטוריה',
+      subtitle: 'דוח שבועי',
+      icon: <BookOpen size={18} strokeWidth={2} />,
+      onClick: onHistoryClick,
+    },
+    {
+      key: 'subscription',
+      title: 'מנוי PRO',
+      subtitle: 'שדרוג תכונות',
+      icon: <Crown size={18} strokeWidth={2} />,
+      onClick: onSubscriptionClick,
     },
   ];
 
   return (
-    <section className="px-4 pt-4" dir="rtl">
+    <section className="px-4 py-4" dir="rtl">
       <div
-        className="overflow-hidden rounded-[34px] p-4"
+        className="rounded-[30px] p-4"
         style={{
-          background: theme.gradientCard,
+          background: '#FFFFFF',
           border: `1px solid ${theme.primaryBorder}`,
-          boxShadow: `0 26px 54px ${theme.primaryShadow}`,
+          boxShadow: '0 18px 36px rgba(15, 23, 42, 0.08)',
         }}
       >
         <div className="flex items-start justify-between gap-4">
           <div className="text-right">
-            <p className="text-[30px] leading-none" style={{ color: theme.primaryDark, fontWeight: 900 }}>
-              {timeString}
-            </p>
-            <p className="mt-1 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
-              {dateString}
-            </p>
+            <p className="text-[30px] font-black leading-none text-[#0F172A]">{timeString}</p>
+            <p className="mt-1 text-sm font-bold text-[#64748B]">{dateString}</p>
           </div>
 
           <button
             onClick={onSOSClick}
-            className="flex h-12 min-w-[118px] items-center justify-center gap-2 rounded-[20px] px-5 transition-all active:scale-95"
+            className="flex h-12 min-w-[112px] items-center justify-center gap-2 rounded-[18px] px-4 transition-all active:scale-[0.98]"
             style={{
-              background: theme.primaryBg,
-              color: theme.primaryDark,
-              border: `1px solid ${theme.primaryBorder}`,
-              boxShadow: '0 14px 28px rgba(118, 150, 201, 0.12)',
+              background: '#EFF6FF',
+              color: '#1D4ED8',
+              border: '1px solid #BFDBFE',
               fontWeight: 900,
             }}
-            aria-label="SOS"
           >
-            <Siren size={18} strokeWidth={1.9} />
+            <Siren size={18} strokeWidth={2} />
             <span>SOS</span>
           </button>
         </div>
 
         <div className="mt-5 text-right">
-          <h2
-            className="text-[28px] leading-tight"
-            style={{ color: '#594841', fontWeight: 900, letterSpacing: '-0.03em' }}
-          >
-            פעולות מרכזיות
-          </h2>
-          <p className="mt-2 text-sm" style={{ color: theme.primaryMuted, fontWeight: 700 }}>
-            {userProfile.name?.trim() ? `שלום ${userProfile.name.trim()}` : 'כל מה שחשוב באמת במקום אחד'}
+          <h2 className="text-[26px] font-black text-[#0F172A]">מבט מהיר להיום</h2>
+          <p className="mt-2 text-sm font-bold text-[#64748B]">
+            {userProfile.name?.trim()
+              ? `שלום ${userProfile.name.trim()}`
+              : 'כל הנתונים החשובים במקום אחד'}
           </p>
         </div>
 
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <QuickInfo
+          <SummaryCard
             label="סוכר אחרון"
             value={latestSugar ? `${latestSugar.level} mg/dL` : 'עדיין לא נמדד'}
           />
-          <QuickInfo
-            label="התרופה הבאה"
-            value={nextMedication ? `${nextMedication.name} · ${formatClock(nextMedication.time)}` : 'אין תזכורת קרובה'}
+          <SummaryCard
+            label="הטיפול הבא"
+            value={
+              nextMedication
+                ? `${nextMedication.name} · ${formatClock(nextMedication.time)}`
+                : 'אין תזכורת קרובה'
+            }
           />
         </div>
+      </div>
 
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          {mainCards.map((card) => (
-            <HomeActionCard
-              key={card.key}
-              title={card.title}
-              subtitle={card.subtitle}
-              icon={card.icon}
-              onClick={card.onClick}
-              theme={theme}
-            />
-          ))}
-        </div>
-
-        <div className="mt-4 grid grid-cols-2 gap-3">
-          <SecondaryActionCard
-            title="היסטוריה"
-            subtitle="מה קרה השבוע"
-            icon={<BookOpen size={18} strokeWidth={1.9} />}
-            onClick={onHistoryClick}
-            theme={theme}
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        {primaryActions.map((action) => (
+          <ActionCard
+            key={action.key}
+            title={action.title}
+            subtitle={action.subtitle}
+            icon={action.icon}
+            onClick={action.onClick}
+            themeColor={theme.primary}
+            themeBorder={theme.primaryBorder}
           />
-          <SecondaryActionCard
-            title="מנוי PRO"
-            subtitle="שדרוג לעוזר חכם יותר"
-            icon={<Crown size={18} strokeWidth={1.9} />}
-            onClick={onSubscriptionClick}
-            theme={theme}
-          />
-        </div>
+        ))}
       </div>
     </section>
   );
 }
 
-function QuickInfo({ label, value }: { label: string; value: string }) {
+function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
     <div
       className="rounded-[22px] px-4 py-3 text-right"
       style={{
-        background: 'rgba(255,255,255,0.84)',
-        border: '1px solid rgba(219, 229, 241, 0.9)',
+        background: '#F8FAFC',
+        border: '1px solid #E2E8F0',
       }}
     >
-      <p className="text-xs font-bold text-[#8A97A8]">{label}</p>
-      <p className="mt-2 text-sm font-black text-[#4D5B73]">{value}</p>
+      <p className="text-xs font-bold text-[#64748B]">{label}</p>
+      <p className="mt-2 text-sm font-black text-[#0F172A]">{value}</p>
     </div>
   );
 }
 
-function HomeActionCard({
+function ActionCard({
   title,
   subtitle,
   icon,
   onClick,
-  theme,
+  themeColor,
+  themeBorder,
 }: {
   title: string;
   subtitle: string;
   icon: ReactNode;
   onClick?: () => void;
-  theme: ReturnType<typeof useAppContext>['theme'];
+  themeColor: string;
+  themeBorder: string;
 }) {
   return (
     <button
       onClick={onClick}
-      className="relative min-h-[122px] rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
+      className="relative min-h-[118px] rounded-[24px] p-4 text-right transition-all active:scale-[0.98]"
       style={{
-        background: 'rgba(255,255,255,0.9)',
-        border: `1px solid ${theme.primaryBorder}`,
-        boxShadow: '0 12px 28px rgba(160, 134, 122, 0.08)',
+        background: '#FFFFFF',
+        border: `1px solid ${themeBorder}`,
+        boxShadow: '0 12px 24px rgba(15, 23, 42, 0.05)',
       }}
     >
       <div
-        className="absolute right-4 top-4 flex h-11 w-11 items-center justify-center rounded-2xl"
+        className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-[16px]"
         style={{
-          background: theme.primaryBg,
-          color: theme.primaryDark,
+          background: '#EFF6FF',
+          color: themeColor,
         }}
       >
         {icon}
       </div>
 
-      <div className="flex h-full flex-col justify-end text-right">
-        <p className="text-[17px] font-black text-[#5A4740]">{title}</p>
-        <p className="mt-1 text-xs font-bold text-[#8D7A73]">{subtitle}</p>
-      </div>
-    </button>
-  );
-}
-
-function SecondaryActionCard({
-  title,
-  subtitle,
-  icon,
-  onClick,
-  theme,
-}: {
-  title: string;
-  subtitle: string;
-  icon: ReactNode;
-  onClick?: () => void;
-  theme: ReturnType<typeof useAppContext>['theme'];
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className="flex min-h-[90px] items-center justify-between rounded-[24px] px-4 text-right transition-all active:scale-[0.98]"
-      style={{
-        background: '#FFFFFF',
-        border: `1px solid ${theme.primaryBorder}`,
-        boxShadow: '0 12px 28px rgba(122, 146, 182, 0.08)',
-      }}
-    >
-      <div className="text-right">
-        <p className="font-black text-[#4D5B73]">{title}</p>
-        <p className="mt-1 text-xs font-bold text-[#7F8CA0]">{subtitle}</p>
-      </div>
-      <div
-        className="flex h-11 w-11 items-center justify-center rounded-2xl"
-        style={{ background: theme.primaryBg, color: theme.primaryDark }}
-      >
-        {icon}
+      <div className="flex h-full flex-col justify-end">
+        <p className="text-[17px] font-black text-[#0F172A]">{title}</p>
+        <p className="mt-1 text-xs font-bold text-[#64748B]">{subtitle}</p>
       </div>
     </button>
   );

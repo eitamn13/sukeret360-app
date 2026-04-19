@@ -11,6 +11,7 @@ import type {
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL?.trim();
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY?.trim();
+const authRedirectUrl = import.meta.env.VITE_AUTH_REDIRECT_URL?.trim();
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
@@ -20,9 +21,51 @@ export const supabase = isSupabaseConfigured
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        flowType: 'pkce',
+        storageKey: 'sukeret360-auth',
       },
     })
   : null;
+
+const APP_LOCAL_STORAGE_KEYS = [
+  'guest_mode_v1',
+  'userProfile',
+  'onboardingDone',
+  'emergency_contact',
+  'saved_location',
+  'locationPermissionGranted',
+  'medication_schedule',
+  'medication_logs',
+  'meal_logs',
+  'todayMeals',
+  'sugar_logs',
+  'medication_notification_log',
+  'sugar_emergency_alert_log',
+] as const;
+
+function stripTrailingSlash(url: string) {
+  return url.replace(/\/+$/, '');
+}
+
+export function getAuthRedirectUrl() {
+  if (authRedirectUrl) {
+    return stripTrailingSlash(authRedirectUrl);
+  }
+
+  if (typeof window !== 'undefined' && window.location.origin) {
+    return stripTrailingSlash(window.location.origin);
+  }
+
+  return 'http://localhost:5173';
+}
+
+export function clearAppLocalState() {
+  if (typeof window === 'undefined') return;
+
+  for (const key of APP_LOCAL_STORAGE_KEYS) {
+    window.localStorage.removeItem(key);
+  }
+}
 
 export type SubscriptionStatus = 'free' | 'premium' | 'lifetime';
 export type SubscriptionPlan = 'free' | 'monthly' | 'yearly' | 'lifetime';
@@ -49,8 +92,17 @@ export interface AppUserRecord {
   subscription_status: SubscriptionStatus;
   subscription_plan: SubscriptionPlan;
   subscription_updated_at: string | null;
+  subscription_started_at: string | null;
+  subscription_renews_at: string | null;
+  subscription_active: boolean;
+  payment_status: string;
   billing_provider: string | null;
   stripe_customer_id: string | null;
+  stripe_subscription_id: string | null;
+  stripe_price_id: string | null;
+  billing_currency: string;
+  cancel_at_period_end: boolean;
+  last_payment_at: string | null;
   is_admin_managed: boolean;
 }
 

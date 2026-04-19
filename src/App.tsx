@@ -42,17 +42,20 @@ function AppInner() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const open = params.get('open');
+    const billing = params.get('billing');
 
     if (open === 'sugar') setShowSugarModal(true);
     if (open === 'meal') setShowMealLogger(true);
     if (open === 'subscription') setShowSubscription(true);
+    if (billing) setShowSubscription(true);
 
     if (open) {
       params.delete('open');
-      const next = params.toString();
-      const nextUrl = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`;
-      window.history.replaceState({}, '', nextUrl);
     }
+
+    const next = params.toString();
+    const nextUrl = `${window.location.pathname}${next ? `?${next}` : ''}${window.location.hash}`;
+    window.history.replaceState({}, '', nextUrl);
   }, []);
 
   if (!remoteReady) {
@@ -166,15 +169,7 @@ function App() {
 
 function AppShell() {
   const { authEnabled, loading, user } = useAuthContext();
-  const [guestMode, setGuestMode] = useState(() => {
-    if (typeof window === 'undefined') return false;
-    return window.localStorage.getItem('guest_mode_v1') === '1';
-  });
-
-  const continueAsGuest = () => {
-    window.localStorage.setItem('guest_mode_v1', '1');
-    setGuestMode(true);
-  };
+  const [guestMode, setGuestMode] = useState(false);
 
   if (loading) {
     return (
@@ -197,8 +192,16 @@ function AppShell() {
     return <AuthScreen />;
   }
 
-  if (!authEnabled && !guestMode) {
-    return <AuthScreen onContinueGuest={continueAsGuest} showGuestOption />;
+  if (!authEnabled) {
+    if (!guestMode) {
+      return <AuthScreen showGuestOption onContinueGuest={() => setGuestMode(true)} />;
+    }
+
+    return (
+      <AppProvider>
+        <AppInner />
+      </AppProvider>
+    );
   }
 
   return (

@@ -121,35 +121,23 @@ export interface Theme {
   headerShadow: string;
 }
 
-export const FEMALE_THEME: Theme = {
-  primary: '#D78DA8',
-  primaryDark: '#6C544A',
-  primaryLight: '#F3D5DD',
-  primaryBorder: '#ECDDCD',
-  primaryBg: '#FFF5F1',
-  primaryShadow: 'rgba(173, 132, 121, 0.18)',
-  primaryMuted: '#9C8076',
-  gradientCard: 'linear-gradient(145deg, #FFFDF9 0%, #FFF6F0 46%, #FBECEF 100%)',
-  gradientFull: 'linear-gradient(180deg, #FFFDF8 0%, #FFF8F1 56%, #FFFDF9 100%)',
-  headerBg: 'rgba(255, 250, 244, 0.96)',
-  headerBorder: '#EFE3D8',
-  headerShadow: '0 10px 28px rgba(146, 118, 103, 0.08)',
+const APP_THEME: Theme = {
+  primary: '#2563EB',
+  primaryDark: '#1E3A8A',
+  primaryLight: '#DBEAFE',
+  primaryBorder: '#D7E3F4',
+  primaryBg: '#EFF6FF',
+  primaryShadow: 'rgba(37, 99, 235, 0.16)',
+  primaryMuted: '#64748B',
+  gradientCard: 'linear-gradient(180deg, #FFFFFF 0%, #F8FBFF 100%)',
+  gradientFull: 'linear-gradient(180deg, #F8FBFF 0%, #F2F7FD 100%)',
+  headerBg: 'rgba(248, 251, 255, 0.98)',
+  headerBorder: '#DCE6F2',
+  headerShadow: '0 10px 24px rgba(30, 58, 138, 0.06)',
 };
 
-export const MALE_THEME: Theme = {
-  primary: '#6B97D6',
-  primaryDark: '#4F617F',
-  primaryLight: '#DCEAFD',
-  primaryBorder: '#DDE6F3',
-  primaryBg: '#F4F8FE',
-  primaryShadow: 'rgba(107, 151, 214, 0.18)',
-  primaryMuted: '#7E8DA6',
-  gradientCard: 'linear-gradient(145deg, #FEFFFE 0%, #F7FAFE 44%, #EEF5FF 100%)',
-  gradientFull: 'linear-gradient(180deg, #FCFEFF 0%, #F4F8FE 56%, #FCFEFF 100%)',
-  headerBg: 'rgba(250, 252, 255, 0.96)',
-  headerBorder: '#E4EBF5',
-  headerShadow: '0 10px 28px rgba(115, 143, 185, 0.08)',
-};
+export const FEMALE_THEME: Theme = APP_THEME;
+export const MALE_THEME: Theme = APP_THEME;
 
 const DEFAULT_PROFILE: UserProfile = {
   name: '',
@@ -179,7 +167,7 @@ const DEFAULT_MEDS: MedicationScheduleItem[] = [
     dosage: '500 מ"ג',
     type: 'pill',
     notes: 'לקחת עם ארוחת הבוקר',
-    image: '💊',
+    image: 'white-pill',
     appearanceLabel: 'כדור לבן',
     notifyEmergencyAfterMinutes: 45,
   },
@@ -191,7 +179,7 @@ const DEFAULT_MEDS: MedicationScheduleItem[] = [
     dosage: '10 יחידות',
     type: 'injection',
     notes: 'להזריק לפי ההנחיה האישית שלך',
-    image: '💉',
+    image: 'insulin-pen',
     appearanceLabel: 'עט אינסולין',
     notifyEmergencyAfterMinutes: 45,
   },
@@ -305,8 +293,8 @@ function buildCriticalSugarAlertMessage(
   return `${displayName} מדד/ה סוכר ${severity}: ${entry.level} mg/dL (${entry.contextLabel}). כדאי לבדוק מיד וליצור קשר.${buildLocationSuffix(savedLocation)}`;
 }
 
-function getThemeForProfile(profile: UserProfile): Theme {
-  return profile.gender === 'male' ? MALE_THEME : FEMALE_THEME;
+function getThemeForProfile(): Theme {
+  return APP_THEME;
 }
 
 function normalizeMedicationScheduleFrom(schedule: MedicationScheduleItem[] = []): MedicationScheduleItem[] {
@@ -315,7 +303,7 @@ function normalizeMedicationScheduleFrom(schedule: MedicationScheduleItem[] = []
   return base.map((item) => ({
     ...item,
     period: item.period || getPeriodFromTime(item.time),
-    image: item.image || (item.type === 'injection' ? '💉' : '💊'),
+    image: item.image || (item.type === 'injection' ? 'insulin-pen' : 'white-pill'),
     appearanceLabel:
       item.appearanceLabel ||
       (item.type === 'injection' ? 'עט אינסולין' : 'כדור'),
@@ -330,7 +318,7 @@ function normalizeMealLogsFrom(meals: LoggedMeal[] = []): LoggedMeal[] {
   return meals
     .map((meal) => ({
       ...meal,
-      icon: meal.icon || '🍽️',
+      icon: meal.icon || 'meal',
       mealType: meal.mealType || 'snack',
       source: meal.source || 'manual',
       calories: typeof meal.calories === 'number' ? meal.calories : undefined,
@@ -436,7 +424,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const remoteHydrating = useRef(false);
   const lastRemoteSnapshot = useRef('');
 
-  const theme = useMemo(() => getThemeForProfile(userProfile), [userProfile]);
+  const theme = useMemo(() => getThemeForProfile(), []);
   const userId = user?.id ?? null;
 
   const todayMeals = useMemo(() => {
@@ -669,7 +657,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           ...item,
           id: item.id || `${Date.now()}-${index}`,
           period: item.period || getPeriodFromTime(item.time),
-          image: item.image || (item.type === 'injection' ? '💉' : '💊'),
+          image: item.image || (item.type === 'injection' ? 'insulin-pen' : 'white-pill'),
           appearanceLabel:
             item.appearanceLabel ||
             (item.type === 'injection' ? 'עט אינסולין' : 'כדור'),

@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import { getStripeClient } from '../src/lib/stripe';
+import { getSubscriptionPlanConfig, type SubscriptionPlanId } from '../src/lib/subscription';
 
 function parseBody(req: VercelRequest) {
   if (!req.body) return {};
@@ -17,37 +18,38 @@ function parseBody(req: VercelRequest) {
   return {};
 }
 
+function getServerAppBaseUrl(req: VercelRequest) {
+  return (
+    process.env.APP_BASE_URL ||
+    process.env.VITE_AUTH_REDIRECT_URL ||
+    req.headers.origin ||
+    'https://sukeret360.app'
+  ).replace(/\/+$/, '');
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const stripe = getStripeClient();
-  const supabaseUrl = process.env.VITE_SUPABASE_URL;
-  const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!stripe || !supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
-    return res.status(500).json({ error: 'Missing billing configuration' });
+    return res.status(500).json({ error: 'Billing service is not ready' });
   }
 
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-
   if (!token) {
     return res.status(401).json({ error: 'Missing auth token' });
   }
 
   const body = parseBody(req);
   const plan = body.plan === 'yearly' ? 'yearly' : 'monthly';
-  const priceId =
-    plan === 'yearly'
-      ? process.env.STRIPE_PRICE_ID_YEARLY
-      : process.env.STRIPE_PRICE_ID_MONTHLY;
-
-  if (!priceId) {
-    return res.status(500).json({ error: 'Missing Stripe price id' });
-  }
+  const planConfig = getSubscriptionPlanConfig(plan as SubscriptionPlanId);
 
   const verifier = createClient(supabaseUrl, supabaseAnonKey);
   const admin = createClient(supabaseUrl, serviceRoleKey);
@@ -87,27 +89,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .from('app_users')
       .update({
         stripe_customer_id: customerId,
+        billing_provider: 'stripe',
+        billing_currency: 'ils',
+        subscription_updated_at: new Date().toISOString(),
       })
       .eq('user_id', user.id);
   }
 
-  const origin =
-    req.headers.origin ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.APP_BASE_URL ||
-    'https://sukeret360.app';
-
+  const appBaseUrl = getServerAppBaseUrl(req);
   const session = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,
-    line_items: [{ price: priceId, quantity: 1 }],
-    success_url: `${origin}/?billing=success`,
-    cancel_url: `${origin}/?billing=cancelled`,
+    line_items: [
+      {
+        price_data: {
+          currency: 'ils',
+          unit_amount: planConfig.amount,
+          recurring: {
+            interval: planConfig.interval,
+          },
+          product_data: {
+            name: planConfig.title,
+            description: planConfig.description,
+          },
+        },
+        quantity: 1,
+      },
+    ],
     metadata: {
       user_id: user.id,
       plan,
     },
+    subscription_data: {
+      metadata: {
+        user_id: user.id,
+        plan,
+      },
+    },
     allow_promotion_codes: true,
+    billing_address_collection: 'required',
+    locale: 'auto',
+    success_url: `${appBaseUrl}/?billing=success`,
+    cancel_url: `${appBaseUrl}/?billing=cancelled`,
   });
 
   return res.status(200).json({ url: session.url });

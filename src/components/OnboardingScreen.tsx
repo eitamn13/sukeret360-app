@@ -1,5 +1,6 @@
-import { Check, ChevronLeft, Clock3, Pill, Plus, ShieldCheck, Trash2 } from 'lucide-react';
-import { useState } from 'react';
+import { Check, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import type {
   DiabetesType,
   Gender,
@@ -7,30 +8,50 @@ import type {
   TreatmentType,
   UserProfile,
 } from '../context/AppContext';
-import {
-  FEMALE_THEME,
-  MALE_THEME,
-  getPeriodFromTime,
-  useAppContext,
-} from '../context/AppContext';
+import { getPeriodFromTime, useAppContext } from '../context/AppContext';
+import { useAuthContext } from '../context/AuthContext';
 import { Logo } from './Logo';
+
+type StepId = 0 | 1 | 2 | 3 | 4;
+
+const TOTAL_STEPS = 5;
 
 const DIABETES_TYPE_OPTIONS: Array<{
   value: DiabetesType;
   label: string;
   description: string;
 }> = [
-  { value: 'prediabetes', label: 'טרום סוכרת', description: 'מעקב, תזונה ותנועה יומית' },
-  { value: 'monitoring', label: 'עדיין בבדיקה', description: 'כשצריכים מעקב גם בלי אבחון סופי' },
-  { value: '2', label: 'סוכרת סוג 2', description: 'לרוב כדורים ושגרה יומית' },
-  { value: '1', label: 'סוכרת סוג 1', description: 'לרוב אינסולין ומעקב צמוד' },
+  {
+    value: 'prediabetes',
+    label: 'טרום סוכרת',
+    description: 'מעקב, תזונה ופעילות למניעת החמרה',
+  },
+  {
+    value: 'monitoring',
+    label: 'עדיין בבדיקה',
+    description: 'כשרוצים מעקב גם לפני אבחון סופי',
+  },
+  {
+    value: '2',
+    label: 'סוכרת סוג 2',
+    description: 'לרוב טיפול תרופתי ומעקב יומי',
+  },
+  {
+    value: '1',
+    label: 'סוכרת סוג 1',
+    description: 'מעקב צמוד וטיפול באינסולין',
+  },
 ];
 
-const TREATMENT_OPTIONS: Array<{ value: TreatmentType; label: string; emoji: string }> = [
-  { value: 'lifestyle', label: 'אורח חיים', emoji: '💪' },
-  { value: 'pills', label: 'כדורים', emoji: '💊' },
-  { value: 'insulin', label: 'אינסולין', emoji: '💉' },
-  { value: 'combined', label: 'משולב', emoji: '🩺' },
+const TREATMENT_OPTIONS: Array<{
+  value: TreatmentType;
+  label: string;
+  description: string;
+}> = [
+  { value: 'lifestyle', label: 'אורח חיים', description: 'תזונה, הליכה ומעקב' },
+  { value: 'pills', label: 'כדורים', description: 'תרופות קבועות לפי שעה' },
+  { value: 'insulin', label: 'אינסולין', description: 'עט או זריקה לפי תכנית טיפול' },
+  { value: 'combined', label: 'טיפול משולב', description: 'כדורים ואינסולין יחד' },
 ];
 
 const MEDICATION_PRESETS: Array<{
@@ -38,25 +59,22 @@ const MEDICATION_PRESETS: Array<{
   name: string;
   dosage: string;
   type: 'pill' | 'injection';
-  emoji: string;
   appearanceLabel: string;
   time: string;
 }> = [
   {
     key: 'metformin',
     name: 'מטפורמין',
-    dosage: '500 מ"ג',
+    dosage: '500 מ״ג',
     type: 'pill',
-    emoji: '💊',
     appearanceLabel: 'כדור לבן',
     time: '08:00',
   },
   {
     key: 'jardiance',
     name: 'ג׳רדיאנס',
-    dosage: '10 מ"ג',
+    dosage: '10 מ״ג',
     type: 'pill',
-    emoji: '💊',
     appearanceLabel: 'כדור לבן',
     time: '08:00',
   },
@@ -65,7 +83,6 @@ const MEDICATION_PRESETS: Array<{
     name: 'אוזמפיק',
     dosage: 'פעם בשבוע',
     type: 'injection',
-    emoji: '💉',
     appearanceLabel: 'עט זריקה',
     time: '20:00',
   },
@@ -74,7 +91,6 @@ const MEDICATION_PRESETS: Array<{
     name: 'אינסולין',
     dosage: '10 יחידות',
     type: 'injection',
-    emoji: '💉',
     appearanceLabel: 'עט אינסולין',
     time: '21:00',
   },
@@ -90,7 +106,7 @@ function createMedicationFromPreset(
     time: preset.time,
     period: getPeriodFromTime(preset.time),
     type: preset.type,
-    image: preset.emoji,
+    image: preset.type === 'injection' ? 'insulin-pen' : 'white-pill',
     appearanceLabel: preset.appearanceLabel,
     notes: '',
     notifyEmergencyAfterMinutes: 45,
@@ -100,9 +116,11 @@ function createMedicationFromPreset(
 export function OnboardingScreen() {
   const { completeOnboarding, saveEmergencyContact, saveMedicationSchedule, saveUserProfile } =
     useAppContext();
+  const { user } = useAuthContext();
 
-  const [step, setStep] = useState(0);
-  const [name, setName] = useState('');
+  const [step, setStep] = useState<StepId>(0);
+  const [name, setName] = useState(user?.user_metadata?.full_name?.trim?.() || '');
+  const [email] = useState(user?.email?.trim() || '');
   const [gender, setGender] = useState<Gender>('');
   const [age, setAge] = useState('');
   const [diabetesType, setDiabetesType] = useState<DiabetesType>('');
@@ -111,27 +129,32 @@ export function OnboardingScreen() {
   const [targetHigh, setTargetHigh] = useState('140');
   const [wakeTime, setWakeTime] = useState('07:00');
   const [sleepTime, setSleepTime] = useState('22:00');
-  const [emergencyName, setEmergencyName] = useState('');
-  const [emergencyPhone, setEmergencyPhone] = useState('');
   const [medications, setMedications] = useState<MedicationScheduleItem[]>([]);
   const [noMedicationSelected, setNoMedicationSelected] = useState(false);
 
-  const theme = gender === 'male' ? MALE_THEME : FEMALE_THEME;
-  const totalSteps = 3;
+  const selectedMedicationNames = new Set(medications.map((medication) => medication.name));
 
-  const selectedMedicationKeys = new Set(
-    medications.map(
-      (medication) =>
-        MEDICATION_PRESETS.find((preset) => preset.name === medication.name)?.key ?? medication.id
-    )
-  );
-
-  const canContinue =
-    step === 0
-      ? Boolean(gender && age.trim() && diabetesType)
-      : step === 1
-        ? Boolean(treatmentType)
-        : Boolean(Number(targetLow) > 0 && Number(targetHigh) > Number(targetLow));
+  const canContinue = useMemo(() => {
+    switch (step) {
+      case 0:
+        return Boolean(name.trim() && email.trim());
+      case 1:
+        return Boolean(age.trim() && gender);
+      case 2:
+        return Boolean(diabetesType);
+      case 3:
+        return Boolean(treatmentType && (noMedicationSelected || medications.length > 0 || treatmentType === 'lifestyle'));
+      case 4:
+        return Boolean(
+          Number(targetLow) > 0 &&
+            Number(targetHigh) > Number(targetLow) &&
+            wakeTime &&
+            sleepTime
+        );
+      default:
+        return false;
+    }
+  }, [age, diabetesType, email, gender, medications.length, name, noMedicationSelected, sleepTime, step, targetHigh, targetLow, treatmentType, wakeTime]);
 
   const toggleMedicationPreset = (preset: (typeof MEDICATION_PRESETS)[number]) => {
     setNoMedicationSelected(false);
@@ -149,47 +172,21 @@ export function OnboardingScreen() {
     setMedications([]);
   };
 
-  const addEmptyMedication = () => {
-    setNoMedicationSelected(false);
-    setMedications((prev) => [
-      ...prev,
-      {
-        id: `custom-${Date.now()}`,
-        name: '',
-        dosage: '',
-        time: '08:00',
-        period: 'בוקר',
-        type: 'pill',
-        image: '💊',
-        appearanceLabel: 'כדור',
-        notes: '',
-        notifyEmergencyAfterMinutes: 45,
-      },
-    ]);
+  const nextStep = () => {
+    if (!canContinue || step === 4) return;
+    setStep((prev) => (prev + 1) as StepId);
   };
 
-  const updateMedication = (medicationId: string, patch: Partial<MedicationScheduleItem>) => {
-    setMedications((prev) =>
-      prev.map((medication) =>
-        medication.id === medicationId
-          ? {
-              ...medication,
-              ...patch,
-              period:
-                patch.time !== undefined ? getPeriodFromTime(patch.time) : medication.period,
-            }
-          : medication
-      )
-    );
-  };
-
-  const removeMedication = (medicationId: string) => {
-    setMedications((prev) => prev.filter((item) => item.id !== medicationId));
+  const previousStep = () => {
+    if (step === 0) return;
+    setStep((prev) => (prev - 1) as StepId);
   };
 
   const handleFinish = () => {
+    if (!canContinue) return;
+
     const profile: UserProfile = {
-      name: name.trim() || 'המשתמש/ת',
+      name: name.trim() || 'משתמש',
       age: age.trim(),
       diabetesType,
       gender,
@@ -203,370 +200,286 @@ export function OnboardingScreen() {
 
     saveUserProfile(profile);
     saveEmergencyContact({
-      name: emergencyName.trim(),
-      phone: emergencyPhone.trim(),
+      name: '',
+      phone: '',
       message: 'אני צריך עזרה דחופה. זה המיקום שלי:',
     });
     saveMedicationSchedule(
-      noMedicationSelected
+      noMedicationSelected || treatmentType === 'lifestyle'
         ? []
-        : medications
-            .filter((item) => item.name.trim())
-            .map((item) => ({
-              ...item,
-              period: getPeriodFromTime(item.time),
-            }))
+        : medications.map((item) => ({
+            ...item,
+            period: getPeriodFromTime(item.time),
+          }))
     );
     completeOnboarding();
   };
 
-  const customMedications = medications.filter(
-    (item) => !MEDICATION_PRESETS.some((preset) => preset.name === item.name)
-  );
-
   return (
-    <div className="min-h-[100dvh] px-4 py-6" dir="rtl" style={{ background: theme.gradientFull }}>
+    <div
+      className="min-h-[100dvh] px-4 py-6"
+      dir="rtl"
+      style={{ background: 'linear-gradient(180deg, #F8FBFF 0%, #F3F7FD 100%)' }}
+    >
       <div className="mx-auto max-w-md">
+        <div className="mb-5 flex justify-center">
+          <div
+            className="flex h-20 w-20 items-center justify-center rounded-[24px]"
+            style={{
+              background: '#FFFFFF',
+              border: '1px solid #DCE6F2',
+              boxShadow: '0 16px 30px rgba(15, 23, 42, 0.08)',
+            }}
+          >
+            <Logo size={50} />
+          </div>
+        </div>
+
         <div
-          className="rounded-[34px] p-6"
+          className="rounded-[30px] p-5"
           style={{
-            background: 'rgba(255,255,255,0.96)',
-            border: `1px solid ${theme.primaryBorder}`,
-            boxShadow: `0 24px 54px ${theme.primaryShadow}`,
+            background: '#FFFFFF',
+            border: '1px solid #DCE6F2',
+            boxShadow: '0 20px 42px rgba(15, 23, 42, 0.08)',
           }}
         >
-          <div className="mb-5 flex justify-center">
-            <div
-              className="flex h-20 w-20 items-center justify-center rounded-[28px]"
+          <div className="flex items-center justify-between gap-3">
+            <button
+              onClick={previousStep}
+              disabled={step === 0}
+              className="flex h-11 min-w-[100px] items-center justify-center gap-1 rounded-[18px] text-sm font-black transition-all disabled:opacity-50"
               style={{
-                background: 'linear-gradient(145deg, #FFFFFF 0%, #FFF8F2 100%)',
-                border: `1px solid ${theme.primaryBorder}`,
+                background: '#FFFFFF',
+                color: '#1D4ED8',
+                border: '1px solid #BFDBFE',
               }}
             >
-              <Logo size={54} />
+              <ChevronRight size={16} strokeWidth={2.2} />
+              <span>חזרה</span>
+            </button>
+
+            <div className="text-center">
+              <h1 className="text-[28px] font-black text-[#0F172A]">התחלה פשוטה</h1>
+              <p className="mt-1 text-sm font-bold text-[#64748B]">שלב {step + 1} מתוך {TOTAL_STEPS}</p>
             </div>
+
+            <div className="w-[100px]" />
           </div>
 
-          <div className="text-center">
-            <h1 className="text-[30px] font-black text-[#4D5B73]">כמה צעדים קצרים</h1>
-            <p className="mt-3 text-sm leading-7 text-[#7C889A]">נגדיר רק מה שחשוב באמת וניכנס.</p>
-          </div>
-
-          <div className="mt-5 flex items-center justify-center gap-2">
-            {Array.from({ length: totalSteps }).map((_, index) => (
+          <div className="mt-5 flex gap-2">
+            {Array.from({ length: TOTAL_STEPS }).map((_, index) => (
               <span
                 key={index}
-                className="h-2.5 rounded-full transition-all"
+                className="h-2 flex-1 rounded-full"
                 style={{
-                  width: step === index ? 30 : 10,
-                  background: step === index ? theme.primary : '#E3E8F1',
+                  background: index <= step ? '#2563EB' : '#E2E8F0',
                 }}
               />
             ))}
           </div>
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-6">
             {step === 0 ? (
-              <>
-                <SectionTitle title="נתחיל בפרטים בסיסיים" subtitle="בחירה גדולה וברורה" />
-
-                <FieldLabel label="שם פרטי או כינוי" optional />
-                <LargeInput
-                  value={name}
-                  onChange={setName}
-                  placeholder="אפשר גם להשאיר ריק"
-                  themeBorder={theme.primaryBorder}
-                />
-
-                <FieldLabel label="מגדר" />
-                <div className="grid grid-cols-2 gap-3">
-                  <ChoiceButton
-                    active={gender === 'female'}
-                    label="אישה"
-                    hint="👩 עיצוב נשי"
-                    onClick={() => setGender('female')}
-                    theme={theme}
-                  />
-                  <ChoiceButton
-                    active={gender === 'male'}
-                    label="גבר"
-                    hint="👨 עיצוב גברי"
-                    onClick={() => setGender('male')}
-                    theme={theme}
-                  />
+              <StepSection
+                title="פרטים בסיסיים"
+                description="כמה פרטים קצרים כדי לפתוח את החשבון."
+              >
+                <div className="space-y-3">
+                  <FieldLabel label="שם מלא" />
+                  <LargeInput value={name} onChange={setName} placeholder="שם מלא" />
+                  <FieldLabel label="מייל" />
+                  <LargeInput value={email} onChange={() => {}} placeholder="מייל" readOnly />
                 </div>
-
-                <FieldLabel label="גיל" />
-                <LargeInput
-                  value={age}
-                  onChange={setAge}
-                  placeholder="למשל 62"
-                  type="number"
-                  themeBorder={theme.primaryBorder}
-                />
-
-                <FieldLabel label="מה הכי מתאים לך?" />
-                <div className="grid grid-cols-2 gap-3">
-                  {DIABETES_TYPE_OPTIONS.map((option) => (
-                    <ChoiceButton
-                      key={option.value}
-                      active={diabetesType === option.value}
-                      label={option.label}
-                      hint={option.description}
-                      onClick={() => setDiabetesType(option.value)}
-                      theme={theme}
-                    />
-                  ))}
-                </div>
-              </>
+              </StepSection>
             ) : null}
 
             {step === 1 ? (
-              <>
-                <SectionTitle title="טיפול ותרופות" subtitle="פחות כתיבה, יותר לחיצות" />
-
-                <FieldLabel label="איך מטפלים בדרך כלל?" />
-                <div className="grid grid-cols-2 gap-3">
-                  {TREATMENT_OPTIONS.map((option) => (
-                    <ChoiceButton
-                      key={option.value}
-                      active={treatmentType === option.value}
-                      label={option.label}
-                      hint={option.emoji}
-                      onClick={() => setTreatmentType(option.value)}
-                      theme={theme}
+              <StepSection
+                title="גיל ומגדר"
+                description="בחירה ברורה, בלי פרטים מיותרים."
+              >
+                <div className="space-y-3">
+                  <FieldLabel label="גיל" />
+                  <LargeInput
+                    value={age}
+                    onChange={setAge}
+                    placeholder="גיל"
+                    type="number"
+                  />
+                  <FieldLabel label="מגדר" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <ChoiceCard
+                      label="אישה"
+                      description="התאמת פנייה בלשון נקבה"
+                      active={gender === 'female'}
+                      onClick={() => setGender('female')}
                     />
-                  ))}
+                    <ChoiceCard
+                      label="גבר"
+                      description="התאמת פנייה בלשון זכר"
+                      active={gender === 'male'}
+                      onClick={() => setGender('male')}
+                    />
+                  </div>
                 </div>
-
-                <button
-                  type="button"
-                  onClick={markNoMedication}
-                  className="flex min-h-[74px] w-full items-center justify-between rounded-[24px] px-5 text-right transition-all"
-                  style={{
-                    background: noMedicationSelected ? theme.primaryBg : '#FFFFFF',
-                    border: `2px solid ${noMedicationSelected ? theme.primary : '#E2E8F0'}`,
-                    color: noMedicationSelected ? theme.primaryDark : '#475569',
-                    fontWeight: 900,
-                  }}
-                >
-                  <span className="text-base">אין לי תרופה קבועה</span>
-                  {noMedicationSelected ? <Check size={18} /> : <Pill size={18} />}
-                </button>
-
-                {!noMedicationSelected ? (
-                  <>
-                    <FieldLabel label="בחירה מהירה של תרופות" optional />
-                    <div className="grid grid-cols-2 gap-3">
-                      {MEDICATION_PRESETS.map((preset) => (
-                        <button
-                          key={preset.key}
-                          type="button"
-                          onClick={() => toggleMedicationPreset(preset)}
-                          className="min-h-[92px] rounded-[24px] p-4 text-right transition-all"
-                          style={{
-                            background: selectedMedicationKeys.has(preset.key)
-                              ? theme.primaryBg
-                              : '#FFFFFF',
-                            border: `2px solid ${
-                              selectedMedicationKeys.has(preset.key) ? theme.primary : '#E2E8F0'
-                            }`,
-                          }}
-                        >
-                          <div className="flex items-start justify-between gap-3">
-                            <span className="text-2xl">{preset.emoji}</span>
-                            {selectedMedicationKeys.has(preset.key) ? (
-                              <span
-                                className="flex h-7 w-7 items-center justify-center rounded-full text-white"
-                                style={{ background: theme.primary }}
-                              >
-                                <Check size={15} />
-                              </span>
-                            ) : null}
-                          </div>
-                          <div className="mt-4">
-                            <p className="text-[15px] font-black text-[#4D5B73]">{preset.name}</p>
-                            <p className="mt-1 text-xs font-bold text-[#7F8CA0]">{preset.dosage}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={addEmptyMedication}
-                      className="flex h-12 w-full items-center justify-center gap-2 rounded-[22px] font-extrabold"
-                      style={{
-                        background: '#FFFFFF',
-                        color: theme.primaryDark,
-                        border: `1px solid ${theme.primaryBorder}`,
-                      }}
-                    >
-                      <Plus size={18} />
-                      <span>הוספת תרופה ידנית</span>
-                    </button>
-
-                    {customMedications.length > 0 ? (
-                      <div className="space-y-3">
-                        {customMedications.map((medication) => (
-                          <div
-                            key={medication.id}
-                            className="rounded-[24px] p-4"
-                            style={{ background: '#FFFFFF', border: '1px solid #E2E8F0' }}
-                          >
-                            <div className="mb-3 flex items-center justify-between gap-3">
-                              <button
-                                onClick={() => removeMedication(medication.id)}
-                                className="flex h-10 w-10 items-center justify-center rounded-2xl"
-                                style={{
-                                  background: '#FFF5F5',
-                                  color: '#DC2626',
-                                  border: '1px solid #FECACA',
-                                }}
-                                aria-label="מחיקת תרופה"
-                              >
-                                <Trash2 size={16} />
-                              </button>
-                              <p className="font-black text-[#4D5B73]">תרופה ידנית</p>
-                            </div>
-
-                            <div className="space-y-3">
-                              <LargeInput
-                                value={medication.name}
-                                onChange={(value) => updateMedication(medication.id, { name: value })}
-                                placeholder="שם התרופה"
-                                themeBorder={theme.primaryBorder}
-                              />
-                              <div className="grid grid-cols-2 gap-3">
-                                <LargeInput
-                                  value={medication.dosage}
-                                  onChange={(value) => updateMedication(medication.id, { dosage: value })}
-                                  placeholder="מינון"
-                                  themeBorder={theme.primaryBorder}
-                                />
-                                <TimeInput
-                                  value={medication.time}
-                                  onChange={(value) => updateMedication(medication.id, { time: value })}
-                                  themeBorder={theme.primaryBorder}
-                                />
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : null}
-                  </>
-                ) : null}
-              </>
+              </StepSection>
             ) : null}
 
             {step === 2 ? (
-              <>
-                <SectionTitle title="יעדים וקשר חירום" subtitle="רק מה שצריך ליום יום" />
+              <StepSection
+                title="סוג סוכרת"
+                description="בחירה אחת שמגדירה את הזרימה המתאימה."
+              >
+                <div className="space-y-3">
+                  {DIABETES_TYPE_OPTIONS.map((option) => (
+                    <ChoiceCard
+                      key={option.value}
+                      label={option.label}
+                      description={option.description}
+                      active={diabetesType === option.value}
+                      onClick={() => setDiabetesType(option.value)}
+                      fullWidth
+                    />
+                  ))}
+                </div>
+              </StepSection>
+            ) : null}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <FieldLabel label="יעד נמוך" />
-                    <LargeInput
-                      value={targetLow}
-                      onChange={setTargetLow}
-                      placeholder="80"
-                      type="number"
-                      themeBorder={theme.primaryBorder}
+            {step === 3 ? (
+              <StepSection
+                title="טיפול קבוע"
+                description="אפשר לבחור טיפול ולהוסיף תרופה, או לסמן שאין תרופה קבועה."
+              >
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    {TREATMENT_OPTIONS.map((option) => (
+                      <ChoiceCard
+                        key={option.value}
+                        label={option.label}
+                        description={option.description}
+                        active={treatmentType === option.value}
+                        onClick={() => setTreatmentType(option.value)}
+                      />
+                    ))}
+                  </div>
+
+                  <ChoiceCard
+                    label="אין לי תרופה קבועה"
+                    description="המערכת תישאר במעקב בלי תזכורות לתרופה"
+                    active={noMedicationSelected}
+                    onClick={markNoMedication}
+                    fullWidth
+                  />
+
+                  {!noMedicationSelected && treatmentType !== 'lifestyle' ? (
+                    <div className="space-y-3">
+                      <FieldLabel label="בחירת תרופה" />
+                      {MEDICATION_PRESETS.map((preset) => (
+                        <ChoiceCard
+                          key={preset.key}
+                          label={preset.name}
+                          description={`${preset.dosage} · ${preset.appearanceLabel} · ${preset.time}`}
+                          active={selectedMedicationNames.has(preset.name)}
+                          onClick={() => toggleMedicationPreset(preset)}
+                          fullWidth
+                        />
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </StepSection>
+            ) : null}
+
+            {step === 4 ? (
+              <StepSection
+                title="סיכום ואישור"
+                description="עוד שני יעדים יומיים ואפשר להיכנס."
+              >
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <FieldLabel label="יעד נמוך" />
+                      <LargeInput
+                        value={targetLow}
+                        onChange={setTargetLow}
+                        placeholder="80"
+                        type="number"
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel label="יעד גבוה" />
+                      <LargeInput
+                        value={targetHigh}
+                        onChange={setTargetHigh}
+                        placeholder="140"
+                        type="number"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <FieldLabel label="שעת קימה" />
+                      <LargeInput value={wakeTime} onChange={setWakeTime} type="time" />
+                    </div>
+                    <div>
+                      <FieldLabel label="שעת שינה" />
+                      <LargeInput value={sleepTime} onChange={setSleepTime} type="time" />
+                    </div>
+                  </div>
+
+                  <div
+                    className="rounded-[24px] p-4"
+                    style={{
+                      background: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                    }}
+                  >
+                    <SummaryRow label="שם" value={name || 'לא הוזן'} />
+                    <SummaryRow label="מגדר" value={gender === 'male' ? 'גבר' : 'אישה'} />
+                    <SummaryRow
+                      label="סוג סוכרת"
+                      value={
+                        DIABETES_TYPE_OPTIONS.find((option) => option.value === diabetesType)?.label ||
+                        'לא נבחר'
+                      }
+                    />
+                    <SummaryRow
+                      label="טיפול"
+                      value={
+                        noMedicationSelected
+                          ? 'אין תרופה קבועה'
+                          : TREATMENT_OPTIONS.find((option) => option.value === treatmentType)
+                              ?.label || 'לא נבחר'
+                      }
                     />
                   </div>
-                  <div>
-                    <FieldLabel label="יעד גבוה" />
-                    <LargeInput
-                      value={targetHigh}
-                      onChange={setTargetHigh}
-                      placeholder="140"
-                      type="number"
-                      themeBorder={theme.primaryBorder}
-                    />
-                  </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <FieldLabel label="שעת קימה" />
-                    <TimeInput value={wakeTime} onChange={setWakeTime} themeBorder={theme.primaryBorder} />
-                  </div>
-                  <div>
-                    <FieldLabel label="שעת שינה" />
-                    <TimeInput value={sleepTime} onChange={setSleepTime} themeBorder={theme.primaryBorder} />
-                  </div>
-                </div>
-
-                <FieldLabel label="איש קשר לחירום" optional />
-                <div className="grid grid-cols-2 gap-3">
-                  <LargeInput
-                    value={emergencyName}
-                    onChange={setEmergencyName}
-                    placeholder="שם מלא"
-                    themeBorder={theme.primaryBorder}
-                  />
-                  <LargeInput
-                    value={emergencyPhone}
-                    onChange={setEmergencyPhone}
-                    placeholder="טלפון"
-                    type="tel"
-                    themeBorder={theme.primaryBorder}
-                  />
-                </div>
-
-                <div
-                  className="rounded-[24px] p-4 text-right"
-                  style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}
-                >
-                  <div className="mb-2 flex items-center justify-between">
-                    <ShieldCheck size={18} className="text-[#64748B]" />
-                    <p className="font-black text-[#4D5B73]">מה נשמר בשבילך?</p>
-                  </div>
-                  <p className="text-sm leading-7 text-[#64748B]">
-                    יעדי סוכר, תרופות, שעות היום ואיש קשר לחירום. הכול נשמר כדי להקל על השימוש היומי.
-                  </p>
-                </div>
-              </>
+              </StepSection>
             ) : null}
           </div>
 
-          <div className="mt-6 flex items-center gap-3">
-            {step > 0 ? (
-              <button
-                type="button"
-                onClick={() => setStep((current) => Math.max(current - 1, 0))}
-                className="flex h-14 w-24 items-center justify-center gap-1 rounded-[22px] font-extrabold"
-                style={{
-                  background: '#FFFFFF',
-                  color: theme.primaryDark,
-                  border: `1px solid ${theme.primaryBorder}`,
-                }}
-              >
-                <ChevronLeft size={18} />
-                <span>חזרה</span>
-              </button>
-            ) : null}
-
+          <div className="mt-6">
             <button
-              type="button"
+              onClick={step === 4 ? handleFinish : nextStep}
               disabled={!canContinue}
-              onClick={() => {
-                if (step === totalSteps - 1) {
-                  handleFinish();
-                  return;
-                }
-                setStep((current) => Math.min(current + 1, totalSteps - 1));
-              }}
-              className="flex h-14 flex-1 items-center justify-center rounded-[24px] text-white disabled:opacity-60"
+              className="flex h-14 w-full items-center justify-center gap-2 rounded-[22px] text-base font-black text-white transition-all disabled:opacity-60"
               style={{
-                background: 'linear-gradient(135deg, #8EADE4 0%, #D49BB0 100%)',
-                fontWeight: 900,
-                boxShadow: '0 18px 36px rgba(114, 138, 180, 0.18)',
+                background: 'linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%)',
+                boxShadow: canContinue ? '0 18px 34px rgba(37, 99, 235, 0.22)' : 'none',
               }}
             >
-              {step === totalSteps - 1 ? 'סיום וכניסה לאפליקציה' : 'המשך'}
+              {step === 4 ? <Check size={18} strokeWidth={2.3} /> : <ChevronLeft size={18} strokeWidth={2.3} />}
+              <span>{step === 4 ? 'כניסה לאפליקציה' : 'המשך'}</span>
             </button>
+          </div>
+
+          <div
+            className="mt-4 flex items-center justify-center gap-2 rounded-[20px] px-4 py-3 text-center"
+            style={{ background: '#F8FAFC', border: '1px solid #E2E8F0' }}
+          >
+            <ShieldCheck size={17} className="text-[#2563EB]" />
+            <p className="text-sm font-bold text-[#475569]">השלבים קצרים כדי שיהיה נוח וברור גם מהטלפון</p>
           </div>
         </div>
       </div>
@@ -574,36 +487,42 @@ export function OnboardingScreen() {
   );
 }
 
-function SectionTitle({ title, subtitle }: { title: string; subtitle: string }) {
+function StepSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: ReactNode;
+}) {
   return (
-    <div className="text-right">
-      <h2 className="text-[24px] font-black text-[#4D5B73]">{title}</h2>
-      <p className="mt-2 text-sm font-bold leading-7 text-[#7C889A]">{subtitle}</p>
+    <div>
+      <div className="mb-4 text-right">
+        <h2 className="text-[24px] font-black text-[#0F172A]">{title}</h2>
+        <p className="mt-2 text-sm font-bold leading-7 text-[#64748B]">{description}</p>
+      </div>
+      {children}
     </div>
   );
 }
 
-function FieldLabel({ label, optional = false }: { label: string; optional?: boolean }) {
-  return (
-    <div className="mb-2 flex items-center justify-between">
-      {optional ? <span className="text-xs font-bold text-[#9AA7B8]">לא חובה</span> : <span />}
-      <p className="text-sm font-black text-[#5F6D84]">{label}</p>
-    </div>
-  );
+function FieldLabel({ label }: { label: string }) {
+  return <p className="mb-2 text-sm font-black text-[#334155]">{label}</p>;
 }
 
 function LargeInput({
   value,
   onChange,
   placeholder,
-  themeBorder,
   type = 'text',
+  readOnly = false,
 }: {
   value: string;
   onChange: (value: string) => void;
-  placeholder: string;
-  themeBorder: string;
+  placeholder?: string;
   type?: string;
+  readOnly?: boolean;
 }) {
   return (
     <input
@@ -611,75 +530,66 @@ function LargeInput({
       onChange={(event) => onChange(event.target.value)}
       placeholder={placeholder}
       type={type}
+      readOnly={readOnly}
+      className="h-14 w-full rounded-[20px] bg-white px-4 text-right text-base font-bold text-[#0F172A] outline-none"
       dir="rtl"
-      className="h-14 w-full rounded-[22px] px-4 text-right text-base font-bold text-[#4D5B73] outline-none"
       style={{
-        background: '#FFFFFF',
-        border: `1.5px solid ${themeBorder}`,
-        boxShadow: '0 10px 22px rgba(122, 146, 182, 0.08)',
+        border: '1.5px solid #DCE6F2',
+        background: readOnly ? '#F8FAFC' : '#FFFFFF',
       }}
     />
   );
 }
 
-function TimeInput({
-  value,
-  onChange,
-  themeBorder,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-  themeBorder: string;
-}) {
-  return (
-    <div
-      className="flex h-14 items-center gap-3 rounded-[22px] px-4"
-      style={{
-        background: '#FFFFFF',
-        border: `1.5px solid ${themeBorder}`,
-        boxShadow: '0 10px 22px rgba(122, 146, 182, 0.08)',
-      }}
-    >
-      <Clock3 size={18} className="text-[#8DA8D6]" />
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        type="time"
-        dir="rtl"
-        className="w-full bg-transparent text-right text-base font-bold text-[#4D5B73] outline-none"
-      />
-    </div>
-  );
-}
-
-function ChoiceButton({
+function ChoiceCard({
   active,
+  description,
+  fullWidth = false,
   label,
-  hint,
   onClick,
-  theme,
 }: {
   active: boolean;
+  description: string;
+  fullWidth?: boolean;
   label: string;
-  hint: string;
   onClick: () => void;
-  theme: typeof FEMALE_THEME;
 }) {
   return (
     <button
-      type="button"
       onClick={onClick}
-      className="min-h-[84px] rounded-[22px] px-4 text-right font-extrabold transition-all"
+      className={`relative rounded-[22px] p-4 text-right transition-all active:scale-[0.98] ${fullWidth ? 'w-full' : 'min-h-[120px]'}`}
       style={{
-        background: active ? theme.primaryBg : '#FFFFFF',
-        border: `2px solid ${active ? theme.primary : '#E2E8F0'}`,
-        color: active ? theme.primaryDark : '#475569',
+        background: active ? '#EFF6FF' : '#FFFFFF',
+        border: `2px solid ${active ? '#2563EB' : '#DCE6F2'}`,
+        boxShadow: active ? '0 14px 30px rgba(37, 99, 235, 0.12)' : '0 10px 22px rgba(15, 23, 42, 0.04)',
       }}
     >
-      <div className="flex h-full flex-col justify-between">
-        <p className="text-base">{label}</p>
-        <p className="mt-2 text-xs font-bold text-[#8A97A8]">{hint}</p>
+      <div className="absolute left-4 top-4">
+        <span
+          className="flex h-7 w-7 items-center justify-center rounded-full"
+          style={{
+            background: active ? '#2563EB' : '#F8FAFC',
+            color: active ? '#FFFFFF' : '#94A3B8',
+            border: `1px solid ${active ? '#2563EB' : '#DCE6F2'}`,
+          }}
+        >
+          <Check size={14} strokeWidth={2.6} />
+        </span>
+      </div>
+
+      <div className="pr-0 text-right">
+        <p className="text-base font-black text-[#0F172A]">{label}</p>
+        <p className="mt-2 text-sm font-bold leading-7 text-[#64748B]">{description}</p>
       </div>
     </button>
+  );
+}
+
+function SummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-4 border-b border-[#E2E8F0] py-3 last:border-b-0">
+      <span className="text-sm font-bold text-[#64748B]">{label}</span>
+      <span className="text-sm font-black text-[#0F172A]">{value}</span>
+    </div>
   );
 }

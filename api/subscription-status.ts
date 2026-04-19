@@ -1,33 +1,21 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { getStripeClient } from '../src/lib/stripe';
-
-function getServerAppBaseUrl(req: VercelRequest) {
-  return (
-    process.env.APP_BASE_URL ||
-    process.env.VITE_AUTH_REDIRECT_URL ||
-    req.headers.origin ||
-    'https://sukeret360.app'
-  ).replace(/\/+$/, '');
-}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
+  if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const stripe = getStripeClient();
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!stripe || !supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
+  if (!supabaseUrl || !supabaseAnonKey || !serviceRoleKey) {
     return res.status(500).json({ error: 'Billing service is not ready' });
   }
 
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
-
   if (!token) {
     return res.status(401).json({ error: 'Missing auth token' });
   }
@@ -44,20 +32,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Invalid auth token' });
   }
 
-  const { data: appUser } = await admin
+  const { data: appUser, error } = await admin
     .from('app_users')
-    .select('stripe_customer_id')
+    .select(
+      'subscription_status, subscription_plan, subscription_active, subscription_started_at, subscription_renews_at, payment_status, billing_provider, stripe_customer_id, stripe_subscription_id, billing_currency, cancel_at_period_end, last_payment_at'
+    )
     .eq('user_id', user.id)
     .maybeSingle();
 
-  if (!appUser?.stripe_customer_id) {
-    return res.status(400).json({ error: 'No active billing customer found' });
+  if (error) {
+    return res.status(500).json({ error: 'Unable to load subscription status' });
   }
 
-  const session = await stripe.billingPortal.sessions.create({
-    customer: appUser.stripe_customer_id,
-    return_url: getServerAppBaseUrl(req),
+  return res.status(200).json({
+    subscription: appUser ?? {
+      subscription_status: 'free',
+      subscription_plan: 'free',
+      subscription_active: false,
+      subscription_started_at: null,
+      subscription_renews_at: null,
+      payment_status: 'none',
+      billing_provider: null,
+      stripe_customer_id: null,
+      stripe_subscription_id: null,
+      billing_currency: 'ils',
+      cancel_at_period_end: false,
+      last_payment_at: null,
+    },
   });
-
-  return res.status(200).json({ url: session.url });
 }

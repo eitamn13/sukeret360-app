@@ -1,9 +1,11 @@
-import {
+﻿import {
   AlertCircle,
   Bell,
   CalendarPlus,
+  Pill,
   Plus,
   Save,
+  Syringe,
   Trash2,
 } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
@@ -26,15 +28,26 @@ function createMedicationDraft(): MedicationScheduleItem {
   return {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
     time: '08:00',
-    period: 'בוקר',
+    period: '׳‘׳•׳§׳¨',
     name: '',
     dosage: '',
     type: 'pill',
     notes: '',
-    image: '💊',
-    appearanceLabel: 'כדור',
+    image: 'white-pill',
+    appearanceLabel: '׳›׳“׳•׳¨',
     notifyEmergencyAfterMinutes: 45,
   };
+}
+
+function renderMedicationVisual(
+  image: MedicationScheduleItem['image'],
+  type: MedicationScheduleItem['type']
+) {
+  if (type === 'injection' || image === 'insulin-pen') {
+    return <Syringe size={18} strokeWidth={1.9} />;
+  }
+
+  return <Pill size={18} strokeWidth={1.9} />;
 }
 
 function normalizePhoneForWhatsApp(phone: string): string {
@@ -46,15 +59,15 @@ function normalizePhoneForWhatsApp(phone: string): string {
 }
 
 function buildMedicationAlertMessage(patientName: string, medication: MedicationScheduleItem) {
-  const displayName = patientName.trim() || 'המטופל/ת';
+  const displayName = patientName.trim() || '׳”׳׳˜׳•׳₪׳/׳×';
   const appearance = medication.appearanceLabel ? ` (${medication.appearanceLabel})` : '';
-  return `${displayName} עדיין לא סימנ/ה שלקח/ה את ${medication.name}${appearance} של ${medication.period}, שנקבעה לשעה ${medication.time}.`;
+  return `${displayName} ׳¢׳“׳™׳™׳ ׳׳ ׳¡׳™׳׳ /׳” ׳©׳׳§׳—/׳” ׳׳× ${medication.name}${appearance} ׳©׳ ${medication.period}, ׳©׳ ׳§׳‘׳¢׳” ׳׳©׳¢׳” ${medication.time}.`;
 }
 
 function getNotificationEnvironmentMessage() {
   if (typeof window === 'undefined') return null;
-  if (typeof Notification === 'undefined') return 'הדפדפן הזה לא תומך בהתראות.';
-  if (!window.isSecureContext) return 'כדי לאפשר התראות, צריך לפתוח את האתר בחיבור מאובטח.';
+  if (typeof Notification === 'undefined') return '׳”׳“׳₪׳“׳₪׳ ׳”׳–׳” ׳׳ ׳×׳•׳׳ ׳‘׳”׳×׳¨׳׳•׳×.';
+  if (!window.isSecureContext) return '׳›׳“׳™ ׳׳׳₪׳©׳¨ ׳”׳×׳¨׳׳•׳×, ׳¦׳¨׳™׳ ׳׳₪׳×׳•׳— ׳׳× ׳”׳׳×׳¨ ׳‘׳—׳™׳‘׳•׳¨ ׳׳׳•׳‘׳˜׳—.';
 
   const nav = navigator as Navigator & { standalone?: boolean };
   const isIOS = /iPhone|iPad|iPod/.test(window.navigator.userAgent);
@@ -62,7 +75,7 @@ function getNotificationEnvironmentMessage() {
     window.matchMedia?.('(display-mode: standalone)')?.matches || nav.standalone === true;
 
   if (isIOS && !isStandalone) {
-    return 'באייפון צריך להוסיף את האתר למסך הבית ורק אז לאשר התראות.';
+    return '׳‘׳׳™׳™׳₪׳•׳ ׳¦׳¨׳™׳ ׳׳”׳•׳¡׳™׳£ ׳׳× ׳”׳׳×׳¨ ׳׳׳¡׳ ׳”׳‘׳™׳× ׳•׳¨׳§ ׳׳– ׳׳׳©׳¨ ׳”׳×׳¨׳׳•׳×.';
   }
 
   return null;
@@ -95,12 +108,12 @@ function buildMedicationCalendarContent(schedule: MedicationScheduleItem[]) {
         `DTSTART:${formatDate(eventStart)}`,
         `DTEND:${formatDate(eventEnd)}`,
         `RRULE:FREQ=DAILY;UNTIL=${formatDate(endDate)}`,
-        `SUMMARY:תזכורת תרופה - ${item.name}`,
-        `DESCRIPTION:${item.dosage} | ${item.notes || 'תזכורת יומית מהאפליקציה'}`,
+        `SUMMARY:׳×׳–׳›׳•׳¨׳× ׳×׳¨׳•׳₪׳” - ${item.name}`,
+        `DESCRIPTION:${item.dosage} | ${item.notes || '׳×׳–׳›׳•׳¨׳× ׳™׳•׳׳™׳× ׳׳”׳׳₪׳׳™׳§׳¦׳™׳”'}`,
         'BEGIN:VALARM',
         'ACTION:DISPLAY',
         'TRIGGER:-PT10M',
-        `DESCRIPTION:תזכורת לקחת ${item.name}`,
+        `DESCRIPTION:׳×׳–׳›׳•׳¨׳× ׳׳§׳—׳× ${item.name}`,
         'END:VALARM',
         'END:VEVENT',
       ].join('\n');
@@ -248,34 +261,34 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
     const permission = await requestBrowserNotificationPermission();
 
     if (permission === 'granted' && typeof Notification !== 'undefined') {
-      new Notification('התראות פעילות', {
-        body: 'מעולה. מעכשיו תקבלו תזכורות לתרופות.',
+      new Notification('׳”׳×׳¨׳׳•׳× ׳₪׳¢׳™׳׳•׳×', {
+        body: '׳׳¢׳•׳׳”. ׳׳¢׳›׳©׳™׳• ׳×׳§׳‘׳׳• ׳×׳–׳›׳•׳¨׳•׳× ׳׳×׳¨׳•׳₪׳•׳×.',
       });
-      setNotificationFeedback('ההתראות הופעלו בהצלחה.');
+      setNotificationFeedback('׳”׳”׳×׳¨׳׳•׳× ׳”׳•׳₪׳¢׳׳• ׳‘׳”׳¦׳׳—׳”.');
       return;
     }
 
     if (permission === 'denied') {
-      setNotificationFeedback('ההתראות חסומות כרגע. אפשר לפתוח אותן דרך הגדרות הדפדפן.');
+      setNotificationFeedback('׳”׳”׳×׳¨׳׳•׳× ׳—׳¡׳•׳׳•׳× ׳›׳¨׳’׳¢. ׳׳₪׳©׳¨ ׳׳₪׳×׳•׳— ׳׳•׳×׳ ׳“׳¨׳ ׳”׳’׳“׳¨׳•׳× ׳”׳“׳₪׳“׳₪׳.');
       return;
     }
 
-    setNotificationFeedback('לא התקבלה הרשאה כרגע. נסו שוב בעוד רגע.');
+    setNotificationFeedback('׳׳ ׳”׳×׳§׳‘׳׳” ׳”׳¨׳©׳׳” ׳›׳¨׳’׳¢. ׳ ׳¡׳• ׳©׳•׳‘ ׳‘׳¢׳•׳“ ׳¨׳’׳¢.');
   };
 
   const sendTestNotification = () => {
     if (typeof Notification === 'undefined') return;
-    new Notification('בדיקת התראה', {
-      body: 'אם ראית את ההודעה הזאת, ההתראות עובדות כמו שצריך.',
+    new Notification('׳‘׳“׳™׳§׳× ׳”׳×׳¨׳׳”', {
+      body: '׳׳ ׳¨׳׳™׳× ׳׳× ׳”׳”׳•׳“׳¢׳” ׳”׳–׳׳×, ׳”׳”׳×׳¨׳׳•׳× ׳¢׳•׳‘׳“׳•׳× ׳›׳׳• ׳©׳¦׳¨׳™׳.',
     });
-    setNotificationFeedback('נשלחה התראת בדיקה למכשיר.');
+    setNotificationFeedback('׳ ׳©׳׳—׳” ׳”׳×׳¨׳׳× ׳‘׳“׳™׳§׳” ׳׳׳›׳©׳™׳¨.');
   };
 
   const handleCalendarExport = async () => {
     const scheduleWithNames = medicationSchedule.filter((item) => item.name.trim());
 
     if (scheduleWithNames.length === 0) {
-      setCalendarFeedback('אין עדיין תרופות מוכנות לייצוא ליומן.');
+      setCalendarFeedback('׳׳™׳ ׳¢׳“׳™׳™׳ ׳×׳¨׳•׳₪׳•׳× ׳׳•׳›׳ ׳•׳× ׳׳™׳™׳¦׳•׳ ׳׳™׳•׳׳.');
       return;
     }
 
@@ -287,18 +300,18 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
     if (file && typeof shareNavigator.share === 'function') {
       const shareData: ShareData = {
         files: [file],
-        title: 'לוח התרופות שלי',
-        text: 'אפשר להוסיף את לוח התרופות ליומן מהמכשיר.',
+        title: '׳׳•׳— ׳”׳×׳¨׳•׳₪׳•׳× ׳©׳׳™',
+        text: '׳׳₪׳©׳¨ ׳׳”׳•׳¡׳™׳£ ׳׳× ׳׳•׳— ׳”׳×׳¨׳•׳₪׳•׳× ׳׳™׳•׳׳ ׳׳”׳׳›׳©׳™׳¨.',
       };
 
       if (!shareNavigator.canShare || shareNavigator.canShare(shareData)) {
         try {
           await shareNavigator.share(shareData);
-          setCalendarFeedback('חלון השיתוף נפתח. אפשר לבחור יומן ולהוסיף תזכורת אוטומטית.');
+          setCalendarFeedback('׳—׳׳•׳ ׳”׳©׳™׳×׳•׳£ ׳ ׳₪׳×׳—. ׳׳₪׳©׳¨ ׳׳‘׳—׳•׳¨ ׳™׳•׳׳ ׳•׳׳”׳•׳¡׳™׳£ ׳×׳–׳›׳•׳¨׳× ׳׳•׳˜׳•׳׳˜׳™׳×.');
           return;
         } catch (error) {
           if (error instanceof DOMException && error.name === 'AbortError') {
-            setCalendarFeedback('השיתוף בוטל. אפשר לנסות שוב בכל רגע.');
+            setCalendarFeedback('׳”׳©׳™׳×׳•׳£ ׳‘׳•׳˜׳. ׳׳₪׳©׳¨ ׳׳ ׳¡׳•׳× ׳©׳•׳‘ ׳‘׳›׳ ׳¨׳’׳¢.');
             return;
           }
 
@@ -308,7 +321,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
     }
 
     downloadMedicationCalendarBlob(blob, fileName);
-    setCalendarFeedback('קובץ היומן ירד למכשיר. באייפון אפשר לפתוח אותו, לבחור יומן ולקבל תזכורת יומית.');
+    setCalendarFeedback('׳§׳•׳‘׳¥ ׳”׳™׳•׳׳ ׳™׳¨׳“ ׳׳׳›׳©׳™׳¨. ׳‘׳׳™׳™׳₪׳•׳ ׳׳₪׳©׳¨ ׳׳₪׳×׳•׳— ׳׳•׳×׳•, ׳׳‘׳—׳•׳¨ ׳™׳•׳׳ ׳•׳׳§׳‘׳ ׳×׳–׳›׳•׳¨׳× ׳™׳•׳׳™׳×.');
   };
 
   return (
@@ -318,8 +331,8 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
       style={{ background: theme.gradientFull }}
     >
       <OverlayHeader
-        title="תרופות"
-        subtitle="סימון, תזכורות ועריכה"
+        title="׳×׳¨׳•׳₪׳•׳×"
+        subtitle="׳¡׳™׳׳•׳, ׳×׳–׳›׳•׳¨׳•׳× ׳•׳¢׳¨׳™׳›׳”"
         theme={theme}
         onBack={onClose}
         onClose={onClose}
@@ -327,9 +340,9 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
 
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         <div className="grid grid-cols-3 gap-3">
-          <TopStat label="נלקחו" value={String(doneCount)} tone="success" />
-          <TopStat label="ממתינות" value={String(pendingCount)} tone="primary" />
-          <TopStat label="באיחור" value={String(overdueMedications.length)} tone="danger" />
+          <TopStat label="׳ ׳׳§׳—׳•" value={String(doneCount)} tone="success" />
+          <TopStat label="׳׳׳×׳™׳ ׳•׳×" value={String(pendingCount)} tone="primary" />
+          <TopStat label="׳‘׳׳™׳—׳•׳¨" value={String(overdueMedications.length)} tone="danger" />
         </div>
 
         <div
@@ -338,7 +351,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
         >
           <div className="flex flex-row-reverse items-center justify-between mb-2">
             <span className="text-xs" style={{ color: '#6B7280', fontWeight: 700 }}>
-              {doneCount}/{medicationSchedule.length} סומנו היום
+              {doneCount}/{medicationSchedule.length} ׳¡׳•׳׳ ׳• ׳”׳™׳•׳
             </span>
             <span
               className="text-xs"
@@ -386,12 +399,12 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
 
             <div className="text-right flex-1">
               <p style={{ fontWeight: 900, fontSize: 18 }}>
-                {notificationPermission === 'granted' ? 'התראות פעילות' : 'אפשר התראות'}
+                {notificationPermission === 'granted' ? '׳”׳×׳¨׳׳•׳× ׳₪׳¢׳™׳׳•׳×' : '׳׳₪׳©׳¨ ׳”׳×׳¨׳׳•׳×'}
               </p>
               <p style={{ marginTop: 6, opacity: 0.9, lineHeight: 1.7 }}>
                 {notificationPermission === 'granted'
-                  ? 'אפשר לקבל תזכורות ישירות למכשיר.'
-                  : 'כדי לא לפספס תרופות, צריך לאשר התראות.'}
+                  ? '׳׳₪׳©׳¨ ׳׳§׳‘׳ ׳×׳–׳›׳•׳¨׳•׳× ׳™׳©׳™׳¨׳•׳× ׳׳׳›׳©׳™׳¨.'
+                  : '׳›׳“׳™ ׳׳ ׳׳₪׳¡׳₪׳¡ ׳×׳¨׳•׳₪׳•׳×, ׳¦׳¨׳™׳ ׳׳׳©׳¨ ׳”׳×׳¨׳׳•׳×.'}
               </p>
             </div>
           </div>
@@ -413,7 +426,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                 fontWeight: 800,
               }}
             >
-              {notificationPermission === 'granted' ? 'בדיקת התראה' : 'אפשר עכשיו'}
+              {notificationPermission === 'granted' ? '׳‘׳“׳™׳§׳× ׳”׳×׳¨׳׳”' : '׳׳₪׳©׳¨ ׳¢׳›׳©׳™׳•'}
             </button>
             <button
               onClick={() => setEditingEnabled((current) => !current)}
@@ -425,7 +438,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                 fontWeight: 800,
               }}
             >
-              {editingEnabled ? 'סגור עריכה' : 'עריכת תרופות'}
+              {editingEnabled ? '׳¡׳’׳•׳¨ ׳¢׳¨׳™׳›׳”' : '׳¢׳¨׳™׳›׳× ׳×׳¨׳•׳₪׳•׳×'}
             </button>
           </div>
         </div>
@@ -456,7 +469,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
             style={{ backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA' }}
           >
             <div className="flex flex-row-reverse items-center justify-end gap-2 mb-2">
-              <p style={{ color: '#B91C1C', fontWeight: 900 }}>יש תרופה שלא סומנה בזמן</p>
+              <p style={{ color: '#B91C1C', fontWeight: 900 }}>׳™׳© ׳×׳¨׳•׳₪׳” ׳©׳׳ ׳¡׳•׳׳ ׳” ׳‘׳–׳׳</p>
               <AlertCircle size={18} strokeWidth={1.8} style={{ color: '#B91C1C' }} />
             </div>
 
@@ -488,7 +501,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
               </div>
             ) : (
               <p style={{ color: '#991B1B', marginTop: 12, fontWeight: 700 }}>
-                כדי לשלוח הודעה, צריך להוסיף איש קשר במסך ההגדרות.
+                ׳›׳“׳™ ׳׳©׳׳•׳— ׳”׳•׳“׳¢׳”, ׳¦׳¨׳™׳ ׳׳”׳•׳¡׳™׳£ ׳׳™׳© ׳§׳©׳¨ ׳‘׳׳¡׳ ׳”׳”׳’׳“׳¨׳•׳×.
               </p>
             )}
           </div>
@@ -500,9 +513,9 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
               className="rounded-2xl p-5 text-center"
               style={{ backgroundColor: '#FFFFFF', border: `1.5px solid ${theme.primaryBorder}` }}
             >
-              <p style={{ color: '#1F2937', fontWeight: 800, fontSize: 18 }}>עדיין לא הוגדרו תרופות</p>
+              <p style={{ color: '#1F2937', fontWeight: 800, fontSize: 18 }}>׳¢׳“׳™׳™׳ ׳׳ ׳”׳•׳’׳“׳¨׳• ׳×׳¨׳•׳₪׳•׳×</p>
               <p style={{ color: '#64748B', marginTop: 6, lineHeight: 1.7 }}>
-                הוסיפו תרופה ראשונה כדי לקבל תזכורות ולסמן לקיחה.
+                ׳”׳•׳¡׳™׳₪׳• ׳×׳¨׳•׳₪׳” ׳¨׳׳©׳•׳ ׳” ׳›׳“׳™ ׳׳§׳‘׳ ׳×׳–׳›׳•׳¨׳•׳× ׳•׳׳¡׳׳ ׳׳§׳™׳—׳”.
               </p>
             </div>
           ) : null}
@@ -530,7 +543,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                       backgroundColor: isDone ? '#DCFCE7' : theme.primaryBg,
                     }}
                   >
-                    {medication.image || (medication.type === 'injection' ? '💉' : '💊')}
+                    {renderMedicationVisual(medication.image, medication.type)}
                   </div>
 
                   <div className="text-right flex-1">
@@ -549,7 +562,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                     </div>
 
                     <p style={{ color: '#64748B', marginTop: 6, fontWeight: 700 }}>
-                      {medication.dosage || medication.appearanceLabel || 'ללא מינון'}
+                      {medication.dosage || medication.appearanceLabel || '׳׳׳ ׳׳™׳ ׳•׳'}
                     </p>
                     <p style={{ color: '#334155', marginTop: 4, fontWeight: 800 }}>{medication.time}</p>
                   </div>
@@ -569,7 +582,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                     className="rounded-2xl px-3 py-2 mt-3 text-sm text-right"
                     style={{ backgroundColor: '#FEF2F2', color: '#B91C1C', fontWeight: 700 }}
                   >
-                    עברו {minutesLate} דקות מאז התזכורת והתרופה עדיין לא סומנה.
+                    ׳¢׳‘׳¨׳• {minutesLate} ׳“׳§׳•׳× ׳׳׳– ׳”׳×׳–׳›׳•׳¨׳× ׳•׳”׳×׳¨׳•׳₪׳” ׳¢׳“׳™׳™׳ ׳׳ ׳¡׳•׳׳ ׳”.
                   </div>
                 )}
 
@@ -585,7 +598,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                       : `0 4px 16px ${theme.primaryShadow}`,
                   }}
                 >
-                  {isDone ? 'סומן כנלקח' : 'סמן כנלקח'}
+                  {isDone ? '׳¡׳•׳׳ ׳›׳ ׳׳§׳—' : '׳¡׳׳ ׳›׳ ׳׳§׳—'}
                 </button>
               </div>
             );
@@ -604,7 +617,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
             }}
           >
             <CalendarPlus size={18} />
-            ייצוא ליומן
+            ׳™׳™׳¦׳•׳ ׳׳™׳•׳׳
           </button>
 
           <button
@@ -618,7 +631,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
             }}
           >
             <Plus size={18} />
-            {editingEnabled ? 'סגור עריכה' : 'עריכת לוח תרופות'}
+            {editingEnabled ? '׳¡׳’׳•׳¨ ׳¢׳¨׳™׳›׳”' : '׳¢׳¨׳™׳›׳× ׳׳•׳— ׳×׳¨׳•׳₪׳•׳×'}
           </button>
         </div>
 
@@ -652,9 +665,9 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                 }}
               >
                 <Save size={16} />
-                {savedSchedule ? 'נשמר' : 'שמור'}
+                {savedSchedule ? '׳ ׳©׳׳¨' : '׳©׳׳•׳¨'}
               </button>
-              <p style={{ color: '#1F2937', fontWeight: 800 }}>עריכת תרופות</p>
+              <p style={{ color: '#1F2937', fontWeight: 800 }}>׳¢׳¨׳™׳›׳× ׳×׳¨׳•׳₪׳•׳×</p>
             </div>
 
             <div className="space-y-3">
@@ -684,7 +697,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                       type="text"
                       value={medication.name}
                       onChange={(event) => updateEditableMedication(medication.id, { name: event.target.value })}
-                      placeholder="שם התרופה"
+                      placeholder="׳©׳ ׳”׳×׳¨׳•׳₪׳”"
                       dir="rtl"
                       className="w-full h-11 rounded-2xl px-4 outline-none"
                       style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}
@@ -695,7 +708,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                         type="text"
                         value={medication.dosage}
                         onChange={(event) => updateEditableMedication(medication.id, { dosage: event.target.value })}
-                        placeholder="מינון"
+                        placeholder="׳׳™׳ ׳•׳"
                         dir="rtl"
                         className="w-full h-11 rounded-2xl px-4 outline-none"
                         style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0' }}
@@ -712,7 +725,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
                     <textarea
                       value={medication.notes || ''}
                       onChange={(event) => updateEditableMedication(medication.id, { notes: event.target.value })}
-                      placeholder="הערה קצרה"
+                      placeholder="׳”׳¢׳¨׳” ׳§׳¦׳¨׳”"
                       dir="rtl"
                       className="w-full rounded-2xl px-4 py-3 outline-none"
                       style={{
@@ -738,7 +751,7 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
               }}
             >
               <Plus size={18} />
-              הוסף תרופה
+              ׳”׳•׳¡׳£ ׳×׳¨׳•׳₪׳”
             </button>
           </div>
         )}
@@ -749,10 +762,10 @@ export function MedicationsScreen({ onClose }: MedicationsScreenProps) {
             style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #BBF7D0' }}
           >
             <p className="text-lg" style={{ color: '#15803D', fontWeight: 800 }}>
-              כל התרופות סומנו היום
+              ׳›׳ ׳”׳×׳¨׳•׳₪׳•׳× ׳¡׳•׳׳ ׳• ׳”׳™׳•׳
             </p>
             <p className="text-sm mt-1" style={{ color: '#16A34A', fontWeight: 500 }}>
-              כל הכבוד. הלוח היומי הושלם.
+              ׳›׳ ׳”׳›׳‘׳•׳“. ׳”׳׳•׳— ׳”׳™׳•׳׳™ ׳”׳•׳©׳׳.
             </p>
           </div>
         )}
@@ -789,3 +802,5 @@ function TopStat({
     </div>
   );
 }
+
+

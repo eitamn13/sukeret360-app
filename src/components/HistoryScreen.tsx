@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Droplets, Pill, Share2, UtensilsCrossed } from 'lucide-react';
+import { Apple, Droplets, Moon, Pill, Share2, Sun, UtensilsCrossed } from 'lucide-react';
 import { OverlayHeader } from './OverlayHeader';
 import { useAppContext } from '../context/AppContext';
 
@@ -15,6 +15,21 @@ function isWithinLastDays(isoDate: string, days: number) {
 
 function getDateKey(date: Date) {
   return date.toISOString().split('T')[0];
+}
+
+function MealLogIcon({ mealType }: { mealType: string }) {
+  const commonProps = { size: 18, strokeWidth: 1.9 };
+
+  switch (mealType) {
+    case 'breakfast':
+      return <Sun {...commonProps} />;
+    case 'dinner':
+      return <Moon {...commonProps} />;
+    case 'snack':
+      return <Apple {...commonProps} />;
+    default:
+      return <UtensilsCrossed {...commonProps} />;
+  }
 }
 
 function getLevelStatus(level: number, low: number, high: number) {
@@ -224,10 +239,10 @@ export function HistoryScreen({ onClose }: HistoryScreenProps) {
               }}
             >
               <div
-                className="w-11 h-11 rounded-2xl flex items-center justify-center text-lg flex-shrink-0"
-                style={{ backgroundColor: '#F8FAFC' }}
+                className="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+                style={{ backgroundColor: '#F8FAFC', color: theme.primary }}
               >
-                {meal.icon}
+                <MealLogIcon mealType={meal.mealType} />
               </div>
 
               <div className="flex-1 text-right min-w-0">

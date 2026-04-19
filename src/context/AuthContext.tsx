@@ -1,7 +1,13 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import type { Session, User } from '@supabase/supabase-js';
-import { isSupabaseConfigured, supabase, syncAuthenticatedUser } from '../lib/supabase';
+import {
+  clearAppLocalState,
+  getAuthRedirectUrl,
+  isSupabaseConfigured,
+  supabase,
+  syncAuthenticatedUser,
+} from '../lib/supabase';
 
 interface AuthContextValue {
   authEnabled: boolean;
@@ -21,20 +27,30 @@ interface AuthContextValue {
     needsEmailConfirmation: boolean;
   }>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<{ error: string | null }>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-const SERVER_NOT_CONFIGURED = 'החיבור לשרת עדיין לא הוגדר בסביבה.';
+const SERVER_NOT_CONFIGURED = 'שירות ההתחברות עדיין לא זמין בסביבה הזו.';
 
 async function signInWithOAuthProvider(provider: 'google' | 'facebook') {
   if (!supabase) {
     return { error: SERVER_NOT_CONFIGURED };
   }
 
+  const redirectTo = getAuthRedirectUrl();
   const { error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: window.location.origin,
+      redirectTo,
+      scopes: provider === 'facebook' ? 'email,public_profile' : 'email profile',
+      queryParams:
+        provider === 'google'
+          ? {
+              access_type: 'offline',
+              prompt: 'consent',
+            }
+          : undefined,
     },
   });
 
@@ -121,12 +137,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       email: email.trim(),
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: getAuthRedirectUrl(),
         data: {
           full_name: name.trim(),
         },
       },
     });
+
+    if (data.user && data.session) {
+      void syncAuthenticatedUser(data.user);
+    }
 
     return {
       error: error?.message ?? null,
@@ -134,10 +154,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   };
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     if (!supabase) return;
     await supabase.auth.signOut();
-  };
+    clearAppLocalState();
+  }, []);
+
+  const deleteAccount = useCallback(async () => {
+    if (!supabase || !session?.access_token) {
+      return { error: 'מחיקת חשבון זמינה רק אחרי התחברות מלאה.' };
+    }
+
+    const response = await fetch('/api/delete-account', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${session.access_token}`,
+      },
+    });
+
+    if (!response.ok) {
+      const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+      return {
+        error: payload?.error || 'לא הצלחנו למחוק את החשבון כרגע. אפשר לנסות שוב בעוד רגע.',
+      };
+    }
+
+    clearAppLocalState();
+    await supabase.auth.signOut();
+    return { error: null };
+  }, [session?.access_token]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -151,8 +197,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signInWithFacebook,
       signUp,
       signOut,
+      deleteAccount,
     }),
-    [adminEmails, loading, session, user]
+    [adminEmails, deleteAccount, loading, session, signOut, user]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
