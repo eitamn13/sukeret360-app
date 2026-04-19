@@ -17,6 +17,8 @@ import { AuthScreen } from './components/AuthScreen';
 import { AdminUsersScreen } from './components/AdminUsersScreen';
 import { SubscriptionScreen } from './components/SubscriptionScreen';
 
+const GUEST_MODE_KEY = 'guest_mode_v1';
+
 function AppInner() {
   const { onboardingDone, theme, logSugar, remoteReady } = useAppContext();
 
@@ -169,7 +171,26 @@ function App() {
 
 function AppShell() {
   const { authEnabled, loading, user } = useAuthContext();
-  const [guestMode, setGuestMode] = useState(false);
+  const [guestMode, setGuestMode] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(GUEST_MODE_KEY) === 'true';
+  });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    if (user) {
+      window.localStorage.removeItem(GUEST_MODE_KEY);
+      setGuestMode(false);
+      return;
+    }
+
+    if (guestMode) {
+      window.localStorage.setItem(GUEST_MODE_KEY, 'true');
+    } else {
+      window.localStorage.removeItem(GUEST_MODE_KEY);
+    }
+  }, [guestMode, user]);
 
   if (loading) {
     return (
@@ -197,7 +218,7 @@ function AppShell() {
   }
 
   return (
-    <AppProvider>
+    <AppProvider storageScope={user ? `user:${user.id}` : 'guest'}>
       <AppInner />
     </AppProvider>
   );

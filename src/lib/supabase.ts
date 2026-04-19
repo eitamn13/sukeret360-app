@@ -43,6 +43,8 @@ const APP_LOCAL_STORAGE_KEYS = [
   'sugar_emergency_alert_log',
 ] as const;
 
+const APP_STORAGE_PREFIX = 'sukeret360:';
+
 function stripTrailingSlash(url: string) {
   return url.replace(/\/+$/, '');
 }
@@ -64,6 +66,13 @@ export function clearAppLocalState() {
 
   for (const key of APP_LOCAL_STORAGE_KEYS) {
     window.localStorage.removeItem(key);
+  }
+
+  for (let index = window.localStorage.length - 1; index >= 0; index -= 1) {
+    const key = window.localStorage.key(index);
+    if (key?.startsWith(APP_STORAGE_PREFIX)) {
+      window.localStorage.removeItem(key);
+    }
   }
 }
 

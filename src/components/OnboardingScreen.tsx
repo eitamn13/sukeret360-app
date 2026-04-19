@@ -117,6 +117,7 @@ export function OnboardingScreen() {
   const { completeOnboarding, saveEmergencyContact, saveMedicationSchedule, saveUserProfile } =
     useAppContext();
   const { user } = useAuthContext();
+  const isGuestFlow = !user;
 
   const [step, setStep] = useState<StepId>(0);
   const [name, setName] = useState(user?.user_metadata?.full_name?.trim?.() || '');
@@ -137,7 +138,7 @@ export function OnboardingScreen() {
   const canContinue = useMemo(() => {
     switch (step) {
       case 0:
-        return Boolean(name.trim() && email.trim());
+        return Boolean(name.trim() && (isGuestFlow || email.trim()));
       case 1:
         return Boolean(age.trim() && gender);
       case 2:
@@ -154,7 +155,7 @@ export function OnboardingScreen() {
       default:
         return false;
     }
-  }, [age, diabetesType, email, gender, medications.length, name, noMedicationSelected, sleepTime, step, targetHigh, targetLow, treatmentType, wakeTime]);
+  }, [age, diabetesType, email, gender, isGuestFlow, medications.length, name, noMedicationSelected, sleepTime, step, targetHigh, targetLow, treatmentType, wakeTime]);
 
   const toggleMedicationPreset = (preset: (typeof MEDICATION_PRESETS)[number]) => {
     setNoMedicationSelected(false);
@@ -282,13 +283,21 @@ export function OnboardingScreen() {
             {step === 0 ? (
               <StepSection
                 title="פרטים בסיסיים"
-                description="כמה פרטים קצרים כדי לפתוח את החשבון."
+                description={
+                  isGuestFlow
+                    ? 'כמה פרטים קצרים כדי להתאים את האפליקציה עבורך.'
+                    : 'כמה פרטים קצרים כדי לפתוח את החשבון.'
+                }
               >
                 <div className="space-y-3">
                   <FieldLabel label="שם מלא" />
                   <LargeInput value={name} onChange={setName} placeholder="שם מלא" />
-                  <FieldLabel label="מייל" />
-                  <LargeInput value={email} onChange={() => {}} placeholder="מייל" readOnly />
+                  {!isGuestFlow ? (
+                    <>
+                      <FieldLabel label="מייל" />
+                      <LargeInput value={email} onChange={() => {}} placeholder="מייל" readOnly />
+                    </>
+                  ) : null}
                 </div>
               </StepSection>
             ) : null}

@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, ReactNode } from 'react';
 import { useAuthContext } from './AuthContext';
 import {
+  clearAppLocalState,
   fetchRemoteAppSnapshot,
   isSupabaseConfigured,
   RemoteAppSnapshot,
@@ -222,6 +223,21 @@ interface AppContextValue extends AppState {
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
+const APP_STORAGE_PREFIX = 'sukeret360';
+const STORAGE_KEYS = [
+  'userProfile',
+  'onboardingDone',
+  'emergency_contact',
+  'saved_location',
+  'locationPermissionGranted',
+  'medication_schedule',
+  'medication_logs',
+  'meal_logs',
+  'todayMeals',
+  'sugar_logs',
+  'medication_notification_log',
+  'sugar_emergency_alert_log',
+] as const;
 
 function readJson<T>(key: string, fallback: T): T {
   try {
@@ -233,11 +249,63 @@ function readJson<T>(key: string, fallback: T): T {
   }
 }
 
-function writeJson(key: string, value: unknown) {
+function buildScopedStorageKey(scope: string, key: string) {
+  return `${APP_STORAGE_PREFIX}:${scope}:${key}`;
+}
+
+function readScopedJson<T>(scope: string, key: string, fallback: T): T {
   try {
-    localStorage.setItem(key, JSON.stringify(value));
+    const scopedKey = buildScopedStorageKey(scope, key);
+    const scopedRaw = localStorage.getItem(scopedKey);
+    if (scopedRaw) {
+      return JSON.parse(scopedRaw) as T;
+    }
+
+    return readJson<T>(key, fallback);
+  } catch {
+    return fallback;
+  }
+}
+
+function writeScopedJson(scope: string, key: string, value: unknown) {
+  try {
+    localStorage.setItem(buildScopedStorageKey(scope, key), JSON.stringify(value));
   } catch {
     // ignore storage failures
+  }
+}
+
+function readScopedBoolean(scope: string, key: string, fallback = false) {
+  try {
+    const scopedValue = localStorage.getItem(buildScopedStorageKey(scope, key));
+    if (scopedValue !== null) {
+      return scopedValue === 'true';
+    }
+
+    const legacyValue = localStorage.getItem(key);
+    if (legacyValue !== null) {
+      return legacyValue === 'true';
+    }
+  } catch {
+    return fallback;
+  }
+
+  return fallback;
+}
+
+function writeScopedBoolean(scope: string, key: string, value: boolean) {
+  try {
+    localStorage.setItem(buildScopedStorageKey(scope, key), value ? 'true' : 'false');
+  } catch {
+    // ignore storage failures
+  }
+}
+
+function clearScopedAppState(scope: string) {
+  if (typeof window === 'undefined') return;
+
+  for (const key of STORAGE_KEYS) {
+    window.localStorage.removeItem(buildScopedStorageKey(scope, key));
   }
 }
 
@@ -347,15 +415,15 @@ function normalizeRemoteSnapshot(snapshot: RemoteAppSnapshot): RemoteAppSnapshot
   };
 }
 
-function normalizeMealLogs(): LoggedMeal[] {
-  const legacyTodayMeals = readJson<LoggedMeal[]>('todayMeals', []);
-  const mealLogs = readJson<LoggedMeal[]>('meal_logs', legacyTodayMeals);
+function normalizeMealLogs(scope: string): LoggedMeal[] {
+  const legacyTodayMeals = readScopedJson<LoggedMeal[]>(scope, 'todayMeals', []);
+  const mealLogs = readScopedJson<LoggedMeal[]>(scope, 'meal_logs', legacyTodayMeals);
 
   return normalizeMealLogsFrom(mealLogs);
 }
 
-function normalizeMedicationSchedule(): MedicationScheduleItem[] {
-  const saved = readJson<MedicationScheduleItem[]>('medication_schedule', DEFAULT_MEDS);
+function normalizeMedicationSchedule(scope: string): MedicationScheduleItem[] {
+  const saved = readScopedJson<MedicationScheduleItem[]>(scope, 'medication_schedule', DEFAULT_MEDS);
 
   return normalizeMedicationScheduleFrom(saved);
 }
@@ -367,26 +435,32 @@ function normalizeUserProfile(profile: UserProfile): UserProfile {
   };
 }
 
-export function AppProvider({ children }: { children: ReactNode }) {
+export function AppProvider({
+  children,
+  storageScope = 'guest',
+}: {
+  children: ReactNode;
+  storageScope?: string;
+}) {
   const { authEnabled, user } = useAuthContext();
   const [userProfile, setUserProfile] = useState<UserProfile>(() =>
-    normalizeUserProfile(readJson<UserProfile>('userProfile', DEFAULT_PROFILE))
+    normalizeUserProfile(readScopedJson<UserProfile>(storageScope, 'userProfile', DEFAULT_PROFILE))
   );
 
   const [onboardingDone, setOnboardingDone] = useState<boolean>(
-    () => localStorage.getItem('onboardingDone') === 'true'
+    () => readScopedBoolean(storageScope, 'onboardingDone')
   );
 
   const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>(() =>
-    readJson<EmergencyContact>('emergency_contact', DEFAULT_CONTACT)
+    readScopedJson<EmergencyContact>(storageScope, 'emergency_contact', DEFAULT_CONTACT)
   );
 
   const [savedLocation, setSavedLocationState] = useState<SavedLocation | null>(() =>
-    readJson<SavedLocation | null>('saved_location', null)
+    readScopedJson<SavedLocation | null>(storageScope, 'saved_location', null)
   );
 
   const [locationPermissionGranted, setLocationPermissionGrantedState] = useState<boolean>(
-    () => localStorage.getItem('locationPermissionGranted') === 'true'
+    () => readScopedBoolean(storageScope, 'locationPermissionGranted')
   );
 
   const [notificationPermission, setNotificationPermission] = useState<NotificationPermission | 'default'>(
@@ -397,28 +471,28 @@ export function AppProvider({ children }: { children: ReactNode }) {
   );
 
   const [medicationSchedule, setMedicationSchedule] = useState<MedicationScheduleItem[]>(
-    normalizeMedicationSchedule
+    () => normalizeMedicationSchedule(storageScope)
   );
 
   const [medicationLogs, setMedicationLogs] = useState<MedicationLogEntry[]>(() =>
-    readJson<MedicationLogEntry[]>('medication_logs', [])
+    readScopedJson<MedicationLogEntry[]>(storageScope, 'medication_logs', [])
   );
 
-  const [mealLogs, setMealLogs] = useState<LoggedMeal[]>(normalizeMealLogs);
+  const [mealLogs, setMealLogs] = useState<LoggedMeal[]>(() => normalizeMealLogs(storageScope));
 
   const [sugarLogs, setSugarLogs] = useState<SugarLogEntry[]>(() =>
-    normalizeSugarLogsFrom(readJson<SugarLogEntry[]>('sugar_logs', []))
+    normalizeSugarLogsFrom(readScopedJson<SugarLogEntry[]>(storageScope, 'sugar_logs', []))
   );
   const [remoteReady, setRemoteReady] = useState<boolean>(() => !(authEnabled && isSupabaseConfigured && user));
 
   const [sentMedicationNotifications, setSentMedicationNotifications] = useState<string[]>(() => {
     const todayKey = getTodayKey();
-    return readJson<string[]>('medication_notification_log', []).filter((entry) =>
+    return readScopedJson<string[]>(storageScope, 'medication_notification_log', []).filter((entry) =>
       entry.startsWith(todayKey)
     );
   });
   const [sentSugarEmergencyAlerts, setSentSugarEmergencyAlerts] = useState<string[]>(() =>
-    readJson<string[]>('sugar_emergency_alert_log', [])
+    readScopedJson<string[]>(storageScope, 'sugar_emergency_alert_log', [])
   );
   const emergencyAlertInFlight = useRef<Set<string>>(new Set());
   const remoteHydrating = useRef(false);
@@ -459,35 +533,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const serializedRemoteSnapshot = useMemo(() => JSON.stringify(remoteSnapshot), [remoteSnapshot]);
 
   useEffect(() => {
-    writeJson('userProfile', userProfile);
-  }, [userProfile]);
+    writeScopedJson(storageScope, 'userProfile', userProfile);
+  }, [storageScope, userProfile]);
 
   useEffect(() => {
-    localStorage.setItem('onboardingDone', onboardingDone ? 'true' : 'false');
-  }, [onboardingDone]);
+    writeScopedBoolean(storageScope, 'onboardingDone', onboardingDone);
+  }, [onboardingDone, storageScope]);
 
   useEffect(() => {
-    writeJson('emergency_contact', emergencyContact);
-  }, [emergencyContact]);
+    writeScopedJson(storageScope, 'emergency_contact', emergencyContact);
+  }, [emergencyContact, storageScope]);
 
   useEffect(() => {
-    writeJson('saved_location', savedLocation);
-  }, [savedLocation]);
+    writeScopedJson(storageScope, 'saved_location', savedLocation);
+  }, [savedLocation, storageScope]);
 
   useEffect(() => {
-    localStorage.setItem(
-      'locationPermissionGranted',
-      locationPermissionGranted ? 'true' : 'false'
-    );
-  }, [locationPermissionGranted]);
+    writeScopedBoolean(storageScope, 'locationPermissionGranted', locationPermissionGranted);
+  }, [locationPermissionGranted, storageScope]);
 
   useEffect(() => {
-    writeJson('medication_schedule', medicationSchedule);
-  }, [medicationSchedule]);
+    writeScopedJson(storageScope, 'medication_schedule', medicationSchedule);
+  }, [medicationSchedule, storageScope]);
 
   useEffect(() => {
-    writeJson('medication_logs', medicationLogs);
-  }, [medicationLogs]);
+    writeScopedJson(storageScope, 'medication_logs', medicationLogs);
+  }, [medicationLogs, storageScope]);
 
   useEffect(() => {
     if (typeof Notification === 'undefined') return;
@@ -507,13 +578,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    writeJson('meal_logs', mealLogs);
-    writeJson('todayMeals', todayMeals);
-  }, [mealLogs, todayMeals]);
+    writeScopedJson(storageScope, 'meal_logs', mealLogs);
+    writeScopedJson(storageScope, 'todayMeals', todayMeals);
+  }, [mealLogs, storageScope, todayMeals]);
 
   useEffect(() => {
-    writeJson('sugar_logs', sugarLogs);
-  }, [sugarLogs]);
+    writeScopedJson(storageScope, 'sugar_logs', sugarLogs);
+  }, [storageScope, sugarLogs]);
 
   useEffect(() => {
     let active = true;
@@ -581,15 +652,16 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const todayKey = getTodayKey();
-    writeJson(
+    writeScopedJson(
+      storageScope,
       'medication_notification_log',
       sentMedicationNotifications.filter((entry) => entry.startsWith(todayKey))
     );
-  }, [sentMedicationNotifications]);
+  }, [sentMedicationNotifications, storageScope]);
 
   useEffect(() => {
-    writeJson('sugar_emergency_alert_log', sentSugarEmergencyAlerts);
-  }, [sentSugarEmergencyAlerts]);
+    writeScopedJson(storageScope, 'sugar_emergency_alert_log', sentSugarEmergencyAlerts);
+  }, [sentSugarEmergencyAlerts, storageScope]);
 
   const isMedicationTakenToday = useCallback(
     (medicationId: string) => {
@@ -632,10 +704,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setOnboardingDone(true);
   };
 
-  const resetOnboarding = () => {
-    localStorage.clear();
+  const resetOnboarding = useCallback(() => {
+    clearScopedAppState(storageScope);
+    if (storageScope === 'guest') {
+      clearAppLocalState();
+    }
     window.location.reload();
-  };
+  }, [storageScope]);
 
   const saveEmergencyContact = (contact: EmergencyContact) => {
     setEmergencyContact(contact);
@@ -1018,6 +1093,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       medicationLogs,
       isMedicationTakenToday,
       getMedicationTakenAt,
+      resetOnboarding,
     ]
   );
 

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { useAuthContext } from '../context/AuthContext';
 import type { DiabetesType, Gender, TreatmentType, UserProfile } from '../context/AppContext';
 import { useAppContext } from '../context/AppContext';
+import { clearAppLocalState } from '../lib/supabase';
 import { OverlayHeader } from './OverlayHeader';
 
 interface ProfileSettingsModalProps {
@@ -47,8 +48,8 @@ export function ProfileSettingsModal({
   onOpenAdminUsers,
   onOpenSubscription,
 }: ProfileSettingsModalProps) {
-  const { userProfile, saveEmergencyContact, saveUserProfile, theme } = useAppContext();
-  const { authEnabled, deleteAccount, isAdmin, signOut } = useAuthContext();
+  const { emergencyContact, userProfile, saveEmergencyContact, saveUserProfile, theme } = useAppContext();
+  const { authEnabled, deleteAccount, isAdmin, signOut, user } = useAuthContext();
 
   const [screen, setScreen] = useState<SettingsScreen>('home');
   const [name, setName] = useState(userProfile.name);
@@ -88,25 +89,10 @@ export function ProfileSettingsModal({
     setWakeTime(userProfile.wakeTime);
     setSleepTime(userProfile.sleepTime);
 
-    try {
-      const raw = localStorage.getItem('emergency_contact');
-      if (!raw) {
-        setEmergencyName('');
-        setEmergencyPhone('');
-        setEmergencyMessage(DEFAULT_EMERGENCY_CONTACT.message);
-        return;
-      }
-
-      const parsed = JSON.parse(raw);
-      setEmergencyName(parsed?.name || '');
-      setEmergencyPhone(parsed?.phone || '');
-      setEmergencyMessage(parsed?.message || DEFAULT_EMERGENCY_CONTACT.message);
-    } catch {
-      setEmergencyName('');
-      setEmergencyPhone('');
-      setEmergencyMessage(DEFAULT_EMERGENCY_CONTACT.message);
-    }
-  }, [isOpen, userProfile]);
+    setEmergencyName(emergencyContact?.name || '');
+    setEmergencyPhone(emergencyContact?.phone || '');
+    setEmergencyMessage(emergencyContact?.message || DEFAULT_EMERGENCY_CONTACT.message);
+  }, [emergencyContact, isOpen, userProfile]);
 
   const isValid = useMemo(() => {
     return Boolean(
@@ -152,10 +138,10 @@ export function ProfileSettingsModal({
   };
 
   const handleDeleteAccount = async () => {
-    if (!authEnabled) {
+    if (!authEnabled || !user) {
       const confirmed = window.confirm('למחוק את כל הנתונים מהמכשיר הזה?');
       if (!confirmed) return;
-      window.localStorage.clear();
+      clearAppLocalState();
       window.location.reload();
       return;
     }
@@ -173,10 +159,14 @@ export function ProfileSettingsModal({
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    if (!authEnabled) {
+    if (!user) {
+      clearAppLocalState();
       window.location.reload();
+      return;
     }
+
+    await signOut();
+    window.location.reload();
   };
 
   if (!isOpen) return null;
