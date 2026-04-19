@@ -188,20 +188,12 @@ function AppShell() {
     );
   }
 
-  if (authEnabled && !user) {
-    return <AuthScreen />;
+  if (authEnabled && !user && !guestMode) {
+    return <AuthScreen showGuestOption onContinueGuest={() => setGuestMode(true)} />;
   }
 
-  if (!authEnabled) {
-    if (!guestMode) {
-      return <AuthScreen showGuestOption onContinueGuest={() => setGuestMode(true)} />;
-    }
-
-    return (
-      <AppProvider>
-        <AppInner />
-      </AppProvider>
-    );
+  if (!authEnabled && !guestMode) {
+    return <AuthScreen showGuestOption onContinueGuest={() => setGuestMode(true)} />;
   }
 
   return (
